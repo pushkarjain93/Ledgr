@@ -9,6 +9,7 @@ Flow:  entry (scroll to choose source)  ->  dashboard (zeros)  ->  results
 Run:  streamlit run app.py
 """
 import html
+import os
 import re
 import io
 from datetime import date, datetime, timedelta
@@ -438,6 +439,17 @@ def soften_inputs(odf, sdf):
 DEMO_DATA = str(Path(__file__).parent / "data")
 
 
+def demo_mode():
+    """True on Streamlit Cloud when DEMO_MODE=1. Local default is off."""
+    if os.environ.get("DEMO_MODE", "").strip().lower() in ("1", "true", "yes"):
+        return True
+    try:
+        v = st.secrets.get("DEMO_MODE", "")
+    except Exception:
+        return False
+    return str(v).strip().lower() in ("1", "true", "yes")
+
+
 def go_demo():
     """Only flags the transition. The wait screen does the actual switch."""
     st.session_state.pending = "demo"
@@ -851,8 +863,20 @@ CUSTOMERS = Path(__file__).parent / "customers.csv"
 
 
 def load_review_log():
-    """Append-only human resolutions. Missing file = nobody has resolved yet."""
+    """Append-only human resolutions. Missing file = nobody has resolved yet.
+
+    DEMO_MODE never reads the on-disk file — session-only list instead.
+    """
     empty = pd.DataFrame(columns=["record_id", "resolved_at", "note"])
+    if demo_mode():
+        rows = st.session_state.get("demo_review") or []
+        if not rows:
+            return empty
+        df = pd.DataFrame(rows)
+        for c in ("record_id", "resolved_at", "note"):
+            if c not in df.columns:
+                df[c] = ""
+        return df[["record_id", "resolved_at", "note"]].fillna("")
     if not REVIEW_LOG.exists() or REVIEW_LOG.stat().st_size == 0:
         return empty
     try:
@@ -921,6 +945,11 @@ def append_review(record_id, note):
         "resolved_at": datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"),
         "note": note,
     }])
+    if demo_mode():
+        log = list(st.session_state.get("demo_review") or [])
+        log.append(row.iloc[0].to_dict())
+        st.session_state.demo_review = log
+        return True
     header = (not REVIEW_LOG.exists()) or REVIEW_LOG.stat().st_size == 0
     row.to_csv(REVIEW_LOG, mode="a", header=header, index=False)
     return True
@@ -1557,7 +1586,8 @@ def render_rows(df, prefix):
                 with ba:
                     if openable:
                         if st.button("Mark as resolved", key=f"mr_{prefix}_{rid}",
-                                     help="Mark as resolved"):
+                                     help=("Live demo — saved for this session only, not written to disk"
+                                           if demo_mode() else "Mark as resolved")):
                             ss.resolve_id = rid
                             st.rerun()
                 with bb:
