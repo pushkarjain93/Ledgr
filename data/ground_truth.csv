@@ -1,0 +1,266 @@
+record_id,scenario,expected_tier,expected_status,expected_delta,expected_reason,expected_fee_type,note
+ORD-00001,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00002,T2_MDR_FEE,2,CLEARED_WITH_FEE,-4.11,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00003,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00004,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00005,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-299.75,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00006,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00007,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 3 days since order, no remittance yet"
+ORD-00008,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00009,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00010,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-3.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00011,T4_COD_FEE,4,CLEARED_WITH_FEE,-40.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00012,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00013,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00014,T2_MDR_FEE,2,CLEARED_WITH_FEE,-33.61,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00015,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00016,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 7 days since order, no remittance yet"
+ORD-00017,T2_MDR_FEE,2,CLEARED_WITH_FEE,-35.38,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00018,T2_MDR_FEE,2,CLEARED_WITH_FEE,-4.11,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00019,T4_COD_FEE,4,CLEARED_WITH_FEE,-25.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00020,T4_COD_FEE,4,CLEARED_WITH_FEE,-20.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00021,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00022,T2_MDR_FEE,2,CLEARED_WITH_FEE,-176.98,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00023,T5_NO_SETTLEMENT,5,EXCEPTION,-9999.00,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00024,T2_MDR_FEE,2,CLEARED_WITH_FEE,-117.98,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00025,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 6 days since order, no remittance yet"
+ORD-00026,T2_MDR_FEE,2,CLEARED_WITH_FEE,-22.10,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00027,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00028,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00029,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00030,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00031,T2_MDR_FEE,2,CLEARED_WITH_FEE,-17.68,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00032,T0_COD_APPROACHING,0,APPROACHING_THRESHOLD,0.00,R1_AWAITING_REMITTANCE,,"COD, 9 days since order, no remittance yet"
+ORD-00033,T2_MDR_FEE,2,CLEARED_WITH_FEE,-29.48,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00034,T3_OVERPAYMENT,3,MANUAL_REVIEW,2499.50,R5_AI_VARIANCE,,"settled above order value, possible duplicate capture"
+ORD-00035,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00036,T2_MDR_FEE,2,CLEARED_WITH_FEE,-7.06,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00037,T3_OVERPAYMENT,3,MANUAL_REVIEW,899.00,R5_AI_VARIANCE,,"settled above order value, possible duplicate capture"
+ORD-00038,T2_MDR_FEE,2,CLEARED_WITH_FEE,-115.03,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00039,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00040,T4_COD_FEE,4,CLEARED_WITH_FEE,-50.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00041,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00042,T4_COD_FEE,4,CLEARED_WITH_FEE,-20.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00043,T3_OVERCHARGED_FEE,3,MANUAL_REVIEW,-19.42,R5_AI_VARIANCE,,deduction exceeds contracted MDR band
+ORD-00044,T2_MDR_FEE,2,CLEARED_WITH_FEE,-15.90,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00045,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00046,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-999.75,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00047,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00048,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00049,T2_MDR_FEE,2,CLEARED_WITH_FEE,-7.06,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00050,T5_ORPHAN_REF,5,EXCEPTION,-3999.00,R3_UNMATCHED_AMBIGUOUS,,gateway ref absent from settlement feed
+ORD-00051,T2_MDR_FEE,2,CLEARED_WITH_FEE,-176.97,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00052,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00053,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00054,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00055,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00056,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 0 days since order, no remittance yet"
+ORD-00057,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00058,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00059,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00060,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00061,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.50,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00062,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00063,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00064,T2_MDR_FEE,2,CLEARED_WITH_FEE,-56.62,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00065,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00066,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00067,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00068,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00069,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00070,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00071,T2_MDR_FEE,2,CLEARED_WITH_FEE,-22.11,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00072,T2_MDR_FEE,2,CLEARED_WITH_FEE,-7.06,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00073,T2_MDR_FEE,2,CLEARED_WITH_FEE,-10.60,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00074,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00075,T2_MDR_FEE,2,CLEARED_WITH_FEE,-44.23,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00076,T4_COD_FEE,4,CLEARED_WITH_FEE,-25.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00077,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00078,T2_MDR_FEE,2,CLEARED_WITH_FEE,-17.68,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00079,T2_MDR_FEE,2,CLEARED_WITH_FEE,-115.03,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00080,T2_MDR_FEE,2,CLEARED_WITH_FEE,-17.68,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00081,T0_COD_OVERDUE,0,EXCEPTION,0.00,R2_REMITTANCE_OVERDUE,,"COD, 26 days since order, no remittance yet"
+ORD-00082,T4_COD_SHORTFALL,4,MANUAL_REVIEW,-1210.31,R4_PARTIAL_PAYMENT,,COD shortfall beyond collection-fee band
+ORD-00083,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00084,T2_MDR_FEE,2,CLEARED_WITH_FEE,-76.68,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00085,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00086,T2_MDR_FEE,2,CLEARED_WITH_FEE,-14.73,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00087,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00088,T4_COD_FEE,4,CLEARED_WITH_FEE,-30.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00089,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00090,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00091,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00092,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 7 days since order, no remittance yet"
+ORD-00093,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00094,T5_NO_SETTLEMENT,5,EXCEPTION,-349.99,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00095,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00096,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00097,T2_MDR_FEE,2,CLEARED_WITH_FEE,-47.18,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00098,T2_MDR_FEE,2,CLEARED_WITH_FEE,-115.03,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00099,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00100,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.50,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00101,T5_ORPHAN_REF,5,EXCEPTION,-899.50,R3_UNMATCHED_AMBIGUOUS,,gateway ref absent from settlement feed
+ORD-00102,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00103,T0_COD_OVERDUE,0,EXCEPTION,0.00,R2_REMITTANCE_OVERDUE,,"COD, 18 days since order, no remittance yet"
+ORD-00104,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00105,T5_DUPLICATE_MATCH,5,EXCEPTION,0.00,R3_UNMATCHED_AMBIGUOUS,,"two settlements claim the same gateway ref, cannot pick one"
+ORD-00106,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00107,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00108,T2_MDR_FEE,2,CLEARED_WITH_FEE,-47.18,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00109,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00110,T0_COD_APPROACHING,0,APPROACHING_THRESHOLD,0.00,R1_AWAITING_REMITTANCE,,"COD, 12 days since order, no remittance yet"
+ORD-00111,T0_COD_OVERDUE,0,EXCEPTION,0.00,R2_REMITTANCE_OVERDUE,,"COD, 25 days since order, no remittance yet"
+ORD-00112,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-449.50,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00113,T4_COD_FEE,4,CLEARED_WITH_FEE,-50.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00114,T2_MDR_FEE,2,CLEARED_WITH_FEE,-4.11,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00115,T3_OVERCHARGED_FEE,3,MANUAL_REVIEW,-62.30,R5_AI_VARIANCE,,deduction exceeds contracted MDR band
+ORD-00116,T2_MDR_FEE,2,CLEARED_WITH_FEE,-92.01,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00117,T4_COD_SHORTFALL,4,MANUAL_REVIEW,-117.64,R4_PARTIAL_PAYMENT,,COD shortfall beyond collection-fee band
+ORD-00118,T4_COD_FEE,4,CLEARED_WITH_FEE,-25.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00119,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00120,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 6 days since order, no remittance yet"
+ORD-00121,T2_MDR_FEE,2,CLEARED_WITH_FEE,-47.18,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00122,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00123,T2_MDR_FEE,2,CLEARED_WITH_FEE,-17.68,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00124,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00125,T5_NO_SETTLEMENT,5,EXCEPTION,-899.99,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00126,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00127,T0_COD_OVERDUE,0,EXCEPTION,0.00,R2_REMITTANCE_OVERDUE,,"COD, 29 days since order, no remittance yet"
+ORD-00128,T4_COD_FEE,4,CLEARED_WITH_FEE,-40.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00129,T5_NO_SETTLEMENT,5,EXCEPTION,-6499.00,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00130,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00131,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00132,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00133,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00134,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-239.60,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00135,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 3 days since order, no remittance yet"
+ORD-00136,T4_COD_FEE,4,CLEARED_WITH_FEE,-40.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00137,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00138,T5_DUPLICATE_MATCH,5,EXCEPTION,0.00,R3_UNMATCHED_AMBIGUOUS,,"two settlements claim the same gateway ref, cannot pick one"
+ORD-00139,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00140,T5_DUPLICATE_MATCH,5,EXCEPTION,0.00,R3_UNMATCHED_AMBIGUOUS,,"two settlements claim the same gateway ref, cannot pick one"
+ORD-00141,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00142,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00143,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00144,T2_MDR_FEE,2,CLEARED_WITH_FEE,-8.48,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00145,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00146,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00147,T2_MDR_FEE,2,CLEARED_WITH_FEE,-10.59,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00148,T3_OVERCHARGED_FEE,3,MANUAL_REVIEW,-13.35,R5_AI_VARIANCE,,deduction exceeds contracted MDR band
+ORD-00149,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00150,T3_OVERCHARGED_FEE,3,MANUAL_REVIEW,-211.05,R5_AI_VARIANCE,,deduction exceeds contracted MDR band
+ORD-00151,T2_MDR_FEE,2,CLEARED_WITH_FEE,-10.60,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00152,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00153,T3_OVERPAYMENT,3,MANUAL_REVIEW,1899.00,R5_AI_VARIANCE,,"settled above order value, possible duplicate capture"
+ORD-00154,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 5 days since order, no remittance yet"
+ORD-00155,T5_ORPHAN_REF,5,EXCEPTION,-899.00,R3_UNMATCHED_AMBIGUOUS,,gateway ref absent from settlement feed
+ORD-00156,T2_MDR_FEE,2,CLEARED_WITH_FEE,-47.18,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00157,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-2599.60,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00158,T4_COD_FEE,4,CLEARED_WITH_FEE,-40.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00159,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00160,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00161,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00162,T2_MDR_FEE,2,CLEARED_WITH_FEE,-115.03,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00163,T4_COD_FEE,4,CLEARED_WITH_FEE,-20.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00164,T2_MDR_FEE,2,CLEARED_WITH_FEE,-92.02,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00165,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-474.75,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00166,T2_MDR_FEE,2,CLEARED_WITH_FEE,-8.48,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00167,T2_MDR_FEE,2,CLEARED_WITH_FEE,-117.98,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00168,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00169,T2_MDR_FEE,2,CLEARED_WITH_FEE,-8.48,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00170,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00171,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.50,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00172,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00173,T4_COD_FEE,4,CLEARED_WITH_FEE,-30.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00174,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-3.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00175,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00176,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00177,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 6 days since order, no remittance yet"
+ORD-00178,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00179,T4_COD_SHORTFALL,4,MANUAL_REVIEW,-1096.09,R4_PARTIAL_PAYMENT,,COD shortfall beyond collection-fee band
+ORD-00180,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 7 days since order, no remittance yet"
+ORD-00181,T4_COD_FEE,4,CLEARED_WITH_FEE,-25.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00182,T2_MDR_FEE,2,CLEARED_WITH_FEE,-17.68,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00183,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00184,T4_COD_FEE,4,CLEARED_WITH_FEE,-25.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00185,T2_MDR_FEE,2,CLEARED_WITH_FEE,-17.68,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00186,T5_DUPLICATE_MATCH,5,EXCEPTION,0.00,R3_UNMATCHED_AMBIGUOUS,,"two settlements claim the same gateway ref, cannot pick one"
+ORD-00187,T5_NO_SETTLEMENT,5,EXCEPTION,-3999.99,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00188,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00189,T4_COD_FEE,4,CLEARED_WITH_FEE,-50.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00190,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00191,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.50,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00192,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 2 days since order, no remittance yet"
+ORD-00193,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00194,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00195,T3_OVERCHARGED_FEE,3,MANUAL_REVIEW,-382.71,R5_AI_VARIANCE,,deduction exceeds contracted MDR band
+ORD-00196,T0_COD_APPROACHING,0,APPROACHING_THRESHOLD,0.00,R1_AWAITING_REMITTANCE,,"COD, 13 days since order, no remittance yet"
+ORD-00197,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00198,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-3.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00199,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00200,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00201,T4_COD_FEE,4,CLEARED_WITH_FEE,-25.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00202,T5_ORPHAN_REF,5,EXCEPTION,-899.50,R3_UNMATCHED_AMBIGUOUS,,gateway ref absent from settlement feed
+ORD-00203,T2_MDR_FEE,2,CLEARED_WITH_FEE,-8.48,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00204,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-3.00,,GATEWAY_FEE,"flat netbanking fee, inside band"
+ORD-00205,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00206,T0_COD_OVERDUE,0,EXCEPTION,0.00,R2_REMITTANCE_OVERDUE,,"COD, 22 days since order, no remittance yet"
+ORD-00207,T5_NO_SETTLEMENT,5,EXCEPTION,-899.50,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00208,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00209,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-149.87,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00210,T2_MDR_FEE,2,CLEARED_WITH_FEE,-4.11,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00211,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00212,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00213,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00214,T4_COD_SHORTFALL,4,MANUAL_REVIEW,-174.96,R4_PARTIAL_PAYMENT,,COD shortfall beyond collection-fee band
+ORD-00215,T4_COD_FEE,4,CLEARED_WITH_FEE,-20.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00216,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00217,T3_OVERPAYMENT,3,MANUAL_REVIEW,6499.50,R5_AI_VARIANCE,,"settled above order value, possible duplicate capture"
+ORD-00218,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00219,T2_MDR_FEE,2,CLEARED_WITH_FEE,-29.48,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00220,T4_COD_FEE,4,CLEARED_WITH_FEE,-40.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00221,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00222,T5_NO_SETTLEMENT,5,EXCEPTION,-599.50,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00223,T0_COD_APPROACHING,0,APPROACHING_THRESHOLD,0.00,R1_AWAITING_REMITTANCE,,"COD, 13 days since order, no remittance yet"
+ORD-00224,T4_COD_SHORTFALL,4,MANUAL_REVIEW,-173.28,R4_PARTIAL_PAYMENT,,COD shortfall beyond collection-fee band
+ORD-00225,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00226,T4_DIRECT_TRANSFER,4,AUTO_CLEARED,0.00,,,"direct bank transfer, no gateway ref, matched on UTR"
+ORD-00227,T2_MDR_FEE,2,CLEARED_WITH_FEE,-29.48,,GATEWAY_FEE,"MDR + 18% GST, inside contracted band"
+ORD-00228,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00229,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00230,T4_COD_SHORTFALL,4,MANUAL_REVIEW,-1054.61,R4_PARTIAL_PAYMENT,,COD shortfall beyond collection-fee band
+ORD-00231,T5_ORPHAN_REF,5,EXCEPTION,-3999.00,R3_UNMATCHED_AMBIGUOUS,,gateway ref absent from settlement feed
+ORD-00232,T3_OVERCHARGED_FEE,3,MANUAL_REVIEW,-38.28,R5_AI_VARIANCE,,deduction exceeds contracted MDR band
+ORD-00233,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00234,T3_PARTIAL_SETTLEMENT,3,MANUAL_REVIEW,-4999.75,R4_PARTIAL_PAYMENT,,"large shortfall, likely refund or chargeback netted off"
+ORD-00235,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00236,T0_COD_AWAITING,0,AWAITING_REMITTANCE,0.00,R1_AWAITING_REMITTANCE,,"COD, 6 days since order, no remittance yet"
+ORD-00237,T0_COD_APPROACHING,0,APPROACHING_THRESHOLD,0.00,R1_AWAITING_REMITTANCE,,"COD, 12 days since order, no remittance yet"
+ORD-00238,T0_COD_APPROACHING,0,APPROACHING_THRESHOLD,0.00,R1_AWAITING_REMITTANCE,,"COD, 10 days since order, no remittance yet"
+ORD-00239,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00240,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00241,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00242,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00243,T3_OVERCHARGED_FEE,3,MANUAL_REVIEW,-154.95,R5_AI_VARIANCE,,deduction exceeds contracted MDR band
+ORD-00244,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00245,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00246,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00247,T0_COD_APPROACHING,0,APPROACHING_THRESHOLD,0.00,R1_AWAITING_REMITTANCE,,"COD, 10 days since order, no remittance yet"
+ORD-00248,T5_NO_SETTLEMENT,5,EXCEPTION,-3999.00,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00249,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00250,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00251,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00252,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00253,T4_COD_FEE,4,CLEARED_WITH_FEE,-25.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00254,T4_COD_FEE,4,CLEARED_WITH_FEE,-50.00,,COD_COLLECTION_FEE,"COD collection fee, inside COD band"
+ORD-00255,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00256,T5_NO_SETTLEMENT,5,EXCEPTION,-349.50,R3_UNMATCHED_AMBIGUOUS,,no settlement record found for this order
+ORD-00257,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
+ORD-00258,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
+ORD-00259,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.50,,GATEWAY_FEE,"flat netbanking fee, inside band"
+STL-X0001,T5_UNKNOWN_CREDIT,5,EXCEPTION,3930.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0002,T5_UNKNOWN_CREDIT,5,EXCEPTION,7898.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0003,T5_UNKNOWN_CREDIT,5,EXCEPTION,1422.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0004,T5_UNKNOWN_CREDIT,5,EXCEPTION,2213.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0005,T5_UNKNOWN_CREDIT,5,EXCEPTION,7209.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0006,T5_UNKNOWN_CREDIT,5,EXCEPTION,1407.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
