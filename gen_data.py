@@ -1,5 +1,5 @@
 """
-ReconAI — synthetic data generator.
+Ledgr — synthetic data generator.
 
 Produces three files in data/:
 
