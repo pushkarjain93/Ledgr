@@ -291,3 +291,206 @@ First:
 - verify what has already been implemented
 - identify the exact insertion point for the AI forensic workflow
 - then agree on the implementation plan
+
+---
+
+## 15. AI Implementation Architecture (Updated Aug 26, 2026)
+
+### Core Principle: Hybrid Approach
+
+The AI agent does NOT replace the deterministic engine.
+
+**Architecture layers:**
+1. Deterministic engine (engine.py) - handles 85-90% via Tiers 0-2
+2. AI Forensic Agent (new) - investigates remaining 10-15% (Tier 3)
+3. Human review - final authority on ambiguous cases
+
+### When AI is Used vs Not Used
+
+**DO NOT use AI for (Tier 0-2):**
+- Exact amount matches
+- Known fee deductions within tolerance (2-3%)
+- Direct UTR/gateway_ref matches
+- COD within collection window (0-14 days)
+
+**USE AI for (Tier 3):**
+- Amount variance outside fee tolerance
+- Unknown/complex deduction patterns
+- Ambiguous matches (multiple candidates)
+- Cases requiring multi-step reasoning
+- Generating human-readable explanations
+
+**AI Technology Choice:**
+- Using: LLM (Claude API) for reasoning + explanation
+- NOT using: Traditional ML (needs training data)
+- NOT using: Full agentic AI (too complex for scope)
+- Optional: Light agentic features (AI plans, human executes)
+
+### Real-World Data Challenges
+
+**DO NOT assume perfect data quality:**
+
+COD reconciliation reality:
+- Only 20% have perfect courier reports with order IDs
+- 80% have bulk remittances (1 UTR for multiple orders)
+- Courier reports often missing, incomplete, or wrong format
+- Multiple couriers = multiple incompatible formats
+- bank_utr not always present (bulk payments, system lag)
+
+Online payment reality:
+- Razorpay API sometimes has lag (24-48h for chargebacks)
+- Customers can change payment method at checkout
+- Gateway fees vary (international cards, special categories)
+- Refunds/disputes not always immediately visible
+
+**The AI layer exists specifically to handle these imperfect data scenarios.**
+
+### Customer History as Secondary Evidence
+
+Customer history is NOT primary matching criteria.
+
+**Primary matching:** UTR, gateway_ref, amount
+**Secondary (AI uses):** Customer payment history, behavior patterns
+
+**Valid uses:**
+1. Breaking ties in ambiguous matches (2 customers same name)
+2. Fraud risk assessment (new customer with large order)
+3. Behavior pattern validation (customer switched payment methods)
+4. Trust scoring (100% payment history vs 0%)
+
+**Invalid uses:**
+- ❌ Matching by name alone without amount/date/mode
+- ❌ Auto-clearing based only on good history
+- ❌ Ignoring actual transaction data
+
+### Confidence-Based Routing
+
+AI must provide confidence scores with every diagnosis:
+
+**90-100%:** Auto-clear (with full evidence and explanation)
+- Example: International card verified via API, fee matches exactly 5%
+
+**70-89%:** Suggest match but flag for review
+- Example: Ambiguous match, strong evidence for one candidate
+
+**40-69%:** Present options, require human decision
+- Example: Multiple plausible explanations, incomplete evidence
+
+**0-39%:** Flag as needs investigation
+- Example: No matching candidates or conflicting evidence
+
+**Always err on side of caution for financial data.**
+
+### Razorpay API Integration
+
+API is for evidence collection, not primary matching.
+
+**What API provides:**
+- Payment status, actual fee charged
+- Card type (international/domestic)
+- Refunds, disputes, chargebacks
+- Payment method details
+
+**How used:**
+1. Tier 3 variance → Call API automatically
+2. AI analyzes: order + settlement + API data
+3. Generate explanation with evidence
+4. Route based on confidence
+
+**If API fails:**
+- Never auto-clear
+- Flag: "Could not verify (API unavailable)"
+- Provide manual review option
+
+### Implementation Phases
+
+**Phase 1 (MVP for buildathon):**
+- Replace `_llm_diagnose()` stub with Claude API
+- Evidence collector (CSV data + optional Razorpay API)
+- Structured output: reason, confidence, evidence, actions
+- Confidence-based routing
+
+**Phase 2 (UI):**
+- Show AI investigations in dashboard
+- "AI Auto-Cleared" separate category
+- Evidence panels (what checked, what found)
+- Draft messages (emails to stakeholders)
+
+**Phase 3 (Optional):**
+- Pattern detection (systematic courier delays, etc.)
+- Bulk actions (approve multiple AI suggestions)
+- Light agentic features
+
+### Buildathon Value Proposition
+
+**Focus on:**
+"AI explains payment variances that deterministic rules cannot handle, reducing manual investigation from 2-3 hours to 15-20 minutes per batch."
+
+**Demo scenarios:**
+1. International card - AI verifies 5% MDR via API, auto-clears
+2. Large unknown variance - AI investigates, drafts escalation email
+3. Ambiguous COD match - AI weighs evidence, suggests match with confidence
+4. Pattern detection - AI notices systematic gateway overcharging
+
+**NOT claiming:**
+- AI matches all payments (false - deterministic handles 90%)
+- AI replaces engine (false - augments only)
+- AI works on perfect data (false - handles messy data)
+
+### Known Issues and Loopholes Addressed
+
+**Issue 1:** "Why not just match by UTR for COD?"
+- Answer: We do when available (primary method)
+- AI only needed when UTR missing (bulk remittances, system lag)
+
+**Issue 2:** "Delivery guy knows amount, why mismatch?"
+- Answer: Real problems - customer complaints, doorstep returns, courier penalties, cash errors
+- AI helps investigate these edge cases
+
+**Issue 3:** "Don't couriers send order lists?"
+- Answer: Only 20% of merchants get clean reports
+- 80% deal with bulk payments, missing reports, format mismatches
+- AI bridges the gap
+
+### Critical Rules for AI Implementation
+
+1. **Never auto-clear without justification**
+   - Confidence alone insufficient
+   - Must have: complete evidence + low risk + validated pattern
+
+2. **Never invent evidence**
+   - If API unavailable, state that
+   - If data missing, acknowledge gap
+   - Uncertainty is acceptable, fabrication is not
+
+3. **Preserve human authority**
+   - Ambiguous cases → human decides
+   - High-risk cases → human approves
+   - AI assists, doesn't replace judgment
+
+4. **Be conservative**
+   - When in doubt, flag for review
+   - Financial accuracy > automation rate
+   - Under-promise, over-deliver on confidence
+
+---
+
+## 16. Session Notes (Aug 26, 2026)
+
+**Key learnings from user discussion:**
+- User has strong understanding of ideal COD flow (UTR matching)
+- User correctly identified loopholes in oversimplified examples
+- User wants AI for real problems (messy data), not perfect scenarios
+- Focus shifted from "AI matches everything" to "AI handles edge cases"
+
+**Architectural clarity achieved:**
+- Hybrid approach (if-else + LLM + human) fully defined
+- When AI is needed vs not needed clearly documented
+- Real-world data quality challenges acknowledged
+- Customer history usage scoped correctly (secondary, not primary)
+
+**Next steps:**
+- Finalize buildathon scope (online payments with Razorpay API?)
+- Implement Phase 1: Core AI forensic agent
+- Design modern UI (move away from table-heavy Streamlit)
+- Create realistic demo scenarios
