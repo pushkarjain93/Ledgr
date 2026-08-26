@@ -1,16 +1,18 @@
 """
 Ledgr Main Application
-Entry point with authentication flow.
+Entry point with authentication flow. Visual language shared with login.py
+via theme.py.
 """
 
 import streamlit as st
 from auth import is_authenticated, get_current_merchant, logout
 from login import show_login_page
+from theme import base_css, html, INK, BODY, DIM, LINE, SOFT, MATCHED, WARN, WARN_BG, WARN_BD
 
 # Page config
 st.set_page_config(
     page_title="Ledgr - AI Reconciliation",
-    page_icon="📊",
+    page_icon="L",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -27,284 +29,161 @@ def show_main_dashboard():
 
     merchant = get_current_merchant(st.session_state)
 
-    # Apply consistent theme
-    st.markdown("""
+    st.markdown(base_css(), unsafe_allow_html=True)
+    st.markdown(html(f"""
         <style>
-        /* Color theme - Purple gradient */
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --background: #ffffff;
-            --surface: #f8fafc;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-        }
+        .block-container {{padding: 1.5rem 3rem 4rem; max-width: 1240px;}}
 
-        /* Hide Streamlit branding */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        .stDeployButton {display: none;}
-
-        /* Header bar */
-        .header-bar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px 40px;
-            color: white;
-            border-radius: 0;
-            margin: -80px -80px 30px -80px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .app-logo {
-            font-size: 32px;
-        }
-
-        .app-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .company-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .company-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        /* Card styling */
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 20px;
-        }
-
-        .card-header {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 16px;
-        }
-
-        /* Metric cards */
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .metric-value {
-            font-size: 36px;
-            font-weight: 700;
-            margin: 10px 0;
-        }
-
-        .metric-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        /* Buttons */
-        .stButton > button {
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .stButton > button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        /* Status badges */
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status-connected {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-disconnected {
-            background: #fee2e2;
-            color: #991b1b;
-        }
+        .header-wordmark {{
+            font-size: 25px; font-weight: 600; letter-spacing: -.035em; color: {INK};
+        }}
+        .company-badge {{
+            display: inline-flex; align-items: center; gap: 8px;
+            background: {SOFT}; border: 1px solid {LINE}; padding: 6px 14px;
+            border-radius: 999px; font-size: 13px; font-weight: 500; color: {BODY};
+        }}
+        .metric-card {{
+            background: #fff; border: 1px solid {LINE}; border-radius: 8px;
+            padding: 18px 20px;
+        }}
+        .metric-value {{
+            font-size: 32px; font-weight: 600; letter-spacing: -.03em;
+            color: {INK}; line-height: 1.15; margin: 6px 0 2px;
+        }}
+        .metric-label {{
+            font-size: 11px; font-weight: 600; letter-spacing: .06em;
+            text-transform: uppercase; color: {DIM};
+        }}
+        .status-badge {{
+            display: inline-flex; align-items: center; border-radius: 999px;
+            padding: 3px 10px; font-size: 11px; font-weight: 500;
+        }}
+        .status-connected {{background: #E7F5EF; color: {MATCHED};}}
+        .status-disconnected {{background: {WARN_BG}; color: {WARN}; border: 1px solid {WARN_BD};}}
+        .sec {{
+            font-size: 11.5px; font-weight: 600; letter-spacing: .1em;
+            text-transform: uppercase; color: {DIM}; margin: 40px 0 16px;
+        }}
         </style>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     # Header
-    st.markdown(f"""
-        <div class="header-bar">
-            <div class="header-left">
-                <div class="app-logo">📊</div>
-                <div class="app-title">Ledgr</div>
-            </div>
-            <div class="company-info">
-                <div class="company-badge">{merchant['logo_emoji']} {merchant['company_name']}</div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    with st.container(border=True):
+        hcol1, hcol2 = st.columns([3, 2])
+        with hcol1:
+            st.markdown('<div class="header-wordmark">Ledgr</div>', unsafe_allow_html=True)
+        with hcol2:
+            st.markdown(
+                f'<div style="text-align:right;">'
+                f'<span class="company-badge">{merchant["logo_emoji"]} '
+                f'{merchant["company_name"]}</span></div>',
+                unsafe_allow_html=True,
+            )
 
     # Logout button in sidebar
     with st.sidebar:
         st.markdown("### Account")
         st.write(f"**{merchant['company_name']}**")
-        st.write(f"📧 {merchant['email']}")
-        st.write(f"🏢 {merchant['industry']}")
+        st.write(f"{merchant['email']}")
+        st.write(f"{merchant['industry']}")
         st.markdown("---")
-        if st.button("🚪 Logout", use_container_width=True):
+        if st.button("Logout", use_container_width=True):
             logout(st.session_state)
             st.rerun()
 
     # Main content
-    st.markdown("## 🎯 Dashboard")
+    st.markdown("## Dashboard")
 
     # Metrics row
     col1, col2, col3, col4 = st.columns(4)
 
-    with col1:
-        st.markdown("""
-            <div class="metric-card">
-                <div class="metric-label">Total Orders</div>
-                <div class="metric-value">1,247</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        st.markdown("""
-            <div class="metric-card">
-                <div class="metric-label">Auto-Cleared</div>
-                <div class="metric-value">1,089</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with col3:
-        st.markdown("""
-            <div class="metric-card">
-                <div class="metric-label">AI Resolved</div>
-                <div class="metric-value">23</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with col4:
-        st.markdown("""
-            <div class="metric-card">
-                <div class="metric-label">Need Review</div>
-                <div class="metric-value">5</div>
-            </div>
-        """, unsafe_allow_html=True)
+    metrics = [
+        ("Total Orders", "1,247"),
+        ("Auto-Cleared", "1,089"),
+        ("AI Resolved", "23"),
+        ("Need Review", "5"),
+    ]
+    for col, (label, value) in zip((col1, col2, col3, col4), metrics):
+        with col:
+            st.markdown(html(f"""
+                <div class="metric-card">
+                    <div class="metric-label">{label}</div>
+                    <div class="metric-value">{value}</div>
+                </div>
+            """), unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Integrations status
+    # Integrations status + Last Sync — built with st.container(border=True)
+    # so the "Sync Now" button actually nests inside the card. (The previous
+    # version opened a <div class="card"> in one st.markdown call and closed
+    # it in another; Streamlit renders each markdown call as its own isolated
+    # HTML fragment, so that div never wrapped anything — no border ever
+    # showed up.)
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("""
-            <div class="card">
-                <div class="card-header">🔗 Integrations</div>
-        """, unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown('<div style="font-size:15px; font-weight:600; '
+                        f'color:{INK}; margin-bottom:16px;">Integrations</div>',
+                        unsafe_allow_html=True)
 
-        st.markdown(f"""
-            <div style="margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+            st.markdown(html(f"""
+                <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <strong>Razorpay</strong><br>
-                        <span style="font-size: 12px; color: #64748b;">{merchant['razorpay_key_id']}</span>
+                        <strong style="font-size:13.5px;">Razorpay</strong><br>
+                        <span style="font-size:12px; color:{DIM};">{merchant['razorpay_key_id']}</span>
                     </div>
-                    <span class="status-badge status-connected">✓ Connected</span>
+                    <span class="status-badge status-connected">Connected</span>
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
-            <div style="margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <strong>Shopify</strong><br>
-                        <span style="font-size: 12px; color: #64748b;">{merchant['shopify_url']}</span>
+                        <strong style="font-size:13.5px;">Shopify</strong><br>
+                        <span style="font-size:12px; color:{DIM};">{merchant['shopify_url']}</span>
                     </div>
-                    <span class="status-badge status-connected">✓ Connected</span>
+                    <span class="status-badge status-connected">Connected</span>
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
 
     with col2:
-        st.markdown("""
-            <div class="card">
-                <div class="card-header">🔄 Last Sync</div>
-        """, unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown('<div style="font-size:15px; font-weight:600; '
+                        f'color:{INK}; margin-bottom:16px;">Last Sync</div>',
+                        unsafe_allow_html=True)
 
-        st.markdown("""
-            <div style="margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span><strong>Orders</strong></span>
-                    <span style="color: #64748b;">2 mins ago</span>
+            st.markdown(html(f"""
+                <div style="margin-bottom:12px; display:flex; justify-content:space-between;">
+                    <span style="font-size:13.5px;"><strong>Orders</strong></span>
+                    <span style="color:{DIM}; font-size:13px;">2 mins ago</span>
                 </div>
-            </div>
-            <div style="margin-bottom: 15px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span><strong>Settlements</strong></span>
-                    <span style="color: #64748b;">5 mins ago</span>
+                <div style="margin-bottom:15px; display:flex; justify-content:space-between;">
+                    <span style="font-size:13.5px;"><strong>Settlements</strong></span>
+                    <span style="color:{DIM}; font-size:13px;">5 mins ago</span>
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
 
-        st.button("🔄 Sync Now", use_container_width=True, type="primary")
-
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.button("Sync Now", use_container_width=True, type="primary")
 
     # Quick actions
-    st.markdown("## 🚀 Quick Actions")
+    st.markdown('<div class="sec">Quick actions</div>', unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("▶️ Run Reconciliation", use_container_width=True):
-            st.info("🔄 Starting reconciliation...")
+        if st.button("Run Reconciliation", use_container_width=True):
+            st.info("Starting reconciliation...")
 
     with col2:
-        if st.button("📊 View Reports", use_container_width=True):
-            st.info("📈 Loading reports...")
+        if st.button("View Reports", use_container_width=True):
+            st.info("Loading reports...")
 
     with col3:
-        if st.button("⚙️ Settings", use_container_width=True):
-            st.info("⚙️ Opening settings...")
+        if st.button("Settings", use_container_width=True):
+            st.info("Opening settings...")
 
     # Placeholder for future content
     st.markdown("---")
-    st.info("💡 **Coming soon:** AI investigation dashboard, detailed reports, and more!")
+    st.info("**Coming soon:** AI investigation dashboard, detailed reports, and more.")
 
 
 # Main app logic

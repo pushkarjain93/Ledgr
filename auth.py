@@ -56,13 +56,16 @@ def authenticate(email: str, password: str) -> tuple[bool, dict | None]:
         (success: bool, merchant_data: dict | None)
     """
     email = email.strip().lower()
+    password = password.strip()
 
     if email not in DEMO_MERCHANTS:
         return False, None
 
     merchant = DEMO_MERCHANTS[email]
 
-    if merchant["password"] == password:
+    # Case-insensitive: these are throwaway demo credentials, not real
+    # secrets, and caps-lock/autofill shouldn't break the demo.
+    if merchant["password"].lower() == password.lower():
         # Don't return password in session data
         session_data = {k: v for k, v in merchant.items() if k != "password"}
         session_data["email"] = email
