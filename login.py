@@ -143,7 +143,8 @@ def show_login_page():
                     if not email or not password:
                         st.error("Please enter both email and password.")
                     else:
-                        success, merchant_data = authenticate(email, password)
+                        with st.spinner("Signing in…"):
+                            success, merchant_data = authenticate(email, password)
 
                         if success:
                             st.session_state.authenticated = True

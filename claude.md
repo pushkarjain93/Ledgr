@@ -305,6 +305,9 @@ AI can help: Draft escalation email to courier when overdue.
 
 ### Never Auto-Clear Without Justification
 
+
+
+
 High confidence (>90%) alone is not enough to auto-clear.
 
 **Required for auto-clearing:**
@@ -493,3 +496,32 @@ Grounded directly in `engine.py`'s actual tiers/paths, not abstract categories:
 
 ### Why call real APIs at all — the honest pitch, for judges
 Verified: payment reconciliation via API (vs. manual CSV) is a real, established SaaS category (Airwallex, Payrails, Taxilla etc. all sell this, with the exact same "legacy = manual CSV, modern = API-native" framing). But be precise about *which* API call is the strong argument: the **bulk settlement fetch is useful automation but table-stakes** — every competitor claims it. The **defensible, hard-to-replicate value is the Tier-3 payment-fetch evidence call** — pulling live, on-demand detail (refund status, dispute status, card type) for one specific flagged payment, which a static CSV export can never contain no matter how automated. Pitch this as "the API matters because our AI agent needs live per-transaction evidence," not "we automated an upload click."
+
+---
+
+## Session Update (Aug 27, 2026): Dashboard rebuilt as HTML shell + minimal widgets
+
+Redesigned `app_new.py`'s post-login dashboard end to end (command-center layout: header with account dropdown, three source-status cards, last-reconciliation block, Sync & Reconcile CTA, activity log). Getting the layout precise took several rounds of real bugs — the lessons below are worth reading *before* touching this page's CSS again, not after re-discovering them.
+
+### The core architectural lesson: HTML shell for structure, st.columns() for placement, CSS only for visual styling
+
+Early attempts tried to control layout (centering, right-alignment, overlay positioning) by overriding a Streamlit container's own `display`/`position` via a `.st-key-*` class. This lost the specificity fight against Streamlit's own CSS almost every time — three separate bugs (popover spacing, avatar landing on the wrong side, a button pinned to the page edge) all traced back to this. The fix that actually held: use real `st.columns()` for *where things sit* (Streamlit's own layout primitive, reliable every time it's been tried on this page), and scope custom CSS to *only* the innermost visual details (a button's own border-radius/color/padding) — never a container's own layout-determining properties. When in doubt, add a layout-only `st.columns()` split rather than fight a container's `display`/`position` with `!important`.
+
+### Streamlit's current testid naming — verify camelCase, don't guess older names
+`data-testid="element-container"` does not exist in this Streamlit version and silently matches nothing — a CSS rule targeting it will look plausible and simply do nothing, which is a nasty silent-failure shape (no error, just no effect). The correct current testid is `stElementContainer`, matching the camelCase convention already confirmed working elsewhere (`stVerticalBlock`, `stButton`, `stToolbar`, `stDecoration`, `stStatusWidget`). If a spacing/margin override targeting a testid appears to do nothing, suspect an outdated/wrong testid name first, before assuming a specificity problem.
+
+### Overlay positioning (dropdown menus, popovers) that doesn't shift page content
+A real Streamlit widget rendered conditionally in normal document flow will push everything below it down the page when it appears — there is no way around this while it stays in-flow, no matter how it's styled. For a true overlay (dropdown, tooltip, popover) that must not shift layout:
+1. Give it `position: absolute` — this removes it from flow entirely, so it neither pushes siblings down nor expands its own parent's height.
+2. Anchor it to a small, tightly-scoped positioned ancestor — nest it inside the same small `st.container(key=...)` as the specific element it should hang off of (e.g. an avatar button), not a wide ancestor (a whole header row). A wide/ambiguous positioning context is what caused the avatar-dropdown to drift to the wrong side in an earlier attempt.
+3. But watch out: if that small ancestor also has an explicit `width` set (e.g. 36px to size an avatar circle), an element `position:absolute` inside it can still inherit that width constraint in practice and render squeezed down to a sliver (symptom: text wrapping one character per line). Fix: introduce one more layer — a wrapping container with no width constraint of its own (e.g. `rightslot`) as the actual positioned ancestor, with the width-constrained element (`avatarbtn`) and the overlay (`accountmenu`) as siblings inside it, not nested inside the narrow one.
+4. `st.popover()` exists and works, but its rendered content sits in a portal-like structure whose internal testids proved unreliable to target confidently — after two failed styling attempts, it was dropped in favor of hand-rolling the toggle+overlay with `st.session_state` + a plain `st.button()`, which gave full control.
+
+### Centering with st.columns()
+`st.columns([2, 3, 1])` does not put the middle column's center at the row's true center — asymmetric flanks shift the middle column's own midpoint away from 50%. For true centering, flanks must be equal: `st.columns([1, 3, 1])`.
+
+### Streamlit's own theme color can bleed through as a focus/hover state
+A button styled only for its resting state can still show Streamlit's theme `primaryColor` (set in `.streamlit/config.toml`, currently a blue) on `:hover`/`:focus`/`:active`, since those pseudo-states aren't touched by a plain resting-state override. If a button unexpectedly shows the theme accent color when clicked, explicitly override `:hover`, `:focus`, and `:active` too, not just the base state.
+
+### Login to dashboard transition
+Streamlit reruns the entire script on every navigation — there is a real network round-trip on every `st.rerun()` that cannot be eliminated while staying on Streamlit (a constraint the user explicitly confirmed: keep Streamlit, don't introduce a new frontend framework). What's achievable instead: a CSS fade-in on `[data-testid="stMain"]` so new content eases in rather than popping in abruptly (in `theme.py`'s `base_css()`, shared by every page), and an explicit `st.spinner("Signing in...")` around the auth check so the wait is communicated rather than feeling like unexplained lag. This masks the abruptness; it does not make the round-trip itself instant — say so plainly if asked again, don't imply it's fully solved.

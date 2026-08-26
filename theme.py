@@ -42,6 +42,15 @@ def base_css() -> str:
         }}
         .stApp {{background:{SOFT}; color:{INK};}}
 
+        /* Streamlit swaps the whole page on every rerun (login -> dashboard
+           included) -- there's a real network round-trip that can't be
+           eliminated without leaving Streamlit's execution model. This
+           doesn't remove that latency, it masks the abruptness: new
+           content eases in instead of popping in, so the wait reads as
+           intentional rather than a jarring flash. */
+        @keyframes lg-fade-in {{from {{opacity:0; transform:translateY(4px);}} to {{opacity:1; transform:none;}}}}
+        [data-testid="stMain"] {{animation: lg-fade-in .25s ease-out;}}
+
         /* Hide all Streamlit chrome, including the newer Deploy toolbar */
         #MainMenu, footer, .stDeployButton {{visibility:hidden; display:none;}}
         header[data-testid="stHeader"] {{background:transparent; height:0;}}
