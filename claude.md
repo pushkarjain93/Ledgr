@@ -380,8 +380,54 @@ High confidence (>90%) alone is not enough to auto-clear.
 - Couriers should send order lists (in ideal case)
 - → Agreed: AI is for the 80% "messy data" cases, not the 20% "perfect data" cases
 
-**Next steps:**
-- Finalize buildathon scope (online payment variances with Razorpay API focus?)
-- Build Phase 1: Core AI forensic agent
-- Design modern UI (move away from heavy Streamlit tables)
-- Create demo scenarios that showcase AI value on real problems
+**Major Architecture Shift (Aug 26, 2026 afternoon):**
+
+User proposed moving from **CSV upload tool** to **SaaS platform** with:
+1. **Login/authentication** - Company-specific SSO credentials
+2. **Auto-fetch orders** - From merchant's e-commerce platform (Shopify/WooCommerce/custom API)
+3. **Auto-fetch settlements** - From Razorpay API directly
+4. **Incremental sync** - Only fetch new data since last sync (timestamp-based)
+5. **Multi-merchant isolation** - Each company sees only their data
+
+**Critical implementation decisions for buildathon (10 days left):**
+
+### What to Build (REAL):
+1. **Simple login** (hardcoded 3-4 demo accounts, NOT full OAuth SSO)
+2. **Real Razorpay API integration** (fetch settlements + payment details)
+3. **Mock Shopify/merchant API** (simulate with pre-prepared realistic JSON data)
+4. **Settings page** (show integration status, API key config)
+5. **Auto-sync dashboard** ("Sync Now" button, progress indicators)
+6. **Keep existing engine.py** (DO NOT rewrite reconciliation logic)
+7. **CSV upload backup** (safety net if demo breaks)
+
+### What NOT to Build (too complex for timeline):
+- ❌ Real OAuth/SSO with Google/Microsoft
+- ❌ Real Shopify/WooCommerce API integration
+- ❌ Database with encryption (hardcode credentials for demo)
+- ❌ Webhook infrastructure
+- ❌ Multi-gateway support beyond Razorpay
+
+### Incremental Sync Strategy:
+```python
+# Store last_sync_timestamp per merchant
+# Fetch only NEW data:
+GET /api/orders?created_after=2026-08-26T10:30:00Z
+GET /v1/settlements?from=1724665800
+
+# Razorpay API naturally isolates by API key
+# Filter Shopify orders by payment_gateway_names = ["razorpay"]
+```
+
+### 10-Day Timeline:
+- Day 1-2: Login screen + session management
+- Day 3-4: Real Razorpay API integration (test mode)
+- Day 5: Mock merchant API (realistic demo data)
+- Day 6: Settings page (integrations UI)
+- Day 7: Auto-sync dashboard
+- Day 8-9: AI Forensic Agent (Claude API)
+- Day 10: Polish + demo prep
+
+**Next immediate task:**
+- Update PROJECT_CONTEXT.md with new architecture
+- Start building login screen (decide: Streamlit vs React)
+- Create 3-4 demo merchant accounts

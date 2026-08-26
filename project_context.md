@@ -489,8 +489,153 @@ API is for evidence collection, not primary matching.
 - Real-world data quality challenges acknowledged
 - Customer history usage scoped correctly (secondary, not primary)
 
-**Next steps:**
-- Finalize buildathon scope (online payments with Razorpay API?)
-- Implement Phase 1: Core AI forensic agent
-- Design modern UI (move away from table-heavy Streamlit)
-- Create realistic demo scenarios
+---
+
+## 17. Major Architecture Shift: CSV Tool → SaaS Platform (Aug 26, 2026)
+
+### New Vision
+
+Transform Ledgr from a **CSV upload tool** to a **multi-tenant SaaS platform** with auto-sync capabilities.
+
+### Core Changes
+
+**From:**
+```
+User uploads orders.csv + settlements.csv → Reconciliation → Results
+```
+
+**To:**
+```
+Merchant logs in → Auto-sync from APIs → Reconciliation → Dashboard
+```
+
+### Key Features
+
+1. **Authentication Layer**
+   - Company-specific login (3-4 demo accounts for buildathon)
+   - Session management
+   - Multi-tenancy (each merchant sees only their data)
+
+2. **Auto-Fetch Orders**
+   - From merchant's e-commerce platform
+   - Target: Shopify, WooCommerce, custom APIs
+   - **Buildathon scope:** Mock Shopify API with realistic demo data
+
+3. **Auto-Fetch Settlements**
+   - From Razorpay API (REAL integration)
+   - Uses merchant's Razorpay API keys
+   - Razorpay naturally isolates data by API key
+
+4. **Incremental Sync Strategy**
+   - Store `last_sync_timestamp` per merchant
+   - Fetch only NEW records: `created_after=last_sync_timestamp`
+   - Prevents re-fetching entire dataset
+   - **Example:**
+     ```python
+     # Only fetch orders created after last sync
+     GET /api/orders?created_after=2026-08-26T10:30:00Z
+     
+     # Razorpay settlements from timestamp
+     GET /v1/settlements?from=1724665800
+     ```
+
+5. **Multi-Merchant Data Isolation**
+   - Each merchant has separate Razorpay API credentials
+   - Filter e-commerce orders by `payment_gateway_names = ["razorpay"]`
+   - Prevents cross-merchant data leakage
+
+### Critical User Questions Addressed
+
+**Q1: Won't the system re-fetch all orders every time?**
+- A: No. Timestamp-based filtering ensures only NEW orders are fetched.
+- Stored per merchant: `last_order_sync_at`, `last_settlement_sync_at`
+
+**Q2: How to ensure orders belong to correct merchant when multiple merchants use same platform?**
+- A: Match by `gateway_ref_id` (Razorpay payment ID)
+- Each merchant's Razorpay API key only returns THEIR settlements
+- Filter e-commerce orders to only those paid via Razorpay
+
+**Q3: What if merchant uses multiple payment gateways?**
+- A: Filter orders by `payment_gateway_names` field
+- Only process orders where `"razorpay" in payment_gateway_names`
+- Ignore Stripe/PayPal/COD orders (out of scope for Razorpay buildathon)
+
+### Implementation Strategy (10 Days)
+
+**What to build (REAL):**
+1. ✅ **Simple login** - Hardcode 3-4 demo accounts (no OAuth/SSO)
+2. ✅ **Real Razorpay API** - Fetch settlements + payment details (test mode)
+3. ✅ **Mock merchant API** - Pre-prepared realistic Shopify-format JSON
+4. ✅ **Settings page** - Show integration status, API key config
+5. ✅ **Auto-sync dashboard** - "Sync Now" button with progress indicators
+6. ✅ **Keep engine.py untouched** - Existing reconciliation logic stays
+7. ✅ **CSV upload backup** - Safety net for demo
+
+**What NOT to build (too complex):**
+- ❌ Real OAuth SSO (Google/Microsoft)
+- ❌ Real Shopify/WooCommerce API integration
+- ❌ Database with encrypted credentials
+- ❌ Webhook infrastructure
+- ❌ Multi-gateway support
+
+### Timeline (10 Days)
+
+- **Day 1-2:** Login screen + session management
+- **Day 3-4:** Real Razorpay API integration (test mode)
+- **Day 5:** Mock merchant API with realistic demo data
+- **Day 6:** Settings page (integrations UI)
+- **Day 7:** Auto-sync dashboard
+- **Day 8-9:** AI Forensic Agent (Claude API)
+- **Day 10:** Polish + demo prep
+
+### Demo Flow
+
+1. **Login:** `demo@acmecorp.com` / `demo123`
+2. **Dashboard:** Shows connected integrations (Razorpay ✓, Shopify ✓)
+3. **Sync Now:** 
+   - "Fetching orders from Shopify..." (mock)
+   - "Fetching settlements from Razorpay..." (REAL API call!)
+   - Progress bar
+4. **Reconciliation:** Runs automatically on synced data
+5. **Results:** AI-powered dashboard with investigations
+6. **Backup:** Manual CSV upload tab still available
+
+### What to Say During Demo
+
+**✅ Say (honest):**
+- "Auto-syncs with Razorpay via their API" (real!)
+- "Supports Shopify, WooCommerce, custom APIs" (architecture does)
+- "AI investigates variances using Razorpay payment data" (real!)
+- "For demo, pre-integrated with test merchant store" (transparent)
+
+**❌ Don't say:**
+- "Fully production-ready" (it's an MVP)
+- "Supports all e-commerce platforms" (only mocked one)
+- "Enterprise SSO" (hardcoded logins)
+
+### Technical Debt Acknowledged
+
+For buildathon scope, acceptable shortcuts:
+- Hardcoded credentials (no database encryption)
+- Mock e-commerce API (not real Shopify integration)
+- Simple login (no OAuth)
+- No webhook infrastructure
+- Single payment gateway (Razorpay only)
+
+Post-buildathon priorities:
+- Real database with encrypted credentials
+- OAuth/SSO integration
+- Real Shopify/WooCommerce connectors
+- Webhook-based real-time sync
+- Multi-gateway support
+
+### Architecture Validation
+
+User concerns addressed:
+- ✅ Incremental sync prevents re-fetching (timestamp filtering)
+- ✅ Multi-merchant isolation works (Razorpay API keys + gateway filtering)
+- ✅ Data belongs to correct merchant (match by gateway_ref_id)
+- ✅ Timeline is realistic (10 days, hybrid real/mock approach)
+
+**User confidence level:** Initially nervous ("haven't built anything like this before")
+**Our response:** Architecture is solid, timeline is achievable with smart scoping
