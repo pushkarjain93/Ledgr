@@ -639,3 +639,52 @@ User concerns addressed:
 
 **User confidence level:** Initially nervous ("haven't built anything like this before")
 **Our response:** Architecture is solid, timeline is achievable with smart scoping
+
+---
+
+## 18. Session Log: Login Built, Razorpay Client Verified Live, AI Case Taxonomy Defined (Aug 26-27, 2026)
+
+### What got built and verified
+
+- **Login/dashboard shell** (`login.py`, `app_new.py`, `auth.py`, new `theme.py`) — working, restyled to match `app.py`'s actual brand (not the purple-gradient theme an earlier pass invented), several real Streamlit rendering bugs found and fixed along the way (see `CLAUDE.md` for the technical detail — split-div wrapping, Markdown code-block misfires on multi-line HTML).
+- **`razorpay_client.py`** — real, isolated Razorpay API client (settlements only, never orders). **Tested live against the user's actual Razorpay Test Mode credentials: authentication succeeded, 0 settlements returned.** This is the correct, expected result — confirmed via Razorpay's own docs that Test Mode never generates real settlements (no real money moves). Not a bug, not blocked — this is exactly the "Connected, but no live settlements" state the dashboard now shows honestly.
+- **Dashboard wiring** — real connection status card (genuine API call, cached 30s), `data/settlements.csv` shown as clearly-labeled demo data underneath, "Sync Now" forces a fresh live check. Fake hardcoded status badges were replaced with the real result everywhere they appeared.
+
+### Major clarification: three data sources, not two
+
+Earlier sections of this file conflated "Razorpay integration" with "auto-fetch orders and settlements" as one thing. Corrected understanding, reached through direct questioning from the user:
+
+1. **Orders** — always the merchant's e-commerce platform (Shopify, mocked for the buildathon). Razorpay's own Orders API is explicitly *not* used for this, even though it exists — keeping the boundary clean (Razorpay = payment/settlement data only) matters for the "why call Razorpay at all" pitch below.
+2. **Online settlements** — Razorpay API, real, built, verified live.
+3. **COD/bank settlement data** — a genuinely separate third source. **Razorpay has zero visibility into COD** — the customer pays the delivery agent in cash, and the courier remits it to the merchant's bank directly, completely bypassing Razorpay. This isn't a buildathon shortcut to fix later; getting this "for real" means a regulated bank Account Aggregator integration or direct per-courier remittance APIs, both explicitly out of scope. For now and for the foreseeable future, this stays either synthetic (`gen_data.py`'s `BANK`-sourced rows in `settlements.csv`) or manual upload — the same mechanism `app.py`'s original CSV flow already provides. The existing `settlements.csv` already unifies both origins via its `source` column (`RAZORPAY` vs `BANK`) — real Razorpay settlements should be *merged* into this file at sync time, not replace it.
+
+### Major clarification: sync is incremental, reconciliation is not
+
+`engine.reconcile()` has no memory — every call is a full, stateless join over whatever DataFrames it's given. Discussed at length with the user via a concrete 3-day walkthrough (Monday: order fetched, no settlement yet; Tuesday: an unrelated orphan settlement arrives and gets human-resolved; Wednesday: Monday's order finally gets its real settlement). The conclusion: **fetching can and should be incremental** (don't re-download what's already stored, using `last_sync_at` timestamps), **but reconciliation must always run against the full cumulative dataset**, because a match can legitimately span across sync batches days apart. Reconciling only "today's new fetch" in isolation would turn normal settlement lag into false-positive orphan exceptions.
+
+Previously-flagged, still-unresolved exceptions will naturally reappear on every rerun — expected behavior, not a bug — because nothing is ever deleted from the underlying data. `review_log.csv` (pre-existing, append-only: `record_id,resolved_at,note`) is the mechanism that suppresses already-resolved records from the "needs attention" view. **Retention policy agreed:** unresolved records are kept indefinitely; for resolved duplicate-payment cases specifically, keep a permanent lightweight audit record (same shape `review_log.csv` already has) forever, but the full investigation evidence can be pruned after 7 days — never delete the fact that something was flagged and how it was resolved, since a chargeback dispute weeks later would need exactly that proof.
+
+A future "open items ledger" optimization (archive terminal/closed records out of the working set so reconciliation cost doesn't grow with total historical volume forever) was discussed and explicitly deferred — not needed at demo data volumes, worth designing for once this is more than a demo.
+
+### The AI Forensic Agent: sharpened into 7 concrete, code-grounded cases
+
+Earlier phases of this project described AI's role in fairly abstract terms ("ambiguous matching," "unknown variance"). This session forced much sharper grounding by repeatedly asking "why would this actually happen" and "isn't this just a lookup" for every proposed case — and caught a real mistake along the way: an early example used "settlement amount exactly matches a known refund" as an AI use case, when that's explicitly listed in this very file (Section 15) as a case that does *not* need AI — it's a plain data lookup once you have the recon evidence. That correction produced the operating principle now in `CLAUDE.md`: **AI only earns its place where a deterministic lookup structurally cannot answer the question** — and Tier 3 should split into a deterministic 3a (check the evidence table first) and a real-AI 3b (only what's left over).
+
+The seven cases (full detail, with `engine.py` line references, now lives in `CLAUDE.md` under "AI Forensic Agent — the 7-case taxonomy" — not duplicated here to avoid drift):
+1. Genuine unexplained variance — already has a code stub (`ai_diagnose`/`_llm_diagnose`), not yet wired to a real model.
+2. Duplicate/overpayment — corrected understanding: this shows up as an *orphan settlement* (Tier 5), not a same-order double-amount case, because a single `payment_id` can't be captured twice and Razorpay's own duplicate-payment guard protects same-order retries. The real mechanism: a failed confirmation causes a checkout retry that creates a *second* Razorpay order, evading that guard.
+3. Ambiguous multi-candidate match.
+4. Order with zero matching settlement — mostly a lookup (check live payment status), not real reasoning.
+5. COD bulk remittance split — genuinely not modeled in `engine.py` today (`by_utr` is strictly 1:1); this is the one case requiring an actual engine change, which needs explicit user sign-off before touching per this project's own rules.
+6. Free-text/inconsistent courier bank narration parsing.
+7. Human-facing text generation (escalation emails, refund recommendation drafts) — zero financial-decision risk, since a human reviews and sends.
+
+**Hard rule reaffirmed, stronger than the general confidence table in Section 15:** even at high AI confidence, anything that moves money (executing a refund) requires human approval. AI's job stops at producing the evidence-backed recommendation.
+
+### Two real schema gaps found (not yet fixed)
+- `orders.csv`/`ORDER_OPTIONAL` has no customer phone/email — limits how confidently an orphan settlement or ambiguous match can be correlated to a customer beyond amount/date proximity.
+- No courier/delivery-partner field anywhere in the order schema — Case 7's escalation email has no addressee today. Partially resolved in design: Shopify's Fulfillment API has a `tracking_company` field (confirmed, includes DTDC) that will solve this once real Shopify order fetching exists — but it's not in the current mock schema yet.
+
+### Why call real APIs at all — sharpened for the demo pitch
+
+The user raised a sharp, important concern: does calling Razorpay's and Shopify's APIs actually look meaningful to judges, or just decorative? Verified rather than assumed: payment reconciliation via live API is a real, established SaaS category (Airwallex, Payrails, Taxilla, etc., all market themselves against "legacy manual CSV" tools). But the honest breakdown: the bulk settlement fetch is useful automation but **table-stakes** — every competitor in that space claims it. The genuinely differentiated, hard-to-replicate value is the **Tier-3 payment-fetch evidence call** — live, on-demand detail on one specific flagged transaction (refund status, dispute status, card type) that a static CSV export can never contain. **The demo narrative should tie the API integration directly to the AI agent's evidence-gathering, not present it as "we automated a file upload."**
