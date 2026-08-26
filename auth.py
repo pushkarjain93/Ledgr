@@ -1,0 +1,89 @@
+"""
+Authentication module for Ledgr.
+Handles login, session management, and demo merchant accounts.
+"""
+
+# Demo merchant accounts for buildathon
+DEMO_MERCHANTS = {
+    "demo@acmecorp.com": {
+        "password": "demo123",
+        "company_name": "Acme Corporation",
+        "merchant_id": "merchant_acme_001",
+        "razorpay_key_id": "rzp_test_acme123",
+        "razorpay_key_secret": "secret_acme_xyz789",
+        "shopify_url": "acme-store.myshopify.com",
+        "industry": "Electronics & Gadgets",
+        "logo_emoji": "⚡"
+    },
+    "demo@betastore.com": {
+        "password": "demo123",
+        "company_name": "Beta Fashion Store",
+        "merchant_id": "merchant_beta_002",
+        "razorpay_key_id": "rzp_test_beta456",
+        "razorpay_key_secret": "secret_beta_uvw012",
+        "shopify_url": "beta-fashion.myshopify.com",
+        "industry": "Fashion & Apparel",
+        "logo_emoji": "👗"
+    },
+    "demo@gammafoods.com": {
+        "password": "demo123",
+        "company_name": "Gamma Organic Foods",
+        "merchant_id": "merchant_gamma_003",
+        "razorpay_key_id": "rzp_test_gamma789",
+        "razorpay_key_secret": "secret_gamma_abc345",
+        "shopify_url": "gamma-foods.myshopify.com",
+        "industry": "Food & Beverages",
+        "logo_emoji": "🌱"
+    },
+    "demo@deltatech.com": {
+        "password": "demo123",
+        "company_name": "Delta Tech Solutions",
+        "merchant_id": "merchant_delta_004",
+        "razorpay_key_id": "rzp_test_delta012",
+        "razorpay_key_secret": "secret_delta_def678",
+        "shopify_url": "delta-tech.myshopify.com",
+        "industry": "Software & Services",
+        "logo_emoji": "💻"
+    }
+}
+
+
+def authenticate(email: str, password: str) -> tuple[bool, dict | None]:
+    """
+    Authenticate a user with email and password.
+
+    Returns:
+        (success: bool, merchant_data: dict | None)
+    """
+    email = email.strip().lower()
+
+    if email not in DEMO_MERCHANTS:
+        return False, None
+
+    merchant = DEMO_MERCHANTS[email]
+
+    if merchant["password"] == password:
+        # Don't return password in session data
+        session_data = {k: v for k, v in merchant.items() if k != "password"}
+        session_data["email"] = email
+        return True, session_data
+
+    return False, None
+
+
+def is_authenticated(session_state) -> bool:
+    """Check if user is authenticated."""
+    return hasattr(session_state, "authenticated") and session_state.authenticated
+
+
+def get_current_merchant(session_state) -> dict | None:
+    """Get current logged-in merchant data."""
+    if not is_authenticated(session_state):
+        return None
+    return getattr(session_state, "merchant", None)
+
+
+def logout(session_state):
+    """Clear session and logout user."""
+    session_state.authenticated = False
+    session_state.merchant = None
