@@ -40,6 +40,29 @@ CUSTOMERS = [
 COURIERS = ["DELHIVERY", "BLUEDART", "ECOM EXPRESS", "XPRESSBEES"]
 ONLINE_MODES = ["UPI", "CARD", "NETBANKING", "WALLET"]
 
+# Deterministic per-customer contact info -- same customer always gets the
+# same phone/email, so Tier-3 AI correlation (Case 2/3: does this orphan
+# settlement's evidence match a real customer we already have an order for)
+# has something consistent to match against.
+def _slug(name):
+    return name.lower().replace(" ", ".")
+
+
+CUSTOMER_PHONE = {c: f"+91 9{800000000 + i * 1111:09d}" for i, c in enumerate(CUSTOMERS)}
+CUSTOMER_EMAIL = {c: f"{_slug(c)}@example.com" for c in CUSTOMERS}
+
+# Each courier gets a genuinely different bank narration FORMAT, not just a
+# name swap in one shared template -- Case 6 (narration parsing) only means
+# something if the formats actually differ structurally.
+def courier_narration(courier, utr, batch_no=None):
+    if courier == "DELHIVERY":
+        return f"NEFT CR-DELHIVERY COD REMIT-{utr}"
+    if courier == "BLUEDART":
+        return f"IMPS/BLUEDART/COD-SETL/{batch_no or utr[-4:]}"
+    if courier == "ECOM EXPRESS":
+        return f"RTGS-ECOMEXP-CODCOLL-{utr[-6:]}"
+    return f"NEFT CR {utr[-9:]} XXXXX"  # XPRESSBEES: bank truncates hard, no courier name at all
+
 # ---------------------------------------------------------------------------
 # Scenario quotas. Weighted like a real book: most things are clean.
 # ---------------------------------------------------------------------------
@@ -140,10 +163,18 @@ for i, scenario in enumerate(PLAN, start=1):
     if scenario.startswith("T0_COD"):
         order_utr = ""
 
+    # Courier is a delivery/fulfillment detail, independent of payment mode --
+    # a prepaid order still ships via a courier, COD only describes how the
+    # customer paid. Populated for every order (Case 7 needs an addressee).
+    courier = random.choice(COURIERS)
+
     orders.append({
         "order_id": order_id,
         "order_date": str(order_day),
         "customer_name": cust,
+        "customer_phone": CUSTOMER_PHONE[cust],
+        "customer_email": CUSTOMER_EMAIL[cust],
+        "courier": courier,
         "payment_mode": mode,
         "gateway_ref_id": ref,
         "bank_utr": order_utr,
@@ -152,7 +183,7 @@ for i, scenario in enumerate(PLAN, start=1):
 
     band = fee_band(amount, mode)
     gw_narr = f"RAZORPAY SETTLEMENT {utr}"
-    bank_narr = f"NEFT CR-{random.choice(COURIERS)} COD REMIT-{utr}"
+    bank_narr = courier_narration(courier, utr)
     b2b_narr = f"NEFT CR-{cust.upper()}-{utr}"
 
     # ---------------- Tier 0: COD timing pre-check --------------------------
@@ -245,6 +276,57 @@ for i, scenario in enumerate(PLAN, start=1):
         add_truth(order_id, scenario, 5, "EXCEPTION", -amount,
                   "R3_UNMATCHED_AMBIGUOUS", "",
                   "gateway ref absent from settlement feed")
+
+# ---------------- Case 2: shadow duplicate payment --------------------------
+# One real, cleanly-settled order gets a SECOND orphan Razorpay settlement:
+# same amount, one day later, different payment_id/UTR -- the checkout-retry
+# duplicate-capture story (see CLAUDE.md Case 2). The original order's own
+# outcome is untouched (still a clean Tier 1 match); this is purely an extra
+# unmatched settlement for the AI to correlate back to that order via
+# amount + timing (customer_phone/email are the evidence Razorpay's real
+# payment API would additionally provide in a live system).
+_shadow_source = next(t for t in truth if t["scenario"] == "T1_EXACT")
+_shadow_order = next(o for o in orders if o["order_id"] == _shadow_source["record_id"])
+_shadow_amt = to_paise(_shadow_order["order_amount"])
+_shadow_day = min(RUN_DATE, __import__("datetime").date.fromisoformat(_shadow_order["order_date"])
+                   + timedelta(days=1))
+add_settlement("STL-SHADOW01", _shadow_day, f"pay_shadow{random.randint(100,999)}A",
+               new_utr(800001), _shadow_amt, "RAZORPAY",
+               f"RAZORPAY SETTLEMENT {new_utr(800001)}")
+add_truth("STL-SHADOW01", "T5_SHADOW_DUPLICATE", 5, "EXCEPTION", _shadow_amt,
+          "R3_UNMATCHED_AMBIGUOUS", "",
+          f"probable duplicate payment for {_shadow_order['order_id']} -- same amount, "
+          f"settled one day later under a different payment_id; correlate via "
+          f"customer contact ({_shadow_order['customer_name']}) once fetched from Razorpay")
+
+# ---------------- Case 5: COD bulk remittance (one UTR, many orders) --------
+# engine.py's by_utr matching is strictly 1:1 (see CLAUDE.md) -- it has no
+# concept of one settlement covering several orders. This batch is REAL data
+# demonstrating the problem Case 5 needs to solve; it is deliberately left
+# OUT of ground_truth.csv (no "correct" tier exists for a pattern the engine
+# doesn't support yet), so score() reports these as unlabelled rather than
+# silently grading a future feature as a current failure.
+_bulk_courier = "DELHIVERY"
+_bulk_day = START_DATE + timedelta(days=20)
+_bulk_orders = []
+for k in range(1, 6):
+    oid = f"ORD-BULK{k:02d}"
+    amt = to_paise(random.choice([699, 999, 1499, 1999, 2499]))
+    cust = random.choice(CUSTOMERS)
+    orders.append({
+        "order_id": oid, "order_date": str(_bulk_day), "customer_name": cust,
+        "customer_phone": CUSTOMER_PHONE[cust], "customer_email": CUSTOMER_EMAIL[cust],
+        "courier": _bulk_courier, "payment_mode": "COD", "gateway_ref_id": "",
+        "bank_utr": "", "order_amount": to_rupees(amt),
+    })
+    _bulk_orders.append(amt)
+_bulk_utr = new_utr(850001)
+_bulk_gross = sum(_bulk_orders)
+_bulk_fee_total = sum(min(fee_band(a, "COD"), int(a * 0.025)) for a in _bulk_orders)
+add_settlement("STL-BULK01", _bulk_day + timedelta(days=7), "", _bulk_utr,
+               _bulk_gross - _bulk_fee_total, "BANK",
+               courier_narration(_bulk_courier, _bulk_utr, batch_no="BATCH07"))
+# No ground_truth entries for ORD-BULK01..05 or STL-BULK01 -- intentional.
 
 # ---------------- settlements with no order behind them --------------------
 for j in range(1, ORPHAN_CREDITS + 1):

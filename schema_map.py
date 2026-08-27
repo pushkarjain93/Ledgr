@@ -54,6 +54,20 @@ ORDER_OPTIONAL = {
         "customer_name", "customer", "name", "buyer", "buyer_name",
         "client", "client_name",
     ],
+    # Evidence fields for Tier 3 AI review (orphan-settlement/ambiguous-match
+    # correlation, courier escalation addressing) -- NOT used by reconcile()'s
+    # matching logic, which still runs on gateway_ref_id/bank_utr/amount only.
+    "customer_phone": [
+        "customer_phone", "phone", "mobile", "mobile_no", "mob_no",
+        "contact_number", "phone_number", "customer_mobile",
+    ],
+    "customer_email": [
+        "customer_email", "email", "email_address", "buyer_email",
+    ],
+    "courier": [
+        "courier", "carrier", "delivery_partner", "shipping_partner",
+        "logistics_partner", "tracking_company",
+    ],
 }
 
 SETTLEMENT_REQUIRED = {

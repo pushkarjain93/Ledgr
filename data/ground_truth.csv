@@ -258,9 +258,10 @@ ORD-00256,T5_NO_SETTLEMENT,5,EXCEPTION,-349.50,R3_UNMATCHED_AMBIGUOUS,,no settle
 ORD-00257,T4_COD_EXACT,4,AUTO_CLEARED,0.00,,,"COD remitted in full, matched on UTR"
 ORD-00258,T1_EXACT,1,AUTO_CLEARED,0.00,,,ref + amount exact
 ORD-00259,T2_FLAT_FEE,2,CLEARED_WITH_FEE,-2.50,,GATEWAY_FEE,"flat netbanking fee, inside band"
-STL-X0001,T5_UNKNOWN_CREDIT,5,EXCEPTION,3930.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
-STL-X0002,T5_UNKNOWN_CREDIT,5,EXCEPTION,7898.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
-STL-X0003,T5_UNKNOWN_CREDIT,5,EXCEPTION,1422.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
-STL-X0004,T5_UNKNOWN_CREDIT,5,EXCEPTION,2213.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
-STL-X0005,T5_UNKNOWN_CREDIT,5,EXCEPTION,7209.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
-STL-X0006,T5_UNKNOWN_CREDIT,5,EXCEPTION,1407.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-SHADOW01,T5_SHADOW_DUPLICATE,5,EXCEPTION,2499.99,R3_UNMATCHED_AMBIGUOUS,,"probable duplicate payment for ORD-00003 -- same amount, settled one day later under a different payment_id; correlate via customer contact (Diya Patel) once fetched from Razorpay"
+STL-X0001,T5_UNKNOWN_CREDIT,5,EXCEPTION,1467.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0002,T5_UNKNOWN_CREDIT,5,EXCEPTION,2213.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0003,T5_UNKNOWN_CREDIT,5,EXCEPTION,7209.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0004,T5_UNKNOWN_CREDIT,5,EXCEPTION,1407.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0005,T5_UNKNOWN_CREDIT,5,EXCEPTION,1963.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
+STL-X0006,T5_UNKNOWN_CREDIT,5,EXCEPTION,4085.00,R3_UNMATCHED_AMBIGUOUS,,credit in bank feed with no corresponding order
