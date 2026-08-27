@@ -20,16 +20,24 @@ The project should demonstrate:
 
 Current important files include:
 
-- `app.py` — application/UI layer
-- `engine.py` — core reconciliation engine and matching logic
-- `config.py` — configuration and thresholds
-- `gen_data.py` — demo/test data generation
-- `validate_data.py` — data validation
-- `schema_map.py` — schema/field mapping
-- `customers.csv` — customer/order-related data
-- `review_log.csv` — review/audit information
-- `data/` — project data
-- `.streamlit/` — Streamlit configuration
+- `app_new.py` — **the live application** (sidebar + header shell, page-routed: Dashboard, Reconciliations, AI Review, Exceptions, etc.). `app.py` is an earlier prototype, kept for reference only — not the active entrypoint.
+- `login.py` — login screen (split-panel design, demo-account cards); writes `?m=<email>` to `st.query_params` on success so a browser refresh doesn't bounce back to login.
+- `auth.py` — `DEMO_MERCHANTS`, `authenticate()`, `get_merchant_by_email()` (password-free lookup used only to restore a session from the query param, never to log in).
+- `theme.py` — shared colors/fonts/CSS helper (`html()`, `base_css()`) used by every screen.
+- `state_store.py` — per-merchant persisted JSON (`data/state/<merchant_id>.json`): batch progress, notification lifecycle, saved reconciliation runs (each with its own individual flagged records).
+- `engine.py` — core reconciliation engine and matching logic (5-tier waterfall). Also now owns the real `ai_diagnose()`/`_llm_diagnose()` call into `ai_client.py`.
+- `ai_client.py` — isolated Gemini (Google AI) REST client, same architectural pattern as `razorpay_client.py`. See Section 21.
+- `razorpay_client.py` — real, isolated Razorpay settlements client (raw REST, no SDK).
+- `shopify_client.py` — mock Shopify orders client (honestly labeled as demo data, never claims a live connection).
+- `config.py` — configuration and thresholds (money-as-paise helpers, fee bands, `REASON_LEGEND`, `TIER_NAMES`, `priority_of`).
+- `gen_data.py` — demo/test data generation. Currently targets ~180 total orders across 3 batches of 60 (see Section 20) — NOT the original 900-1000.
+- `validate_data.py` — data validation (cross-checks `ground_truth.csv` against `orders.csv`/`settlements.csv`/`config.py`).
+- `schema_map.py` — schema/field mapping.
+- `customers.csv` — customer/order-related data.
+- `review_log.csv` — review/audit information.
+- `data/` — project data (`orders.csv`, `settlements.csv`, `ground_truth.csv`, `run_results.csv`, `state/` per-merchant JSON).
+- `.env` / `.env.example` — Razorpay + Gemini API keys, `RECONAI_LLM` toggle. `.env` is gitignored.
+- `.streamlit/` — Streamlit configuration.
 
 The existing codebase must be inspected and understood before making architectural or implementation changes.
 
@@ -698,3 +706,56 @@ Rebuilt the post-login dashboard (`app_new.py`) into the command-center layout t
 Getting the layout genuinely precise (not just visually close) took several real rounds — full technical detail (exact CSS, testid names, positioning technique) now lives in `CLAUDE.md` under "Dashboard rebuilt as HTML shell + minimal widgets," not duplicated here. The short version: repeated attempts to override a Streamlit container's own layout behavior (`display`, `position`) via custom CSS classes kept losing against Streamlit's own styling — the fix was to stop fighting that battle entirely: use `st.columns()` for actual placement (reliable every time), and restrict custom CSS to visual details only (colors, radius, padding on the innermost elements). One outdated testid (`element-container` vs. the current `stElementContainer`) was also silently causing a spacing fix to do nothing for several rounds — worth remembering that a CSS rule targeting a wrong testid fails silently, with no error, so "verify the testid name" should be an early suspect whenever a targeted override appears to have zero effect.
 
 Also addressed directly: Streamlit's rerun-based navigation means every screen transition (including login → dashboard) is a genuine network round-trip with no way to make it truly instant while staying on Streamlit, which the user confirmed should remain the framework. Mitigated (not eliminated) with a fade-in transition and an explicit "Signing in…" spinner, so the wait reads as intentional rather than as unexplained lag.
+
+---
+
+## 20. Session Log: Incremental Demo-Data Flow, Persistent Notifications, Dashboard/Reconciliations Redesign (Aug 27-28, 2026)
+
+### The problem this solves
+Up to this point the dashboard's activity log lived only in `st.session_state` — it reset on every browser refresh and had no concept of "new data arriving over time." The user wanted a believable simulation of a live SaaS product: data arrives in waves, the app notices without polling, the user is told about it without having to go looking, and none of it breaks on a refresh, a server restart, or logging out and back in.
+
+### The design: 3 deterministic batches, not a live feed
+`gen_data.py`'s ~900-order dataset (itself already scaled up from an original ~260) was rescaled down to **exactly 180 orders, 60 per batch**, per explicit user direction — the original volume was "too much for a clean demo." Every order/settlement/ground-truth row carries a `batch_id` (1/2/3). Batch 1 is available the moment a merchant first logs in; batch 2 unlocks ~45 seconds after batch 1's reconciliation *completes*; batch 3 unlocks ~3 minutes after batch 2's completes. After batch 3, there is no batch 4 — ever.
+
+Critically, **this is a demo stand-in for a future real webhook, not a fake permanent architecture.** The intended production shape (documented so a judge's "is this real?" question has an honest answer): a real Shopify/Razorpay webhook would push a "new data" event; the demo instead persists an availability timestamp and checks `now >= next_batch_available_at` on whatever rerun happens to occur next. **No `time.sleep()`, no background thread, no polling loop, no calling any API on a timer** — the UI is written so it doesn't actually care whether the "new data" event came from this demo mechanism or a real webhook later; that decision is fully isolated in `state_store.py`.
+
+### Persistence: `state_store.py`
+New per-merchant JSON file (`data/state/<merchant_id>.json`) holds: `current_batch`, `processed_record_ids` (every order/settlement ID ever reconciled, so a batch can never be double-processed even across a crash/restart), `reconciliation_runs` (most-recent-first, each a real saved result — see Section 21 for what got added to each run), `next_batch_available_at`, and three notification-lifecycle flags (`notification_created`, `notification_seen`, `notification_overlay_open` — see below). This is what makes "refresh the browser" and "log out, log back in" both fully safe: nothing that matters lives only in Streamlit's session state any more.
+
+Login persistence (a related, previously-fragile piece) was hardened at the same time: `login.py` writes the authenticated merchant's email into `st.query_params` on success; `app_new.py` checks that query param on every fresh load and restores the session via a password-free `auth.get_merchant_by_email()` lookup — this is a *restore*, not a re-authentication, and can only ever resolve an identity that already passed a real password check once.
+
+### Notification system: bell + automatic overlay, not "click the bell to find out"
+An earlier iteration required the user to click the bell to discover new data. The user explicitly rejected this ("I DO NOT want that") and asked for an automatic, dismissible toast instead — matching how real SaaS products (and their own reference mockup) surface new data. Final design:
+- The moment a scheduled batch's timer passes, a small floating card auto-appears near the top-right of whichever page is open, showing the *real* new-batch counts (Orders/Settlements/COD-Bank, read fresh from the same CSVs the real sync step reads — never hardcoded).
+- **"Review & Reconcile →"** on the card: closes it, marks the notification read, navigates to the Reconciliations page — and explicitly does **not** start reconciliation on its own. The user must still click "Sync & Reconcile" there.
+- **"Later" / "×"**: closes the card without marking it read and without touching the batch/timer state. The bell's red dot stays. Critically, the card does not pop back up automatically after this — it stays reachable via the bell only, and this had to be tracked as its own persisted flag (`notification_overlay_open`), separate from "has this batch's notification ever fired" (`notification_created`) and "has the user acted on it" (`notification_seen`) — collapsing these into one flag was tried first and produced either duplicate overlays after a refresh or an overlay that could never be dismissed for good.
+- Each batch gets **exactly one** notification event, guaranteed by `notification_created` gating the auto-fire check — this was explicitly required ("no duplicate notifications," tested by fast-forwarding the timer and refreshing repeatedly).
+
+### Dashboard vs. Reconciliations: a deliberate split, not duplication
+The user, after seeing an early full-screen "syncing..." takeover page, asked for it gone and for a persistent, data-rich "Reconciliations" screen instead (explicitly referencing a real fintech-SaaS-style command-center mockup: KPI row, donut chart, amount-flow comparison, a "Risk Summary," a "Review Queue," and detailed recent-runs history). The resulting split:
+- **Dashboard** — a lighter overview: 4 KPI cards (Total Reconciliations / Auto Matched / AI Resolved / Exceptions, all cumulative, all real), a simple Recent Reconciliations table, and a "+ New Reconciliation" button that **only navigates** to Reconciliations — it never starts a sync itself.
+- **Reconciliations** — the actual operational surface. Before any reconciliation ever ran: a "ready state" card with real current-batch counts and a Sync & Reconcile button. Mid-sync: the same step-by-step progress list from the old full-screen page, but now rendered *inline*, sidebar and header still visible (no more separate route). After at least one run exists: a permanent results workspace — 8-card cumulative KPI row, a donut + `st.bar_chart` Amount Flow + a "Risk Summary" (Overpaid / At Risk / Unmatched, each clickable through to a filtered page) for the *most recent* run specifically, a Review Queue table of real flagged records, and a detailed Recent Reconciliations table. A slim, non-blocking banner (not a full card) surfaces a pending-but-unsynced batch here too — the primary channel for "new data exists" stays the bell + overlay, per the user's explicit instruction not to duplicate that signal as a permanent card on the results view.
+- Sidebar now shows the company name as small static text under the Ledgr logo — explicitly **not** a dropdown, and explicitly removed from the main content header (which now only shows the current page's own title/subtitle).
+
+### A real, quantified risk-safety derivation, not an invented category
+The "Risk Summary" bucket (Overpaid / At Risk / Unmatched) was a genuine design question: the user explicitly forbade fabricating categories the data can't support. Resolved by deriving all three purely from fields `engine.py` already computes — `status`, `delta`, `matched_settlement`, `amount_at_risk` — with no new business logic: Overpaid = matched + settled for more than expected; At Risk = matched + settled for less, outside the fee band; Unmatched = exception with nothing matched at all. The three are mutually exclusive by construction, so they always sum cleanly and never double-count a record.
+
+---
+
+## 21. Session Log: Real AI Integration — Gemini, Not Claude (Aug 28, 2026)
+
+### What changed from the plan in Section 15
+Section 15 (and the Aug 26-27 session log) assumed the real AI Forensic Agent would call the **Claude API**. When the user actually had an API key ready, it turned out to be a **Google AI Studio (Gemini) key**, not an Anthropic one — and getting a fresh Anthropic key would have meant a new signup plus billing setup under real buildathon time pressure. The fix was a plain provider swap, not a re-scoping: `engine.py`'s AI seam (`ai_diagnose()` / `_llm_diagnose()`) was designed from the start to not care which vendor sits behind it, and that held — the only file that needed to change to switch providers was the new isolated `ai_client.py`. **Anywhere earlier sections of this file say "Claude API," read it as "whichever LLM `ai_client.py` currently wraps" — the commitment was to a real LLM call, not a specific vendor.**
+
+### What actually got built
+- **`ai_client.py`** (new) — isolated REST client (raw `requests`, no vendor SDK, matching `razorpay_client.py`'s established pattern) calling Gemini's Generative Language API with a forced JSON response schema: `{reason_code, confidence, explanation, evidence, recommendation}`. `reason_code` is constrained to the real `REASON_LEGEND` codes via the schema's own `enum`; anything else is treated as an invalid response.
+- **`engine.py`** — `ai_diagnose()` now returns that same dict shape on both the offline and live paths (offline: `confidence`/`evidence`/`recommendation` are `None`/`[]`, since a hand-written if-else has no confidence to report). The original deterministic logic itself was untouched, just renamed to `_offline_diagnose()` and reused as `_llm_diagnose()`'s fallback whenever the real call fails for any reason. `emit()` gained three new optional fields purely to carry this data through to the results table — no tier, matching, or threshold logic changed.
+- **`app_new.py`** — each saved reconciliation run now persists its individual flagged records (not just run-level totals), including the real `confidence`/`evidence`/`recommendation` when the live model produced them. The Review Queue / AI Review / Exceptions pages show a real percentage for AI-assisted records once available, "Pending" if AI was invoked but didn't return a score (offline stub or a failed live call), and "—" for records no AI ever touched.
+
+### Non-negotiables that held under a real live test
+- **The model never computes a number.** It receives facts `engine.py` already calculated (paise amounts, converted to `"Rs 1,234.56"` strings only for prompt readability, never touching the underlying arithmetic) and only ever returns a classification + explanation.
+- **API failure never means guessing or crashing.** Verified with a *real* failure, not a mock: mid-testing, the Gemini free-tier quota was exhausted (a genuine `429`), and the fallback path worked exactly as designed — silently dropped to the same deterministic sentence used everywhere else, with a `[AI unavailable -- ...]` prefix, and `confidence`/`evidence`/`recommendation` correctly left empty rather than fabricated.
+- **Live accuracy re-verified end to end**: full 180-record dataset, real calls, no mocking. Tier/disposition accuracy and clearing-decision precision/recall all stayed 100% (no money wrongly auto-cleared, no human bothered for nothing). Reason-code accuracy against the synthetic ground truth dropped very slightly, to 99.45% — one ambiguous overcharged-fee case got a different (still valid) classification than the ground truth assumed. This is the honest, expected cost of a real thinking model replacing a hand-coded heuristic, not a regression, and it's worth stating plainly rather than hiding if asked.
+
+### Where AI coverage actually stops today (a real scope gap, not yet resolved)
+`ai_diagnose()` is only ever called from one branch: "matched, but outside the known fee band" — reached by Tier 3 (has a gateway ref) and by Tier 4 (COD/bank, UTR-matched) when its shortfall is too large for a normal collection fee. **Tier 0 (COD timing) and Tier 5 (unmatched/ambiguous/orphan) get zero AI investigation today** — for the no-settlement-at-all and overdue-timer flavors of Tier 5 that's correct (no real judgement to make), but two Tier 5 sub-cases were already identified back in the Aug 26-27 "7-case taxonomy" session as genuine AI candidates that were never built: **ambiguous multi-candidate match** (case 3 — two settlements claim the same reference) and **orphan-settlement correlation** (case 2 — a credit with no order behind it, e.g. the shadow-duplicate scenario). The user was asked directly whether to extend AI to these next; **no decision had been made as of this writing** — check the latest conversation before assuming this is either in scope or out of scope.

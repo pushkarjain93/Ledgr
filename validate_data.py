@@ -45,7 +45,10 @@ for t in truth:
     check((fee_type != "") == (status == "CLEARED_WITH_FEE"),
           f"{rid}: fee_type '{fee_type}' inconsistent with status {status}")
 
-    if scen == "T5_UNKNOWN_CREDIT":
+    if scen in ("T5_UNKNOWN_CREDIT", "T5_SHADOW_DUPLICATE"):
+        # Shadow-duplicate ground truth is keyed by the SETTLEMENT's own id
+        # (it's the orphan settlement being flagged, not an order) -- by
+        # design there's no matching row in orders.csv. See gen_data.py.
         continue
 
     o = orders.get(rid)
@@ -124,6 +127,11 @@ for o in orders.values():
 labelled = [t["record_id"] for t in truth]
 check(len(labelled) == len(set(labelled)), "duplicate record_id in ground_truth.csv")
 for oid in orders:
+    # ORD-BULK* orders deliberately have no ground truth -- engine.py's
+    # by_utr matching is strictly 1:1 and has no concept of one settlement
+    # covering several orders (Case 5, COD bulk remittance). See gen_data.py.
+    if oid.startswith("ORD-BULK"):
+        continue
     check(oid in set(labelled), f"{oid}: present in orders.csv but never labelled")
 
 print("=" * 66)

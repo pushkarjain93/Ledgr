@@ -74,6 +74,24 @@ def authenticate(email: str, password: str) -> tuple[bool, dict | None]:
     return False, None
 
 
+def get_merchant_by_email(email: str) -> dict | None:
+    """
+    Look up a merchant's session data by email alone, no password check.
+    Used to restore an already-authenticated session after a browser
+    refresh (see login.py writing st.query_params, and app_new.py reading
+    it back) -- this is a restore path, not a login path, so it must
+    never be reachable from user-typed input without a prior real
+    authenticate() call having succeeded first.
+    """
+    email = (email or "").strip().lower()
+    merchant = DEMO_MERCHANTS.get(email)
+    if not merchant:
+        return None
+    session_data = {k: v for k, v in merchant.items() if k != "password"}
+    session_data["email"] = email
+    return session_data
+
+
 def is_authenticated(session_state) -> bool:
     """Check if user is authenticated."""
     return hasattr(session_state, "authenticated") and session_state.authenticated
