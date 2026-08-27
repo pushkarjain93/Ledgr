@@ -156,7 +156,7 @@ def reconcile(orders: pd.DataFrame, setls: pd.DataFrame) -> pd.DataFrame:
 
     def emit(rid, tier, status, reason, fee_type, expected, received, delta,
              at_risk, explanation, matched, age, confidence=None, ai_evidence=None,
-             ai_recommendation=None):
+             ai_recommendation=None, candidates=None):
         out.append(dict(
             record_id=rid, tier=tier, tier_name=TIER_NAMES[tier], status=status,
             reason=reason, reason_label=REASON_LEGEND[reason][0] if reason else "",
@@ -169,7 +169,14 @@ def reconcile(orders: pd.DataFrame, setls: pd.DataFrame) -> pd.DataFrame:
             # exceptions) -- there's no "confidence" to report when no
             # judgement call was made.
             confidence=confidence, ai_evidence=ai_evidence or [],
-            ai_recommendation=ai_recommendation))
+            ai_recommendation=ai_recommendation,
+            # Real competing-settlement facts for the "2+ settlements claim
+            # the same ref" branch only -- structured here (not just baked
+            # into `explanation` text) so the post-reconcile AI investigation
+            # layer (case_engine.py) can hand real candidates to Gemini
+            # instead of re-deriving them. Still just data collection, not a
+            # matching/tier decision -- the record is still EXCEPTION either way.
+            candidates=candidates or []))
 
     for o in orders.to_dict("records"):
         rid, amt, mode = o["order_id"], o["amount_paise"], o["payment_mode"]
@@ -210,9 +217,13 @@ def reconcile(orders: pd.DataFrame, setls: pd.DataFrame) -> pd.DataFrame:
 
         if len(cands) > 1:
             ids = ", ".join(c["settlement_id"] for c in cands)
+            competing = [{"settlement_id": c["settlement_id"], "amount_paise": c["amount_paise"],
+                          "settled_on": c["settled_on"], "narration": c.get("narration", "")}
+                         for c in cands]
             emit(rid, 5, "EXCEPTION", "R3_UNMATCHED_AMBIGUOUS", "", amt, 0, 0, amt,
                  f"{len(cands)} settlements claim {ident} ({ids}). Refusing to pick "
-                 f"one; a wrong match here books the wrong revenue.", "", age)
+                 f"one; a wrong match here books the wrong revenue.", "", age,
+                 candidates=competing)
             for c in cands:
                 consumed.add(c["settlement_id"])
             continue

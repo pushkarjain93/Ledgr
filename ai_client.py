@@ -118,29 +118,26 @@ def _api_key():
     return key
 
 
-def diagnose(facts: dict) -> dict:
+def _generate(system_prompt: str, user_message: str, schema: dict | None = None, temperature: float = 0.2):
     """
-    Send engine-computed facts to Gemini and get back a structured
-    diagnosis: {reason_code, confidence, explanation, evidence, recommendation}.
+    Shared request/response plumbing for every Gemini call in this module.
+    With a schema: returns the parsed JSON object (structured output mode).
+    Without one: returns the raw response text (used by ask(), which is
+    conversational, not a decision the app acts on automatically).
 
-    Raises AIAuthError / AIAPIError on any failure -- callers must treat
-    an exception as "could not verify via AI, fall back to human review",
-    never as license to guess.
+    Raises AIAuthError / AIAPIError on any failure -- every caller in this
+    module treats that as "AI unavailable," never as license to guess.
     """
     key = _api_key()
-    user_message = (
-        "Investigate this reconciliation variance. Facts (already computed, "
-        "treat as ground truth -- do not restate a different number):\n"
-        + json.dumps(_humanize_facts(facts), indent=2, default=str)
-    )
+    generation_config = {"temperature": temperature}
+    if schema is not None:
+        generation_config["responseMimeType"] = "application/json"
+        generation_config["responseSchema"] = schema
+
     payload = {
-        "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+        "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"role": "user", "parts": [{"text": user_message}]}],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "responseSchema": RESPONSE_SCHEMA,
-            "temperature": 0.2,
-        },
+        "generationConfig": generation_config,
     }
 
     try:
@@ -155,15 +152,157 @@ def diagnose(facts: dict) -> dict:
 
     if resp.status_code in (401, 403):
         raise AIAuthError(f"Gemini rejected the API key ({resp.status_code}): {resp.text[:300]}")
+    if resp.status_code == 429:
+        raise AIAPIError(f"Gemini rate-limited this request (429): {resp.text[:300]}")
     if not resp.ok:
         raise AIAPIError(f"Gemini returned {resp.status_code}: {resp.text[:300]}")
 
     data = resp.json()
     try:
         text = data["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError) as exc:
+        raise AIAPIError(f"Gemini's response didn't include any text: {exc}") from exc
+
+    if schema is None:
+        return text.strip()
+    try:
         return json.loads(text)
-    except (KeyError, IndexError, json.JSONDecodeError) as exc:
-        raise AIAPIError(f"Gemini's response didn't match the expected shape: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise AIAPIError(f"Gemini's response wasn't valid JSON: {exc}") from exc
+
+
+def diagnose(facts: dict) -> dict:
+    """
+    Send engine-computed facts to Gemini and get back a structured
+    diagnosis: {reason_code, confidence, explanation, evidence, recommendation}.
+    Used by engine.py's Tier 3 / Tier 4 variance path.
+
+    Raises AIAuthError / AIAPIError on any failure -- callers must treat
+    an exception as "could not verify via AI, fall back to human review",
+    never as license to guess.
+    """
+    user_message = (
+        "Investigate this reconciliation variance. Facts (already computed, "
+        "treat as ground truth -- do not restate a different number):\n"
+        + json.dumps(_humanize_facts(facts), indent=2, default=str)
+    )
+    return _generate(SYSTEM_PROMPT, user_message, schema=RESPONSE_SCHEMA)
+
+
+INVESTIGATION_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "classification": {
+            "type": "STRING",
+            "description": "Short label for what this case is, e.g. 'ambiguous_match', 'unmatched_settlement'.",
+        },
+        "recommendation": {
+            "type": "STRING",
+            "description": "One short sentence: what should happen next.",
+        },
+        "confidence": {
+            "type": "INTEGER",
+            "description": "0-100. Be conservative -- see the system instructions on forcing a match.",
+        },
+        "reason": {
+            "type": "STRING",
+            "description": "Plain-English explanation grounded only in the given records.",
+        },
+        "evidence": {
+            "type": "ARRAY", "items": {"type": "STRING"},
+            "description": "Short bullets of the given facts that led to this conclusion.",
+        },
+        "candidate_rankings": {
+            "type": "ARRAY",
+            "description": "Only for cases with real candidate records given. Empty array if none were provided.",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "id": {"type": "STRING", "description": "The candidate's own ID from the given records."},
+                    "confidence": {"type": "INTEGER"},
+                    "reason": {"type": "STRING"},
+                },
+                "required": ["id", "confidence", "reason"],
+            },
+        },
+        "action": {
+            "type": "STRING", "enum": ["resolve", "manual_review"],
+            "description": ("'resolve' only when one candidate is clearly, unambiguously supported. "
+                             "'manual_review' whenever multiple candidates remain plausible, evidence "
+                             "is insufficient, or there is no real candidate at all -- this is a "
+                             "correct, successful outcome, not a failure to force."),
+        },
+    },
+    "required": ["classification", "recommendation", "confidence", "reason", "evidence",
+                 "candidate_rankings", "action"],
+}
+
+INVESTIGATION_SYSTEM_PROMPT = (
+    "You are Ledgr's AI Forensic Agent, investigating a reconciliation case "
+    "that the deterministic engine could not resolve on its own -- an "
+    "ambiguous match, an orphan settlement, or a similar case. You are given "
+    "the ACTUAL records involved and, where relevant, real candidate matches. "
+    "Do not invent an order, settlement, amount, date, or candidate that is "
+    "not present in what you were given. Compare the real fields you have "
+    "(amount, date/time, payment method, reference, customer info where "
+    "present) to reach a conclusion. If one candidate is clearly, "
+    "unambiguously the best explanation, recommend it with high confidence. "
+    "If several candidates remain plausible, or the evidence is thin, set "
+    "action to \"manual_review\" and say so plainly -- that is the correct, "
+    "successful outcome for a genuinely ambiguous financial case, not a "
+    "failure. Never force a resolution merely because you were asked to "
+    "investigate."
+)
+
+
+def investigate_case(case_type: str, context: dict) -> dict:
+    """
+    General-purpose investigation for the case types engine.py's own
+    ai_diagnose() doesn't cover -- ambiguous multi-candidate matches and
+    orphan/unmatched settlement correlation (Tier 5). Same safety
+    contract as diagnose(): classify and explain using ONLY the given
+    context, never force a match the evidence doesn't support.
+
+    Raises AIAuthError / AIAPIError on failure -- callers must fall back
+    to an honest "AI unavailable" case state, never fabricate a result.
+    """
+    user_message = (
+        f"Case type: {case_type}\n\n"
+        "Investigate this reconciliation case using ONLY the records given "
+        "below.\n\n" + json.dumps(context, indent=2, default=str)
+    )
+    return _generate(INVESTIGATION_SYSTEM_PROMPT, user_message, schema=INVESTIGATION_SCHEMA)
+
+
+ASK_SYSTEM_PROMPT = (
+    "You are Ledgr's reconciliation assistant. Answer the user's question "
+    "using ONLY the reconciliation data provided below -- never invent an "
+    "order, settlement, amount, date, or status that isn't in the given "
+    "data. If the answer cannot be determined from what's given, say so "
+    "plainly instead of guessing. Keep answers short and concrete, and cite "
+    "actual IDs and amounts from the data when relevant. You are read-only: "
+    "you explain, search, summarize, and recommend -- you never claim to "
+    "have changed data, sent money, or sent a message on the user's behalf."
+)
+
+
+def ask(question: str, context: dict) -> str:
+    """
+    Free-text Q&A grounded in real reconciliation data -- powers both the
+    main Reconciliations page's "Ask AI" box (whole-run context) and the
+    investigation ticket's "Ask AI about this case" (single-case
+    context). Plain text, not structured JSON -- conversational, and the
+    app never acts on the answer automatically (see ASK_SYSTEM_PROMPT).
+
+    Raises AIAuthError / AIAPIError on failure -- callers must show an
+    honest "AI unavailable" message, never fabricate an answer.
+    """
+    user_message = (
+        f"Question: {question}\n\n"
+        "Reconciliation data (the ONLY source of truth available to you):\n"
+        + json.dumps(context, indent=2, default=str)
+    )
+    return _generate(ASK_SYSTEM_PROMPT, user_message, schema=None, temperature=0.1)
 
 
 if __name__ == "__main__":

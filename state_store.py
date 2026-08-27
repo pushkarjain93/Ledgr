@@ -49,6 +49,7 @@ def _default_state():
         "notification_created": False,    # the "new data" event has fired once for this batch
         "notification_seen": True,        # False = bell should show an unread dot
         "notification_overlay_open": False,  # should the floating top-right card render now
+        "cases": {},                      # case_id -> case dict; survives across batches/reruns
     }
 
 
@@ -126,6 +127,99 @@ def mark_notification_read(state):
     panel): clears the bell's red dot and closes the overlay."""
     state["notification_seen"] = True
     state["notification_overlay_open"] = False
+
+
+def upsert_case(state, case):
+    """
+    Insert or update one case by its case_id -- the single write path for
+    the persistent case store. Called every time a batch is reconciled,
+    for every non-clean record, whether or not the case already existed.
+
+    Preserves created_at/history/resolution from any EXISTING case with
+    the same id, so a re-evaluated "pending settlement" case (see
+    pending_settlement_order_ids()) keeps its timeline instead of looking
+    like a brand-new case, and a human's earlier decision is never
+    silently overwritten by a fresh deterministic re-run unless the case
+    genuinely moved to a resolved state on its own merits.
+    """
+    cases = state.setdefault("cases", {})
+    cid = case["case_id"]
+    now = datetime.now().isoformat()
+    existing = cases.get(cid)
+    event = case.pop("_event", "reconciled")
+
+    if existing:
+        case["created_at"] = existing.get("created_at", now)
+        case["history"] = list(existing.get("history", []))
+        if existing.get("resolution", {}).get("resolved") and not case.get("resolution"):
+            case["resolution"] = existing["resolution"]
+    else:
+        case["created_at"] = now
+        case.setdefault("history", [])
+
+    case.setdefault("resolution", {"resolved": False, "resolution_type": None,
+                                    "resolved_at": None, "resolved_by": None})
+    case["updated_at"] = now
+    case["history"].append({"at": now, "event": event})
+    cases[cid] = case
+    return case
+
+
+def get_case(state, case_id):
+    return state.get("cases", {}).get(case_id)
+
+
+def list_cases(state, case_status=None, case_type=None):
+    """All persisted cases, newest-updated first. Filter by our own
+    lifecycle status (case_status) and/or case_type -- both plain string
+    fields on each case dict, nothing derived or fabricated here."""
+    cases = list(state.get("cases", {}).values())
+    if case_status:
+        cases = [c for c in cases if c.get("case_status") == case_status]
+    if case_type:
+        cases = [c for c in cases if c.get("case_type") == case_type]
+    return sorted(cases, key=lambda c: c.get("updated_at", ""), reverse=True)
+
+
+def pending_settlement_order_ids(state):
+    """
+    Order IDs still genuinely waiting on a settlement from an EARLIER
+    batch -- Tier 0 (routine COD timing) OR a Tier-5 order-side unmatched
+    exception (has a real identifier, e.g. bank_utr, but nothing in the
+    feed carries it yet) that a human hasn't explicitly resolved. Both
+    are "we haven't seen the settlement yet," just via different engine
+    paths -- see CLAUDE.md's 'delayed settlement' note on why a COD order
+    with a known bank_utr skips engine.py's Tier-0 pre-check entirely and
+    lands as a hard exception instead of a soft pending state.
+
+    The next sync re-includes these orders alongside the new batch's data
+    so a late-arriving settlement updates the SAME case instead of
+    creating a duplicate. This matches this project's own established
+    "reconciliation always re-walks still-open records" philosophy
+    (see CLAUDE.md's earlier sync-semantics note) -- a real settlement
+    that never arrives just keeps re-appearing as the same exception,
+    which is expected, not a bug.
+    """
+    return [c["order_id"] for c in state.get("cases", {}).values()
+            if c.get("order_id")
+            and c.get("case_type") in ("pending_settlement", "unmatched_order", "remittance_overdue")
+            and not c.get("resolution", {}).get("resolved")]
+
+
+def record_resolution(state, case_id, resolution_type, resolved_by="user"):
+    """Accept & Reconcile / Keep for Manual Review / Reject -- persists a
+    real human decision onto an existing case. Returns None if the case
+    doesn't exist (never fabricates one)."""
+    case = state.get("cases", {}).get(case_id)
+    if not case:
+        return None
+    now = datetime.now().isoformat()
+    case["resolution"] = {"resolved": True, "resolution_type": resolution_type,
+                           "resolved_at": now, "resolved_by": resolved_by}
+    case["case_status"] = "resolved" if resolution_type == "accepted" else "manual_review"
+    case["updated_at"] = now
+    case.setdefault("history", []).append({"at": now, "event": f"user action: {resolution_type}"})
+    return case
 
 
 def batch_is_available(state):

@@ -377,6 +377,25 @@ for bid in range(1, N_BATCHES + 1):
                   "R3_UNMATCHED_AMBIGUOUS", "",
                   "credit in bank feed with no corresponding order", bid)
 
+# ---------------------------------------------------------------------------
+# Delayed-settlement demo: 2 real batch-1 orders (already-generated
+# T4_COD_EXACT cases -- clean settlement, no scenario invented) have their
+# SETTLEMENT row's batch_id pushed to batch 2. The order itself stays in
+# batch 1, where it will correctly land on Tier 0 "awaiting remittance"
+# (no bank_utr matched yet, since its settlement isn't in the batch-1 feed).
+# app_new.py's sync step re-includes still-pending Tier-0 orders from
+# earlier batches when it processes the next one, so this order gets
+# re-evaluated once its settlement actually arrives -- the same real
+# order/settlement pair, revealed one batch apart, not a fabricated
+# relationship. See CLAUDE.md's "delayed settlement" session note.
+# ---------------------------------------------------------------------------
+_batch1_cod_exact = [t for t in truth if t["scenario"] == "T4_COD_EXACT" and t["batch_id"] == 1]
+_delayed = random.sample(_batch1_cod_exact, min(2, len(_batch1_cod_exact)))
+_delayed_settlement_ids = {f"STL-{t['record_id'].split('-')[1]}" for t in _delayed}
+for s in settlements:
+    if s["settlement_id"] in _delayed_settlement_ids:
+        s["batch_id"] = 2
+
 random.shuffle(settlements)
 
 # ---------------------------------------------------------------------------
