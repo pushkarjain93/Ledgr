@@ -73,35 +73,38 @@ def courier_narration(courier, utr, batch_no=None):
     return f"NEFT CR {utr[-9:]} XXXXX"  # XPRESSBEES: bank truncates hard, no courier name at all
 
 # ---------------------------------------------------------------------------
-# Scenario quotas, sized so three batches land at exactly 60 orders each from
-# this loop (174 total) -- the per-batch special cases below add 2 bulk-COD
-# orders each, landing on the ~180-total / ~60-per-batch demo target. Same
-# relative proportions as before: majority clean matches (T1/T2), a smaller
+# Scenario quotas, sized so two batches land at exactly 50 orders each from
+# this loop (100 total) -- the per-batch special cases below add a few more,
+# landing comfortably clear of the buildathon's 50+ record bar while keeping
+# Gemini call volume small (see CLAUDE.md's Gemini-quota session note: this
+# replaced an earlier 3-batch/180-record target that produced far more
+# AI-eligible cases than a free-tier API quota could support). Same relative
+# proportions as before: majority clean matches (T1/T2), a smaller
 # AI-variance slice (T3), COD/direct-transfer coverage (T4), COD timing
 # in-flight states (T0, not failures), and a small exception slice (T5).
 # ---------------------------------------------------------------------------
 PLAN = (
-    ["T1_EXACT"]                *  55   # UPI / zero-MDR, settles at face value
-    + ["T2_MDR_FEE"]            *  31   # card / wallet, MDR + GST inside band
-    + ["T2_FLAT_FEE"]           *   9   # netbanking flat Rs 2-3
-    + ["T3_OVERCHARGED_FEE"]    *   5   # deduction exceeds contracted MDR band
-    + ["T3_PARTIAL_SETTLEMENT"] *   5   # refund/chargeback netted off silently
-    + ["T3_OVERPAYMENT"]        *   3   # settled MORE than the order value
-    + ["T4_COD_EXACT"]          *  12   # courier remitted full value
-    + ["T4_COD_FEE"]            *  15   # courier collection fee inside COD band
-    + ["T4_COD_SHORTFALL"]      *   4   # COD gap too wide -> review, still T4
-    + ["T4_DIRECT_TRANSFER"]    *   7   # B2B NEFT, no gateway involved
-    + ["T0_COD_AWAITING"]       *   8   # COD, 0-7 days, clock still running
-    + ["T0_COD_APPROACHING"]    *   5   # COD, 8-14 days, visible but not broken
-    + ["T0_COD_OVERDUE"]        *   3   # COD, 15+ days, chase the courier
-    + ["T5_NO_SETTLEMENT"]      *   6   # online payment, money never arrived
-    + ["T5_DUPLICATE_MATCH"]    *   3   # two credits claim the same ref
-    + ["T5_ORPHAN_REF"]         *   3   # ref exists in orders, nowhere in feed
+    ["T1_EXACT"]                *  30   # UPI / zero-MDR, settles at face value
+    + ["T2_MDR_FEE"]            *  18   # card / wallet, MDR + GST inside band
+    + ["T2_FLAT_FEE"]           *   5   # netbanking flat Rs 2-3
+    + ["T3_OVERCHARGED_FEE"]    *   3   # deduction exceeds contracted MDR band
+    + ["T3_PARTIAL_SETTLEMENT"] *   3   # refund/chargeback netted off silently
+    + ["T3_OVERPAYMENT"]        *   2   # settled MORE than the order value
+    + ["T4_COD_EXACT"]          *   7   # courier remitted full value
+    + ["T4_COD_FEE"]            *   9   # courier collection fee inside COD band
+    + ["T4_COD_SHORTFALL"]      *   2   # COD gap too wide -> review, still T4
+    + ["T4_DIRECT_TRANSFER"]    *   4   # B2B NEFT, no gateway involved
+    + ["T0_COD_AWAITING"]       *   5   # COD, 0-7 days, clock still running
+    + ["T0_COD_APPROACHING"]    *   3   # COD, 8-14 days, visible but not broken
+    + ["T0_COD_OVERDUE"]        *   2   # COD, 15+ days, chase the courier
+    + ["T5_NO_SETTLEMENT"]      *   3   # online payment, money never arrived
+    + ["T5_DUPLICATE_MATCH"]    *   2   # two credits claim the same ref
+    + ["T5_ORPHAN_REF"]         *   2   # ref exists in orders, nowhere in feed
 )
 random.shuffle(PLAN)
 
-N_BATCHES = 3
-BATCH_SIZE = len(PLAN) // N_BATCHES  # 174 // 3 = 58 -- exact, no remainder
+N_BATCHES = 2
+BATCH_SIZE = len(PLAN) // N_BATCHES  # 100 // 2 = 50 -- exact, no remainder
 BULK_ORDERS_PER_BATCH = 2             # COD bulk-remittance group size, per batch
 ORPHAN_CREDITS_PER_BATCH = 2          # settlements with no order behind them
 

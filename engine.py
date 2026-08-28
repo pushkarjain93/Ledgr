@@ -15,27 +15,27 @@ Two rules the whole engine obeys:
      facts and receives back a category plus one sentence. Arithmetic is code's
      job; judgement is the model's.
 
-Run:  python3 engine.py            (offline, deterministic AI stub)
-      RECONAI_LLM=1 python3 engine.py   (once a real client is wired in)
+Run:  python3 engine.py
+
+Real AI investigation is NOT called from here any more. This module stays
+100% deterministic and network-free -- ai_diagnose() below only produces a
+PROVISIONAL classification via the offline heuristic. The real Gemini call
+happens exactly once, in a single batched pass, in case_engine.py, AFTER
+reconcile() returns -- see CLAUDE.md's "batched AI architecture" session
+note for why this moved out of the per-record loop that used to live here
+(rate-limit economics: one call per record burns through a small daily
+quota fast; batching several cases into one request does not).
 """
 import os
 import sys
 from datetime import date
 
 import pandas as pd
-from dotenv import load_dotenv
 
 from config import (RUN_DATE, REASON_LEGEND, TIER_NAMES, to_paise, to_rupees,
                     fmt, fee_band, cod_age_bucket, priority_of)
 
-# Loaded here (not just in ai_client.py/razorpay_client.py) so RECONAI_LLM=1
-# in .env takes effect regardless of which module happens to import engine.py
-# first -- relying on import order across files to populate os.environ would
-# be fragile.
-load_dotenv()
-
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-USE_LLM = os.environ.get("RECONAI_LLM") == "1"
 
 
 # ===========================================================================
@@ -46,28 +46,23 @@ def ai_diagnose(facts: dict) -> dict:
     Given engine-computed facts about a variance, return a dict:
     {reason_code, explanation, confidence, evidence, recommendation}.
 
-    confidence/evidence/recommendation are None/[] on the offline path --
-    there's no "confidence" in a hand-written if-else, only a category and
-    a sentence. Only the real model path (RECONAI_LLM=1) populates them,
-    since only a real judgement call has a confidence to report.
-
-    The offline path is deterministic so the engine can be developed and
-    scored without network access or spend. The model is never asked to
-    compute anything, on either path -- it receives already-computed facts
-    and returns a classification + explanation, nothing else.
+    Always the offline heuristic now -- confidence/evidence/recommendation
+    are always None/[] here, since a hand-written if-else has no real
+    confidence to report. This is a PROVISIONAL classification (shown
+    before real investigation); case_engine.py's batched Gemini pass may
+    revise reason_code/explanation once it actually investigates. Keeping
+    this deterministic keeps engine.py scoreable and testable without
+    network access, exactly as before.
     """
-    if USE_LLM:
-        return _llm_diagnose(facts)
     reason_code, explanation = _offline_diagnose(facts)
     return {"reason_code": reason_code, "explanation": explanation,
             "confidence": None, "evidence": [], "recommendation": None}
 
 
 def _offline_diagnose(facts: dict):
-    """The original deterministic stand-in -- unchanged logic, just given
-    its own name now that ai_diagnose() is a thin dispatcher. Still used
-    directly as ai_diagnose()'s offline path, AND as _llm_diagnose()'s
-    fallback when the real API call fails."""
+    """The deterministic stand-in used for every record's provisional
+    classification. Unchanged logic from before this file talked to any
+    API -- see case_engine.py for where real AI judgement now happens."""
     delta, amt, band = facts["delta"], facts["order_amount"], facts["band"]
     pct = abs(delta) / amt * 100 if amt else 0
 
@@ -101,35 +96,6 @@ def _offline_diagnose(facts: dict):
             f"schedule for this transaction type.")
 
 
-def _llm_diagnose(facts: dict) -> dict:
-    """
-    Real model call, via the isolated ai_client.py (same pattern as
-    razorpay_client.py -- raw REST, no vendor SDK). Validates the response
-    before trusting it: reason_code must be one of REASON_LEGEND's real
-    codes. Any failure at all -- network, auth, malformed response, an
-    invalid reason code -- falls back to the deterministic offline path
-    rather than crashing or fabricating a diagnosis. This mirrors the
-    project's existing rule for Razorpay: "API fails = flag for review,
-    never guess."
-    """
-    import ai_client
-    try:
-        result = ai_client.diagnose(facts)
-        if result.get("reason_code") not in REASON_LEGEND:
-            raise ai_client.AIAPIError(f"invalid reason_code: {result.get('reason_code')!r}")
-    except (ai_client.AIAuthError, ai_client.AIAPIError) as exc:
-        reason_code, explanation = _offline_diagnose(facts)
-        return {"reason_code": reason_code,
-                "explanation": f"[AI unavailable -- {exc}] {explanation}",
-                "confidence": None, "evidence": [], "recommendation": None}
-
-    return {
-        "reason_code": result["reason_code"],
-        "explanation": result.get("explanation", ""),
-        "confidence": result.get("confidence"),
-        "evidence": result.get("evidence") or [],
-        "recommendation": result.get("recommendation"),
-    }
 
 
 # ===========================================================================

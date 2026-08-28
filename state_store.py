@@ -29,8 +29,7 @@ STATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "st
 os.makedirs(STATE_DIR, exist_ok=True)
 
 BATCH2_DELAY_SECONDS = 45
-BATCH3_DELAY_SECONDS = 180
-TOTAL_BATCHES = 3
+TOTAL_BATCHES = 2
 
 
 def _path(merchant_id):
@@ -94,7 +93,7 @@ def schedule_next_batch(state, completed_batch):
         state["next_batch_available_at"] = None
         state["current_batch"] = TOTAL_BATCHES + 1  # sentinel: nothing left
         return
-    delay = BATCH2_DELAY_SECONDS if completed_batch == 1 else BATCH3_DELAY_SECONDS
+    delay = BATCH2_DELAY_SECONDS
     next_batch = completed_batch + 1
     state["current_batch"] = next_batch
     state["next_batch_available_at"] = (datetime.now() + timedelta(seconds=delay)).isoformat()

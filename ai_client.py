@@ -3,19 +3,21 @@ Isolated Gemini (Google AI) client for Ledgr's AI Forensic Agent.
 
 Talks to Google's real Generative Language API using GEMINI_API_KEY from
 the environment. Same pattern as razorpay_client.py: raw REST calls (via
-requests, not a vendor SDK), isolated module, never touches engine.py's
-matching/tier logic directly -- engine.py only ever calls diagnose() and
-reads the dict back; which real provider sits behind that call is entirely
-this file's business.
+requests, not a vendor SDK), isolated module, one-directional and
+swappable -- nothing outside this file knows or cares which provider
+sits behind it.
 
-The model NEVER computes a number. engine.py's ai_diagnose() hands this
-module facts it has ALREADY worked out (delta, band, order_amount, age,
-etc.); this module's only job is judgement -- pick the single best-fitting
-reason code, explain the shape of the variance in plain English, and
-recommend what should happen next. The response is forced into Gemini's
-structured JSON output mode (a response schema), so there's nothing
-free-text to parse and no room for the model to invent a different shape
-than what's expected.
+Batched by design: investigate_batch() sends several independent cases in
+ONE request and gets one structured result per case back, keyed by
+case_id. This exists specifically because a free-tier API quota caps
+REQUEST COUNT (RPM/RPD), not token volume -- batching 5 cases into one
+call is a ~5x reduction in requests for the same amount of reasoning.
+See CLAUDE.md's "batched AI architecture" session note.
+
+The model NEVER computes a number. Every function here hands the model
+facts that deterministic code has ALREADY worked out; the model's only
+job is judgement -- classify, explain, and recommend, using only what
+it's given.
 """
 import json
 import os
@@ -23,15 +25,14 @@ import os
 import requests
 from dotenv import load_dotenv
 
-from config import fmt
-
 # Loads GEMINI_API_KEY from a local .env file (see .env.example) into
 # os.environ, if present -- same mechanism razorpay_client.py already uses.
 load_dotenv()
 
 API_URL_TMPL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 MODEL = "gemini-3.6-flash"
-TIMEOUT_SECONDS = 20
+TIMEOUT_SECONDS = 60  # batched multi-case responses take longer to generate than a single-case call
+DEFAULT_BATCH_SIZE = 5
 
 
 class AIAuthError(Exception):
@@ -39,76 +40,25 @@ class AIAuthError(Exception):
 
 
 class AIAPIError(Exception):
-    """Gemini reachable but responded with a non-2xx status, or the
-    response didn't contain the expected structured JSON."""
+    """Gemini reachable but responded with a non-2xx status (other than
+    auth/rate-limit), or the response didn't contain the expected
+    structured JSON."""
 
 
-# The five reason codes are engine.py's own REASON_LEGEND -- duplicated
-# here (not imported) so this module has zero dependency on engine.py and
-# stays a one-directional, swappable client, exactly like razorpay_client.py.
-_REASON_CODES = [
-    "R1_AWAITING_REMITTANCE", "R2_REMITTANCE_OVERDUE", "R3_UNMATCHED_AMBIGUOUS",
-    "R4_PARTIAL_PAYMENT", "R5_AI_VARIANCE",
-]
-
-RESPONSE_SCHEMA = {
-    "type": "OBJECT",
-    "properties": {
-        "reason_code": {
-            "type": "STRING", "enum": _REASON_CODES,
-            "description": "The single best-fitting reason code for this variance.",
-        },
-        "confidence": {
-            "type": "INTEGER",
-            "description": "Your confidence in this classification, 0-100. Be conservative.",
-        },
-        "explanation": {
-            "type": "STRING",
-            "description": ("One or two plain-English sentences a finance-ops reviewer would "
-                             "read. Never state a rupee amount other than the ones you were given."),
-        },
-        "evidence": {
-            "type": "ARRAY", "items": {"type": "STRING"},
-            "description": "Short bullet points of the given facts that led to this conclusion.",
-        },
-        "recommendation": {
-            "type": "STRING", "enum": ["AUTO_CLEAR", "HUMAN_REVIEW", "ESCALATE"],
-            "description": ("What should happen next. Only recommend AUTO_CLEAR when "
-                             "confidence is 90+ and every given fact unambiguously supports it."),
-        },
-    },
-    "required": ["reason_code", "confidence", "explanation", "evidence", "recommendation"],
-}
-
-SYSTEM_PROMPT = (
-    "You are Ledgr's AI Forensic Agent, investigating a single payment "
-    "reconciliation variance. You are given FACTS that deterministic code has "
-    "already computed -- amounts, deltas, tolerance bands, dates. Treat them as "
-    "ground truth; do not recompute or restate a different number than what you "
-    "were given. Your job is judgement, not arithmetic: pick the single best "
-    "reason code, explain the shape of the variance in plain English, and "
-    "recommend what should happen next. Be conservative -- recommending "
-    "AUTO_CLEAR is only appropriate when the evidence is unambiguous; when in "
-    "doubt, recommend HUMAN_REVIEW."
-)
-
-
-_MONEY_FIELDS = {"order_amount", "received", "delta", "band"}
-
-
-def _humanize_facts(facts: dict) -> dict:
+class AIRateLimitError(AIAPIError):
     """
-    Paise -> 'Rs 1,234.56' for known money fields, for the PROMPT TEXT
-    only. engine.py's own facts dict stays raw paise -- it's also used
-    for real arithmetic in _offline_diagnose() (both as the deterministic
-    path and as _llm_diagnose()'s fallback on failure), which would break
-    if it received formatted strings instead of numbers.
+    Gemini returned 429 -- a distinct, retryable failure, not a generic
+    error. A daily or per-minute cap won't clear by immediately retrying
+    in the same run, so callers should:
+      - mark the affected case(s) 'ai_pending' (NOT 'manual_review' --
+        that would falsely imply AI looked and recommended a human
+        decision, when really AI never got to look at all), and
+      - stop attempting further batches in THIS run rather than burning
+        more of an already-exhausted quota on calls that will also fail.
+    A "Retry AI Investigation" button lets the user try again later --
+    see case_engine.retry_pending_cases(). No automatic sleep/backoff:
+    that would block Streamlit for no benefit against a daily cap.
     """
-    out = dict(facts)
-    for k in _MONEY_FIELDS:
-        if k in out and isinstance(out[k], (int, float)):
-            out[k] = fmt(int(out[k]))
-    return out
 
 
 def _api_key():
@@ -125,8 +75,9 @@ def _generate(system_prompt: str, user_message: str, schema: dict | None = None,
     Without one: returns the raw response text (used by ask(), which is
     conversational, not a decision the app acts on automatically).
 
-    Raises AIAuthError / AIAPIError on any failure -- every caller in this
-    module treats that as "AI unavailable," never as license to guess.
+    Raises AIAuthError / AIRateLimitError / AIAPIError on any failure --
+    every caller in this module treats that as "AI unavailable," never as
+    license to guess.
     """
     key = _api_key()
     generation_config = {"temperature": temperature}
@@ -153,7 +104,7 @@ def _generate(system_prompt: str, user_message: str, schema: dict | None = None,
     if resp.status_code in (401, 403):
         raise AIAuthError(f"Gemini rejected the API key ({resp.status_code}): {resp.text[:300]}")
     if resp.status_code == 429:
-        raise AIAPIError(f"Gemini rate-limited this request (429): {resp.text[:300]}")
+        raise AIRateLimitError(f"Gemini rate-limited this request (429): {resp.text[:300]}")
     if not resp.ok:
         raise AIAPIError(f"Gemini returned {resp.status_code}: {resp.text[:300]}")
 
@@ -171,109 +122,178 @@ def _generate(system_prompt: str, user_message: str, schema: dict | None = None,
         raise AIAPIError(f"Gemini's response wasn't valid JSON: {exc}") from exc
 
 
-def diagnose(facts: dict) -> dict:
-    """
-    Send engine-computed facts to Gemini and get back a structured
-    diagnosis: {reason_code, confidence, explanation, evidence, recommendation}.
-    Used by engine.py's Tier 3 / Tier 4 variance path.
-
-    Raises AIAuthError / AIAPIError on any failure -- callers must treat
-    an exception as "could not verify via AI, fall back to human review",
-    never as license to guess.
-    """
-    user_message = (
-        "Investigate this reconciliation variance. Facts (already computed, "
-        "treat as ground truth -- do not restate a different number):\n"
-        + json.dumps(_humanize_facts(facts), indent=2, default=str)
-    )
-    return _generate(SYSTEM_PROMPT, user_message, schema=RESPONSE_SCHEMA)
-
-
-INVESTIGATION_SCHEMA = {
+# ===========================================================================
+# Batched case investigation -- the one live path used for every
+# AI-eligible case (variance, ambiguous match, orphan settlement alike).
+# One unified schema so mixed case types can travel in the same batch.
+# ===========================================================================
+BATCH_RESULT_ITEM_SCHEMA = {
     "type": "OBJECT",
     "properties": {
-        "classification": {
+        "case_id": {"type": "STRING", "description": "Must exactly match one of the given case_id values."},
+        "decision": {
             "type": "STRING",
-            "description": "Short label for what this case is, e.g. 'ambiguous_match', 'unmatched_settlement'.",
-        },
-        "recommendation": {
-            "type": "STRING",
-            "description": "One short sentence: what should happen next.",
+            "description": ("A short label for what this case is, e.g. 'partial_payment', "
+                             "'overpayment', 'ambiguous_match', 'no_match'."),
         },
         "confidence": {
             "type": "INTEGER",
             "description": "0-100. Be conservative -- see the system instructions on forcing a match.",
         },
-        "reason": {
+        "reasoning": {
             "type": "STRING",
-            "description": "Plain-English explanation grounded only in the given records.",
+            "description": ("Plain-English explanation grounded only in this case's own given "
+                             "records. Never state a rupee amount other than the ones given."),
         },
-        "evidence": {
+        "evidence_used": {
             "type": "ARRAY", "items": {"type": "STRING"},
             "description": "Short bullets of the given facts that led to this conclusion.",
         },
-        "candidate_rankings": {
-            "type": "ARRAY",
-            "description": "Only for cases with real candidate records given. Empty array if none were provided.",
-            "items": {
-                "type": "OBJECT",
-                "properties": {
-                    "id": {"type": "STRING", "description": "The candidate's own ID from the given records."},
-                    "confidence": {"type": "INTEGER"},
-                    "reason": {"type": "STRING"},
-                },
-                "required": ["id", "confidence", "reason"],
-            },
+        "missing_evidence": {
+            "type": "ARRAY", "items": {"type": "STRING"},
+            "description": ("What additional evidence, if it existed, would raise your confidence "
+                             "-- e.g. 'customer order history'. Empty array if nothing would help."),
         },
-        "action": {
-            "type": "STRING", "enum": ["resolve", "manual_review"],
-            "description": ("'resolve' only when one candidate is clearly, unambiguously supported. "
-                             "'manual_review' whenever multiple candidates remain plausible, evidence "
-                             "is insufficient, or there is no real candidate at all -- this is a "
-                             "correct, successful outcome, not a failure to force."),
+        "recommended_action": {
+            "type": "STRING", "enum": ["resolve", "manual_review", "escalate"],
+            "description": ("'resolve' only when confidence is high AND every given fact "
+                             "unambiguously supports one conclusion. 'manual_review' when real "
+                             "evidence or candidates exist but multiple explanations remain "
+                             "plausible, or evidence is thin -- a correct, successful outcome, "
+                             "not a failure to force a match. 'escalate' specifically when there "
+                             "is NO real evidence or candidate at all (nothing to weigh, not even "
+                             "an ambiguous one) and a human needs to take an external action, e.g. "
+                             "contacting a courier or payment gateway -- confidence should "
+                             "genuinely be low in this case, not forced, since there is nothing to "
+                             "be confident about."),
+        },
+        "next_step": {
+            "type": "STRING",
+            "description": ("ONE short, specific, actionable sentence telling a human exactly "
+                             "what to do next, e.g. 'Escalate to courier for remittance "
+                             "confirmation.' or 'Accept STL-00124; mark STL-00221 as duplicate.' "
+                             "Distinct from `reasoning` -- this is the action, not the explanation."),
+        },
+        "candidate_id": {
+            "type": "STRING",
+            "description": ("If this case included candidate_matches and one is clearly the best "
+                             "match, its id. Empty string if there were no candidates, or none "
+                             "stood out."),
         },
     },
-    "required": ["classification", "recommendation", "confidence", "reason", "evidence",
-                 "candidate_rankings", "action"],
+    "required": ["case_id", "decision", "confidence", "reasoning", "evidence_used",
+                 "missing_evidence", "recommended_action", "next_step", "candidate_id"],
 }
 
-INVESTIGATION_SYSTEM_PROMPT = (
-    "You are Ledgr's AI Forensic Agent, investigating a reconciliation case "
-    "that the deterministic engine could not resolve on its own -- an "
-    "ambiguous match, an orphan settlement, or a similar case. You are given "
-    "the ACTUAL records involved and, where relevant, real candidate matches. "
-    "Do not invent an order, settlement, amount, date, or candidate that is "
-    "not present in what you were given. Compare the real fields you have "
-    "(amount, date/time, payment method, reference, customer info where "
-    "present) to reach a conclusion. If one candidate is clearly, "
-    "unambiguously the best explanation, recommend it with high confidence. "
-    "If several candidates remain plausible, or the evidence is thin, set "
-    "action to \"manual_review\" and say so plainly -- that is the correct, "
-    "successful outcome for a genuinely ambiguous financial case, not a "
-    "failure. Never force a resolution merely because you were asked to "
-    "investigate."
+BATCH_RESPONSE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "results": {"type": "ARRAY", "items": BATCH_RESULT_ITEM_SCHEMA},
+    },
+    "required": ["results"],
+}
+
+BATCH_SYSTEM_PROMPT = (
+    "You are Ledgr's AI Forensic Agent, investigating a batch of independent "
+    "payment-reconciliation cases in a single pass. Each case has already had "
+    "its amounts, deltas, and tolerance bands computed by deterministic code -- "
+    "treat those as ground truth; never recompute or restate a different "
+    "number than what you were given, and never invent an order, settlement, "
+    "date, or candidate that isn't present in that case's own records. "
+    "CASES ARE INDEPENDENT: never use one case's evidence to judge another. "
+    "Some cases will have real candidate_matches to weigh; others will have "
+    "NONE at all -- for those, do not invent a match. Confirm plainly that "
+    "nothing was found, explain why in one sentence, recommend 'escalate' "
+    "with a genuinely low confidence (there is nothing to be confident "
+    "about), and give a concrete next_step a human can act on (e.g. verify "
+    "with the payment gateway, or chase the courier for remittance). For "
+    "cases that DO have real evidence or candidates but remain genuinely "
+    "ambiguous, recommend 'manual_review' instead -- that is a correct, "
+    "successful outcome, never a failure to force a match. Recommend "
+    "'resolve' only when the evidence is unambiguous. Return exactly one "
+    "result per case_id you were given, in the same order."
 )
 
 
-def investigate_case(case_type: str, context: dict) -> dict:
+def investigate_batch(cases: list[dict]) -> dict:
     """
-    General-purpose investigation for the case types engine.py's own
-    ai_diagnose() doesn't cover -- ambiguous multi-candidate matches and
-    orphan/unmatched settlement correlation (Tier 5). Same safety
-    contract as diagnose(): classify and explain using ONLY the given
-    context, never force a match the evidence doesn't support.
+    Investigate multiple independent cases in ONE request. `cases` is a
+    list of compact context dicts, each with at least a "case_id" key
+    (see case_engine.py for the exact shape). Returns a dict keyed by
+    case_id -> result, so callers can detect a case the model's response
+    omitted (partial success) by checking membership.
 
-    Raises AIAuthError / AIAPIError on failure -- callers must fall back
-    to an honest "AI unavailable" case state, never fabricate a result.
+    Raises AIAuthError / AIRateLimitError / AIAPIError if the WHOLE
+    request fails -- callers must mark every case in the batch as
+    ai_pending in that case, never fabricate a result for any of them.
     """
     user_message = (
-        f"Case type: {case_type}\n\n"
-        "Investigate this reconciliation case using ONLY the records given "
-        "below.\n\n" + json.dumps(context, indent=2, default=str)
+        f"Investigate these {len(cases)} independent reconciliation cases. "
+        "Return one result per case_id, in the same order:\n\n"
+        + json.dumps(cases, indent=2, default=str)
     )
-    return _generate(INVESTIGATION_SYSTEM_PROMPT, user_message, schema=INVESTIGATION_SCHEMA)
+    result = _generate(BATCH_SYSTEM_PROMPT, user_message, schema=BATCH_RESPONSE_SCHEMA)
+    return {r["case_id"]: r for r in result.get("results", []) if r.get("case_id")}
 
 
+# ===========================================================================
+# Follow-up investigation -- the one controlled, user-triggered agentic
+# step: the model already named what evidence would help (missing_evidence
+# above); the user asks Ledgr to fetch it; this makes ONE more call with
+# that new evidence for a final conclusion. Never automatic, never looped.
+# ===========================================================================
+FOLLOWUP_RESPONSE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "decision": {"type": "STRING"},
+        "confidence": {"type": "INTEGER"},
+        "reasoning": {"type": "STRING"},
+        "evidence_used": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "recommended_action": {"type": "STRING", "enum": ["resolve", "manual_review", "escalate"]},
+        "next_step": {"type": "STRING", "description": "One short, specific, actionable sentence."},
+        "candidate_id": {"type": "STRING"},
+    },
+    "required": ["decision", "confidence", "reasoning", "evidence_used",
+                 "recommended_action", "next_step", "candidate_id"],
+}
+
+FOLLOWUP_SYSTEM_PROMPT = (
+    "You previously investigated a reconciliation case and said you needed "
+    "additional evidence to be more confident. You are now given that "
+    "evidence -- or told plainly that it isn't available in this system. "
+    "Give your FINAL conclusion using everything you now have. If the new "
+    "evidence resolves the ambiguity, say so and raise your confidence "
+    "accordingly. If it doesn't help, or wasn't available, say that plainly "
+    "and keep your recommendation conservative -- do not force a resolution."
+)
+
+
+def investigate_followup(original_context: dict, original_result: dict, new_evidence: dict) -> dict:
+    """
+    ONE additional call for a single case, after the user explicitly asks
+    Ledgr to fetch the evidence the model itself said it was missing. Not
+    part of the batched pass, not automatic, and never looped further --
+    this always produces a final answer, one round only.
+
+    Raises AIAuthError / AIRateLimitError / AIAPIError on failure --
+    callers must leave the case's existing result untouched and report
+    the follow-up as unavailable, never overwrite a real prior result
+    with a fabricated one.
+    """
+    user_message = (
+        "ORIGINAL CASE:\n" + json.dumps(original_context, indent=2, default=str)
+        + "\n\nYOUR PREVIOUS FINDING:\n" + json.dumps(original_result, indent=2, default=str)
+        + "\n\nNEWLY GATHERED EVIDENCE (you asked for this):\n" + json.dumps(new_evidence, indent=2, default=str)
+        + "\n\nGive your final conclusion now."
+    )
+    return _generate(FOLLOWUP_SYSTEM_PROMPT, user_message, schema=FOLLOWUP_RESPONSE_SCHEMA)
+
+
+# ===========================================================================
+# Ask AI -- free-text Q&A. Only reached for genuinely novel questions;
+# case_engine.try_direct_answer() answers most questions from Python
+# first, without spending a Gemini call at all.
+# ===========================================================================
 ASK_SYSTEM_PROMPT = (
     "You are Ledgr's reconciliation assistant. Answer the user's question "
     "using ONLY the reconciliation data provided below -- never invent an "
@@ -288,14 +308,13 @@ ASK_SYSTEM_PROMPT = (
 
 def ask(question: str, context: dict) -> str:
     """
-    Free-text Q&A grounded in real reconciliation data -- powers both the
-    main Reconciliations page's "Ask AI" box (whole-run context) and the
-    investigation ticket's "Ask AI about this case" (single-case
-    context). Plain text, not structured JSON -- conversational, and the
-    app never acts on the answer automatically (see ASK_SYSTEM_PROMPT).
+    Free-text Q&A grounded in real reconciliation data. Plain text, not
+    structured JSON -- conversational, and the app never acts on the
+    answer automatically (see ASK_SYSTEM_PROMPT).
 
-    Raises AIAuthError / AIAPIError on failure -- callers must show an
-    honest "AI unavailable" message, never fabricate an answer.
+    Raises AIAuthError / AIRateLimitError / AIAPIError on failure --
+    callers must show an honest "AI unavailable" message, never fabricate
+    an answer.
     """
     user_message = (
         f"Question: {question}\n\n"
@@ -307,7 +326,7 @@ def ask(question: str, context: dict) -> str:
 
 if __name__ == "__main__":
     # Standalone self-test: python ai_client.py
-    # Never prints the key itself, only pass/fail + the returned diagnosis.
+    # Never prints the key itself, only pass/fail + the returned results.
     key = os.environ.get("GEMINI_API_KEY")
     placeholder = key is None or key.startswith("your_") or key.startswith("paste_")
 
@@ -318,16 +337,25 @@ if __name__ == "__main__":
         print("  Edit .env (not .env.example) and paste your real key in.")
     else:
         print(f"Using key ending in ...{key[-4:]} (rest is never shown)")
-        sample_facts = {
-            "record_id": "ORD-00042", "order_amount": 999900, "received": 949900,
-            "delta": -50000, "band": 25000, "payment_mode": "CARD",
-            "identifier": "pay_000042A", "age_days": 2, "settlement_id": "STL-00042",
-        }
+        sample_cases = [
+            {"case_id": "CASE-TEST-1", "case_type": "partial_payment",
+             "record": {"id": "ORD-00042", "expected": "Rs 9,999.00", "received": "Rs 4,999.50",
+                        "issue": "Partial payment"}, "candidate_matches": []},
+            {"case_id": "CASE-TEST-2", "case_type": "unmatched_settlement",
+             "record": {"id": "STL-00099", "expected": "Rs 0.00", "received": "Rs 6,499.99",
+                        "issue": "Unmatched / ambiguous"},
+             "candidate_matches": [{"order_id": "ORD-00007", "amount_paise": 649999,
+                                    "order_date": "2026-08-06", "days_from_settlement": 2}]},
+        ]
         try:
-            result = diagnose(sample_facts)
-            print("RESULT: CALL SUCCEEDED")
-            for k, v in result.items():
-                print(f"  {k}: {v}")
+            results = investigate_batch(sample_cases)
+            print(f"RESULT: BATCH CALL SUCCEEDED -- {len(results)}/{len(sample_cases)} cases returned")
+            for case_id, r in results.items():
+                print(f"  --- {case_id} ---")
+                for k, v in r.items():
+                    print(f"    {k}: {v}")
+        except AIRateLimitError as exc:
+            print(f"RESULT: RATE LIMITED -- {exc}")
         except AIAuthError as exc:
             print(f"RESULT: AUTH FAILED -- {exc}")
         except AIAPIError as exc:
