@@ -263,7 +263,9 @@ def build_cases_for_batch(result_df, batch_id, orders_lookup, settlements_lookup
     return cases
 
 
-def _build_context(case):
+def build_case_context(case):
+    """Public: the ticket page's step-by-step 'Investigate Further' UI
+    calls this directly (real function boundary, not a cosmetic step)."""
     return {
         "case_id": case["case_id"], "case_type": case["case_type"],
         "record": {"id": case["record_id"], "expected": fmt(case["expected"]),
@@ -284,7 +286,10 @@ def _mark_ai_pending(case, error_message):
     case["_event"] = "ai investigation pending (unavailable)"
 
 
-def _apply_ai_result(case, result):
+def apply_ai_result(case, result):
+    """Public: also called directly by the ticket page's step-by-step
+    'Investigate Further' UI, which needs to update the placeholder
+    between each real call rather than after one opaque function."""
     confidence = result.get("confidence")
     action = result.get("recommended_action", "manual_review")
     if action == "resolve" and (confidence or 0) < AUTO_RESOLVE_CONFIDENCE_FLOOR:
@@ -332,7 +337,7 @@ def investigate_new_cases_batched(cases, batch_size=None):
     chunks = [pending[i:i + batch_size] for i in range(0, len(pending), batch_size)]
 
     for i, chunk in enumerate(chunks):
-        contexts = [_build_context(c) for c in chunk]
+        contexts = [build_case_context(c) for c in chunk]
         try:
             results = ai_client.investigate_batch(contexts)
         except ai_client.AIRateLimitError as exc:
@@ -350,7 +355,7 @@ def investigate_new_cases_batched(cases, batch_size=None):
             if result is None:
                 _mark_ai_pending(c, "Gemini's response omitted this case (partial batch result).")
             else:
-                _apply_ai_result(c, result)
+                apply_ai_result(c, result)
 
     return cases
 
@@ -438,12 +443,12 @@ def investigate_case_followup(state, case_id, orders_lookup):
     case = state_store.get_case(state, case_id)
     if not case or not case.get("ai"):
         return None
-    original_context = _build_context(case)
+    original_context = build_case_context(case)
     new_evidence = fetch_missing_evidence(case, orders_lookup)
     try:
         result = ai_client.investigate_followup(original_context, case["ai"], new_evidence)
         result.setdefault("missing_evidence", [])
-        _apply_ai_result(case, result)
+        apply_ai_result(case, result)
         case["_event"] = "ai follow-up investigation completed"
     except (ai_client.AIAuthError, ai_client.AIAPIError) as exc:
         case["_event"] = f"ai follow-up investigation unavailable: {exc}"

@@ -36,7 +36,7 @@ import razorpay_client as rzp
 import shopify_client as shopify
 import state_store
 from auth import is_authenticated, get_current_merchant, get_merchant_by_email, logout
-from config import to_paise, fmt, RUN_DATE
+from config import to_paise, fmt, RUN_DATE, fee_band
 from engine import reconcile
 from login import show_login_page
 from theme import base_css, html, INK, BODY, DIM, LINE, BG, SOFT, ACC, ACC_D, MATCHED, WARN, WARN_BG
@@ -250,14 +250,24 @@ SYNC_STEPS = [
 ]
 
 
-def _render_steps(placeholder, current, results):
+INVESTIGATE_STEPS = [
+    ("🔍", "Identifying missing evidence…"),
+    ("📥", "Retrieving data…"),
+    ("✨", "Analyzing with AI…"),
+    ("💾", "Updating result…"),
+]
+
+
+def _render_steps(placeholder, current, results, steps=SYNC_STEPS):
     """
     Redraws the whole step list every call: steps before `current` are done
     (faded grey, with their real result line), `current` itself is bold
     full-opacity black, everything after is a dim, not-yet-run placeholder.
+    Shared by the batch sync flow and the ticket page's Investigate Further
+    flow -- both stream real step completions, never a cosmetic delay.
     """
     rows = []
-    for i, (icon, label) in enumerate(SYNC_STEPS):
+    for i, (icon, label) in enumerate(steps):
         if i < current:
             rows.append(
                 f'<div class="sync-step sync-step-done">'
@@ -1244,6 +1254,87 @@ def _render_ask_ai(state, case_id=None, key_prefix="ask"):
 # ===========================================================================
 # AI Investigation Ticket -- opened by clicking "View" on any case.
 # ===========================================================================
+def _order_row_for(case):
+    """Real order fields for the Supporting Documents chips -- a fresh
+    local read of the same demo CSV shopify_client.py always serves,
+    never a second, separate source of truth. None if this case has no
+    order side (e.g. an orphan settlement) or the order genuinely isn't
+    found."""
+    if not case.get("order_id"):
+        return None
+    return next((o for o in shopify.fetch_orders() if o["order_id"] == case["order_id"]), None)
+
+
+def _settlement_row_for(case):
+    """Real settlement fields, same principle as _order_row_for -- reads
+    the same settlements.csv the sync step itself reads."""
+    if not case.get("settlement_id"):
+        return None
+    df = _load_local_settlements()
+    match = df[df["settlement_id"] == case["settlement_id"]]
+    return match.iloc[0].to_dict() if not match.empty else None
+
+
+def _candidate_rows_html(candidates, ai, full=False):
+    rankings = {r["id"]: r for r in ((ai.get("candidate_rankings") if ai else None) or [])}
+    shown = candidates if full else candidates[:3]
+    rows = []
+    for c in shown:
+        cid = c.get("order_id") or c.get("settlement_id", "")
+        rank = rankings.get(cid, {})
+        conf = f"{rank['confidence']}%" if rank.get("confidence") is not None else "—"
+        reason = rank.get("reason", "")
+        amt = fmt(c.get("amount_paise", 0))
+        extra = f" · {c['customer_name']}" if full and c.get("customer_name") else ""
+        rows.append(f'<div class="candidate-row"><b>{cid}</b> · {amt}{extra} · {conf}'
+                    f'{f" · {reason}" if reason else ""}</div>')
+    return "".join(rows)
+
+
+def _run_investigate_further(state, merchant_id, case, order_rows):
+    """
+    The one controlled agentic step, with real progress -- each of these
+    4 steps corresponds to an actual function call completing (see
+    case_engine.fetch_missing_evidence / build_case_context / apply_ai_
+    result), not a cosmetic delay. Streamlit streams each placeholder
+    redraw to the browser as it happens, same technique as the batch sync
+    flow's own step list.
+    """
+    placeholder = st.empty()
+    results = [None] * len(INVESTIGATE_STEPS)
+
+    _render_steps(placeholder, 0, results, steps=INVESTIGATE_STEPS)
+    missing = (case.get("ai") or {}).get("missing_evidence") or []
+    results[0] = (f"AI named {len(missing)} item(s) to check" if missing
+                  else "Nothing specific named -- proceeding with what's available")
+
+    _render_steps(placeholder, 1, results, steps=INVESTIGATE_STEPS)
+    new_evidence = case_engine.fetch_missing_evidence(case, order_rows)
+    results[1] = ("Customer order history retrieved" if "customer_order_history" in new_evidence
+                  else "No additional data available to fetch")
+
+    _render_steps(placeholder, 2, results, steps=INVESTIGATE_STEPS)
+    prior_confidence = (case.get("ai") or {}).get("confidence")
+    original_context = case_engine.build_case_context(case)
+    try:
+        result = ai_client.investigate_followup(original_context, case["ai"], new_evidence)
+        result.setdefault("missing_evidence", [])
+        case_engine.apply_ai_result(case, result)
+        if prior_confidence is not None and case["ai"].get("confidence") is not None:
+            case["ai"]["previous_confidence"] = prior_confidence
+        case["_event"] = "ai follow-up investigation completed"
+        results[2] = f"AI responded -- {case['ai'].get('confidence')}% confidence"
+    except (ai_client.AIAuthError, ai_client.AIAPIError) as exc:
+        case["_event"] = f"ai follow-up investigation unavailable: {exc}"
+        results[2] = f"Unavailable: {exc}"
+
+    _render_steps(placeholder, 3, results, steps=INVESTIGATE_STEPS)
+    state_store.upsert_case(state, case)
+    state_store.save_state(merchant_id, state)
+    results[3] = "Case updated"
+    _render_steps(placeholder, len(INVESTIGATE_STEPS), results, steps=INVESTIGATE_STEPS)
+
+
 def _render_case_ticket(state, merchant_id):
     case_id = st.session_state.get("selected_case_id")
     case = state_store.get_case(state, case_id) if case_id else None
@@ -1258,144 +1349,205 @@ def _render_case_ticket(state, merchant_id):
         return
 
     ai = case.get("ai")
-    status_label, _ = _case_status_display(case)
+    status_label, status_class = _case_status_display(case)
+    bookmarked = case.get("bookmarked", False)
+    already_resolved = case.get("resolution", {}).get("resolved")
 
-    st.markdown(html(f"""
-        <div class="ticket-header">
-            <div>
-                <div class="ticket-title">AI Investigation — {case['record_id']}</div>
-                <div class="ticket-sub">Case {case['case_id']} · {case['case_type'].replace('_', ' ').title()}</div>
-            </div>
-            <span class="status-pill {_case_status_display(case)[1]}">{status_label}</span>
-        </div>
-    """), unsafe_allow_html=True)
+    confidence = ai.get("confidence") if ai else None
+    prev_confidence = ai.get("previous_confidence") if ai else None
+    delta_html = ""
+    if confidence is not None:
+        conf_pill_text = f"{confidence}% Confidence"
+        if prev_confidence is not None and confidence != prev_confidence:
+            up = confidence > prev_confidence
+            delta_html = (f'<span class="conf-delta {"up" if up else "down"}">'
+                          f'{"▲" if up else "▼"}{abs(confidence - prev_confidence)}%</span>')
+    elif ai and ai.get("error"):
+        conf_pill_text = "Confidence Unavailable"
+    elif case["case_status"] == "pending_settlement":
+        conf_pill_text = "Confidence N/A"
+    else:
+        conf_pill_text = "Confidence Pending"
 
-    if case["case_status"] == "ai_pending":
-        error_text = (ai or {}).get("error") or "AI investigation could not complete."
+    hcol_title, hcol_bookmark = st.columns([6, 1])
+    with hcol_title:
         st.markdown(html(f"""
-            <div class="ai-pending-banner">
-                <b>AI hasn't investigated this case yet.</b> {error_text}
-                <br>This is not a "manual review" verdict -- AI simply hasn't had a chance to look.
+            <div class="ticket-title">AI Investigation — {case['record_id']}</div>
+            <div class="ticket-sub">Case ID: {case['case_id']} · {case['case_type'].replace('_', ' ').title()}</div>
+            <div class="ticket-pill-row">
+                <span class="status-pill {status_class}">{status_label}</span>
+                <span class="status-pill pill-confidence">{conf_pill_text}</span>
+                {delta_html}
             </div>
         """), unsafe_allow_html=True)
-        with st.container(key="ticketretrybtn"):
-            if st.button("Retry AI Investigation", key="ticket_retry", use_container_width=False):
-                case_engine.retry_pending_cases(state, [case["case_id"]])
+    with hcol_bookmark:
+        with st.container(key=f"ticketbookmarkbtn_{'on' if bookmarked else 'off'}"):
+            if st.button("🔖 Saved" if bookmarked else "🔖 Bookmark", key="ticket_bookmark_btn",
+                         use_container_width=True):
+                state_store.toggle_bookmark(state, case["case_id"])
                 state_store.save_state(merchant_id, state)
                 st.rerun()
-        st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
 
-    fcol, icol, ccol = st.columns([1, 1.3, 1])
-    with fcol:
-        st.markdown(html(f"""
-            <div class="workspace-card">
-                <div class="workspace-title">Financial Summary</div>
-                <div class="ticket-line"><span>Expected</span><b>{fmt(case['expected'])}</b></div>
-                <div class="ticket-line"><span>Received</span><b>{fmt(case['received'])}</b></div>
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+
+    order_row = _order_row_for(case)
+    settlement_row = _settlement_row_for(case)
+    candidates = case.get("candidates") or []
+
+    col_summary, col_analysis, col_docs = st.columns([1, 1.2, 1])
+
+    # ---- Case Summary: financial facts + order/settlement metadata, one place ----
+    with col_summary:
+        with st.container(key="ticketsummarycard"):
+            st.markdown('<div class="workspace-title">🗂️ Case Summary</div>', unsafe_allow_html=True)
+            st.markdown(html(f"""
+                <div class="ticket-line"><span>Expected Amount</span><b>{fmt(case['expected'])}</b></div>
+                <div class="ticket-line"><span>Received Amount</span><b>{fmt(case['received'])}</b></div>
                 <div class="ticket-line"><span>Difference</span><b>{fmt(case['delta'])}</b></div>
-                <div class="ticket-line"><span>Priority</span><b>{case['priority'] or '—'}</b></div>
-            </div>
-        """), unsafe_allow_html=True)
-    with icol:
-        finding = (ai["reason"] if ai and ai.get("reason") else case["explanation"])
-        st.markdown(html(f"""
-            <div class="workspace-card">
-                <div class="workspace-title">AI Finding</div>
-                <div class="ticket-finding">{finding}</div>
-            </div>
-        """), unsafe_allow_html=True)
-    with ccol:
-        if ai and ai.get("confidence") is not None:
-            conf_text, conf_note = f"{ai['confidence']}%", "Based on the evidence available."
-        elif ai and ai.get("error"):
-            conf_text, conf_note = "Unavailable", "AI investigation could not complete -- see below."
-        elif case["case_status"] == "pending_settlement":
-            conf_text, conf_note = "—", "Awaiting a settlement -- nothing to investigate yet."
-        else:
-            conf_text, conf_note = "Pending", "AI has not investigated this case yet."
-        st.markdown(html(f"""
-            <div class="workspace-card">
-                <div class="workspace-title">AI Confidence</div>
-                <div class="ticket-confidence">{conf_text}</div>
-                <div class="ticket-sub">{conf_note}</div>
-            </div>
-        """), unsafe_allow_html=True)
+                <div class="ticket-line"><span>Order Date</span><b>{(order_row.get('order_date') if order_row else '') or '—'}</b></div>
+                <div class="ticket-line"><span>Customer</span><b>{(order_row.get('customer_name') if order_row else case.get('customer_name')) or '—'}</b></div>
+                <div class="ticket-line"><span>Payment Method</span><b>{(order_row.get('payment_mode') if order_row else '') or '—'}</b></div>
+                <div class="ticket-line"><span>Settlement Date</span><b>{(settlement_row.get('settled_on') if settlement_row else '') or '—'}</b></div>
+                <div class="ticket-line"><span>Settlement ID</span><b>{case.get('settlement_id') or '—'}</b></div>
+            """), unsafe_allow_html=True)
+
+    # ---- AI Analysis: finding, evidence and recommendation as one narrative, not 3 cards ----
+    with col_analysis:
+        with st.container(key="ticketanalysiscard"):
+            st.markdown('<div class="workspace-title">🧠 AI Analysis</div>', unsafe_allow_html=True)
+            has_error = bool(ai and ai.get("error"))
+            if has_error:
+                st.markdown(html(f"""
+                    <div class="callout-box callout-warn">
+                        <div class="callout-title">Finding</div>
+                        <div class="callout-body">AI investigation could not complete: {ai['error']}
+                        The case is safe and can be reprocessed.</div>
+                    </div>
+                """), unsafe_allow_html=True)
+                with st.container(key="ticketretrybtn"):
+                    if st.button("Retry AI Investigation", key="ticket_retry", use_container_width=False):
+                        case_engine.retry_pending_cases(state, [case["case_id"]])
+                        state_store.save_state(merchant_id, state)
+                        st.rerun()
+            else:
+                finding = (ai["reason"] if ai and ai.get("reason") else case["explanation"]) or "No AI finding yet."
+                st.markdown('<div class="ai-section-label">Finding</div>', unsafe_allow_html=True)
+                st.markdown(html(f'<div class="ticket-finding">{finding}</div>'), unsafe_allow_html=True)
+
+                evidence = (ai["evidence"] if ai and ai.get("evidence") else [])
+                if evidence:
+                    st.markdown('<div class="ai-section-label">Evidence</div>', unsafe_allow_html=True)
+                    ev_html = "".join(f'<div class="evidence-line">✓ {e}</div>' for e in evidence)
+                    st.markdown(html(ev_html), unsafe_allow_html=True)
+
+                next_step_text = ai.get("next_step") if ai else None
+                if next_step_text:
+                    st.markdown('<div class="ai-section-label">AI Recommendation</div>', unsafe_allow_html=True)
+                    st.markdown(html(f'<div class="ticket-finding">{next_step_text}</div>'), unsafe_allow_html=True)
+
+    # ---- Supporting Documents: compact chips, only the ones this case actually has ----
+    with col_docs:
+        with st.container(key="ticketdocscard"):
+            st.markdown('<div class="workspace-title">📎 Supporting Documents</div>', unsafe_allow_html=True)
+            any_chip = False
+
+            if order_row:
+                any_chip = True
+                with st.container(key="ticketchip_order"):
+                    with st.popover("📦 Order Details", use_container_width=True):
+                        st.markdown(html(f"""
+                            <div class="ticket-line"><span>Order ID</span><b>{order_row['order_id']}</b></div>
+                            <div class="ticket-line"><span>Order Date</span><b>{order_row.get('order_date') or '—'}</b></div>
+                            <div class="ticket-line"><span>Customer</span><b>{order_row.get('customer_name') or '—'}</b></div>
+                            <div class="ticket-line"><span>Amount</span><b>{fmt(to_paise(order_row.get('order_amount') or 0))}</b></div>
+                            <div class="ticket-line"><span>Payment Mode</span><b>{order_row.get('payment_mode') or '—'}</b></div>
+                            <div class="ticket-line"><span>Gateway Ref ID</span><b>{order_row.get('gateway_ref_id') or '—'}</b></div>
+                            <div class="ticket-line"><span>Bank UTR</span><b>{order_row.get('bank_utr') or '—'}</b></div>
+                            <div class="ticket-line"><span>Source</span><b>Shopify (demo data)</b></div>
+                        """), unsafe_allow_html=True)
+
+            if settlement_row:
+                any_chip = True
+                with st.container(key="ticketchip_settlement"):
+                    with st.popover("🏦 Settlement Details", use_container_width=True):
+                        st.markdown(html(f"""
+                            <div class="ticket-line"><span>Settlement ID</span><b>{settlement_row['settlement_id']}</b></div>
+                            <div class="ticket-line"><span>Settled On</span><b>{settlement_row.get('settled_on') or '—'}</b></div>
+                            <div class="ticket-line"><span>Amount Received</span><b>{fmt(to_paise(settlement_row.get('amount_received') or 0))}</b></div>
+                            <div class="ticket-line"><span>Gateway Ref ID</span><b>{settlement_row.get('gateway_ref_id') or '—'}</b></div>
+                            <div class="ticket-line"><span>Bank UTR</span><b>{settlement_row.get('bank_utr') or '—'}</b></div>
+                            <div class="ticket-line"><span>Source</span><b>{settlement_row.get('source') or '—'}</b></div>
+                            <div class="ticket-line"><span>Narration</span><b>{settlement_row.get('narration') or '—'}</b></div>
+                        """), unsafe_allow_html=True)
+
+            if order_row:
+                any_chip = True
+                amt_paise = to_paise(order_row.get("order_amount") or 0)
+                mode = order_row.get("payment_mode") or "—"
+                band_paise = fee_band(amt_paise, mode)
+                pct = "2.5%" if mode == "COD" else "2%"
+                flat = fmt(5000) if mode == "COD" else fmt(300)
+                with st.container(key="ticketchip_fee"):
+                    with st.popover("💳 Fee Structure (MDR)", use_container_width=True):
+                        st.markdown(html(f"""
+                            <div class="ticket-line"><span>Payment Mode</span><b>{mode}</b></div>
+                            <div class="ticket-line"><span>Tolerance Rule</span><b>{pct} of order value, or {flat} flat -- whichever is larger</b></div>
+                            <div class="ticket-line"><span>Order Amount</span><b>{fmt(amt_paise)}</b></div>
+                            <div class="ticket-line"><span>Max Explainable Shortfall</span><b>{fmt(band_paise)}</b></div>
+                            <div class="ticket-line"><span>This Case's Shortfall</span><b>{fmt(abs(case['delta']))}</b></div>
+                        """), unsafe_allow_html=True)
+                        st.caption("The same rule engine.py uses to auto-clear known fee deductions -- "
+                                   "shown for reference, not a live recomputation of this case's tier.")
+
+            if candidates:
+                any_chip = True
+                with st.container(key="ticketchip_candidates"):
+                    with st.popover(f"🔗 Candidate Matches ({len(candidates)})", use_container_width=True):
+                        st.markdown(html(_candidate_rows_html(candidates, ai)), unsafe_allow_html=True)
+                        if len(candidates) > 3:
+                            with st.expander(f"View full candidate details ({len(candidates)} total)"):
+                                st.markdown(html(_candidate_rows_html(candidates, ai, full=True)),
+                                            unsafe_allow_html=True)
+
+            any_chip = True
+            with st.container(key="ticketchip_activity"):
+                with st.popover("🕐 Activity Log", use_container_width=True):
+                    history = case.get("history") or []
+                    hist_html = "".join(
+                        f'<div class="timeline-row"><span>{datetime.fromisoformat(h["at"]).strftime("%b %d, %Y %I:%M %p")}</span>'
+                        f'<span>{h["event"]}</span></div>' for h in history)
+                    st.markdown(html(hist_html or '<div class="evidence-line">No history yet.</div>'),
+                                unsafe_allow_html=True)
+
+            if not any_chip:
+                st.markdown('<div class="evidence-line">No supporting documents available.</div>',
+                            unsafe_allow_html=True)
 
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
 
-    # ---- evidence checked / candidates -- only what's actually real ----
-    ev_col, cand_col = st.columns([1, 1.3])
-    with ev_col:
-        evidence = (ai["evidence"] if ai and ai.get("evidence") else [])
-        ev_html = "".join(f'<div class="evidence-line">✓ {e}</div>' for e in evidence)
-        if not ev_html:
-            ev_html = '<div class="evidence-line evidence-missing">⚠ Evidence unavailable</div>'
-        st.markdown(html(f"""
-            <div class="workspace-card">
-                <div class="workspace-title">Evidence Checked</div>
-                {ev_html}
-            </div>
-        """), unsafe_allow_html=True)
-    with cand_col:
-        candidates = case.get("candidates") or []
-        rankings = {r["id"]: r for r in (ai.get("candidate_rankings") or [])} if ai else {}
-        if candidates:
-            rows = []
-            for c in candidates:
-                cid = c.get("order_id") or c.get("settlement_id", "")
-                rank = rankings.get(cid, {})
-                conf = f"{rank['confidence']}%" if rank.get("confidence") is not None else "—"
-                reason = rank.get("reason", "")
-                amt = fmt(c.get("amount_paise", 0))
-                rows.append(f'<div class="candidate-row"><b>{cid}</b> · {amt} · {conf}'
-                            f'{f" · {reason}" if reason else ""}</div>')
-            cand_html = "".join(rows)
-        else:
-            cand_html = '<div class="evidence-line">No candidate match found.</div>'
-        st.markdown(html(f"""
-            <div class="workspace-card">
-                <div class="workspace-title">Candidate Matches</div>
-                {cand_html}
-            </div>
-        """), unsafe_allow_html=True)
+    # ---- Actions: comment is required for Keep for Manual Review, auto-filled on Accept ----
+    comment_key = f"ticket_comment_{case['case_id']}"
+    st.session_state.setdefault(comment_key, case.get("comment", ""))
 
-    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-
-    # ---- AI recommendation + actions ----
-    next_step_text = (ai.get('next_step') if ai else None) or 'No AI recommendation yet.'
-    st.markdown(html(f"""
-        <div class="workspace-card">
-            <div class="workspace-title">AI Recommendation</div>
-            <div class="ticket-finding">{next_step_text}</div>
-        </div>
-    """), unsafe_allow_html=True)
-    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
-
-    already_resolved = case.get("resolution", {}).get("resolved")
     can_auto_resolve = bool(ai and ai.get("action") == "resolve" and not already_resolved)
     missing_evidence = (ai.get("missing_evidence") if ai else None) or []
     can_investigate_further = bool(missing_evidence and not already_resolved)
+    manual_review_error = False
 
-    acol1, acol2, acol3, acol4 = st.columns(4)
-    with acol1:
+    # Accept & Reconcile is the positive/default path -- primary, leftmost.
+    # Investigate Further stays secondary (purple outline). Keep for Manual
+    # Review stays neutral, rightmost -- the least-emphasized of the three.
+    acol_accept, acol_investigate, acol_manual = st.columns([1.2, 1, 1])
+    with acol_accept:
         with st.container(key="ticketacceptbtn"):
             if st.button("Accept & Reconcile", key="ticket_accept", use_container_width=True,
                          disabled=not can_auto_resolve):
-                state_store.record_resolution(state, case["case_id"], "accepted")
+                final_comment = ((st.session_state.get(comment_key) or "").strip()
+                                  or (ai.get("next_step") if ai else "") or "")
+                state_store.record_resolution(state, case["case_id"], "accepted", comment=final_comment)
                 state_store.save_state(merchant_id, state)
                 st.rerun()
-    with acol2:
-        if st.button("Review Candidates", key="ticket_review_candidates", use_container_width=True,
-                     disabled=not candidates):
-            st.info("Candidates are shown above -- compare the real fields before deciding.")
-    with acol3:
-        with st.container(key="ticketmanualbtn"):
-            if st.button("Keep for Manual Review", key="ticket_manual", use_container_width=True,
-                         disabled=already_resolved):
-                state_store.record_resolution(state, case["case_id"], "manual_review")
-                state_store.save_state(merchant_id, state)
-                st.rerun()
-    with acol4:
+    with acol_investigate:
         with st.container(key="ticketfollowupbtn"):
             if st.button("Investigate Further", key="ticket_followup", use_container_width=True,
                          disabled=not can_investigate_further,
@@ -1403,39 +1555,61 @@ def _render_case_ticket(state, merchant_id):
                                "available and ask for one final conclusion." if can_investigate_further
                                else "No missing evidence named, or already followed up.")):
                 order_rows = shopify.fetch_orders()
-                case_engine.investigate_case_followup(state, case["case_id"], order_rows)
-                state_store.save_state(merchant_id, state)
+                _run_investigate_further(state, merchant_id, case, order_rows)
                 st.rerun()
-    if missing_evidence:
-        st.markdown(html(f"""
-            <div class="missing-evidence-note">
-                AI said this would help: {'; '.join(missing_evidence)}
+    with acol_manual:
+        with st.container(key="ticketmanualbtn"):
+            if st.button("Keep for Manual Review", key="ticket_manual", use_container_width=True,
+                         disabled=already_resolved):
+                typed_comment = (st.session_state.get(comment_key) or "").strip()
+                if not typed_comment:
+                    manual_review_error = True
+                else:
+                    state_store.record_resolution(state, case["case_id"], "manual_review",
+                                                   comment=typed_comment)
+                    state_store.save_state(merchant_id, state)
+                    st.rerun()
+
+    if manual_review_error:
+        st.markdown(html("""
+            <div class="callout-box callout-warn">
+                Please add a comment below before keeping this case for manual review.
             </div>
         """), unsafe_allow_html=True)
 
     if already_resolved:
         res = case["resolution"]
+        resolved_label = "AI Recommendation Accepted" if res["resolution_type"] == "accepted" else "Kept for Manual Review"
+        comment_row = (f'<div class="resolved-comment-box"><div class="ai-section-label">Comment</div>'
+                       f'<div class="ticket-finding">{res["comment"]}</div></div>' if res.get("comment") else "")
         st.markdown(html(f"""
-            <div class="ticket-resolved-note">
-                Resolved as <b>{res['resolution_type']}</b> by {res['resolved_by']} on
-                {datetime.fromisoformat(res['resolved_at']).strftime('%b %d, %Y %I:%M %p')}.
+            <div class="resolved-banner">
+                <div class="resolved-banner-title">✅ Case Resolved Successfully!</div>
+                <div class="ticket-line"><span>Resolution Type</span><b>{resolved_label}</b></div>
+                <div class="ticket-line"><span>Resolved By</span><b>{res['resolved_by']}</b></div>
+                <div class="ticket-line"><span>Resolved At</span><b>{datetime.fromisoformat(res['resolved_at']).strftime('%b %d, %Y %I:%M %p')}</b></div>
+                {comment_row}
             </div>
         """), unsafe_allow_html=True)
 
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-    _render_ask_ai(state, case_id=case["case_id"], key_prefix=f"ticketask_{case['case_id']}")
-
-    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-    history = case.get("history") or []
-    hist_html = "".join(
-        f'<div class="timeline-row"><span>{datetime.fromisoformat(h["at"]).strftime("%b %d, %Y %I:%M %p")}</span>'
-        f'<span>{h["event"]}</span></div>' for h in history)
-    st.markdown(html(f"""
-        <div class="workspace-card">
-            <div class="workspace-title">Case Timeline</div>
-            {hist_html or '<div class="evidence-line">No history yet.</div>'}
-        </div>
-    """), unsafe_allow_html=True)
+    ask_col, comment_col = st.columns([1.3, 1])
+    with ask_col:
+        _render_ask_ai(state, case_id=case["case_id"], key_prefix=f"ticketask_{case['case_id']}")
+    with comment_col:
+        with st.container(key="ticketcommentbox"):
+            # Collapsed by default -- comments only matter when manually
+            # resolving; auto-opens the moment that path is blocked for
+            # missing one, so the user lands right where they need to be.
+            with st.expander("💬 Comments", expanded=manual_review_error):
+                st.text_area("Comment", key=comment_key, placeholder="Add a comment...",
+                             label_visibility="collapsed", height=80)
+                if st.button("Save Comment", key="ticket_save_comment", use_container_width=True):
+                    state_store.set_comment(state, case["case_id"], st.session_state[comment_key])
+                    state_store.save_state(merchant_id, state)
+                    st.rerun()
+                st.markdown('<div class="ask-ai-hint">Required before Keep for Manual Review; '
+                            'auto-fills with the AI recommendation on Accept.</div>', unsafe_allow_html=True)
 
 
 # ===========================================================================
@@ -1756,27 +1930,60 @@ def _shell_css():
         }}
 
         /* ---- investigation ticket ---- */
-        .ticket-header {{display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;}}
         .ticket-title {{font-size: 18px; font-weight: 700; color: {INK};}}
         .ticket-sub {{font-size: 12px; color: {DIM}; margin-top: 2px;}}
+        .ticket-pill-row {{display: flex; align-items: center; gap: 8px; margin-top: 8px;}}
         .ticket-line {{
-            display: flex; justify-content: space-between; font-size: 12.5px; color: {BODY};
-            padding: 5px 0; border-bottom: 1px solid {LINE};
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12.5px; color: {BODY}; padding: 5px 0; border-bottom: 1px solid {LINE};
         }}
         .ticket-line:last-child {{border-bottom: none;}}
         .ticket-finding {{font-size: 13px; color: {INK}; line-height: 1.6;}}
-        .ticket-confidence {{font-size: 30px; font-weight: 700; color: {INK}; margin: 6px 0 2px;}}
         .evidence-line {{font-size: 12.5px; color: {MATCHED}; padding: 4px 0;}}
         .evidence-line.evidence-missing {{color: {WARN};}}
         .candidate-row {{font-size: 12px; color: {INK}; padding: 6px 0; border-bottom: 1px solid {LINE};}}
         .candidate-row:last-child {{border-bottom: none;}}
-        .ticket-resolved-note {{
-            background: #E7F5EF; color: {MATCHED}; border-radius: 8px; padding: 10px 14px; font-size: 12.5px;
-        }}
         .timeline-row {{
             display: flex; gap: 12px; font-size: 12px; color: {BODY}; padding: 5px 0;
         }}
         .timeline-row span:first-child {{color: {DIM}; min-width: 150px;}}
+        .ai-section-label {{
+            font-size: 11px; font-weight: 700; color: {DIM}; text-transform: uppercase;
+            letter-spacing: .04em; margin: 12px 0 4px;
+        }}
+        .ai-section-label:first-of-type {{margin-top: 0;}}
+        .status-pill.pill-confidence {{background: #EEF2FF; color: {ACC}; border: 1px solid #C7D2FE;}}
+        .conf-delta {{font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;}}
+        .conf-delta.up {{background: #E7F5EF; color: {MATCHED};}}
+        .conf-delta.down {{background: {WARN_BG}; color: {WARN};}}
+        .callout-box {{border-radius: 8px; padding: 10px 12px; margin: 10px 0 0; font-size: 12px; line-height: 1.6;}}
+        .callout-box.callout-warn {{background: #FEF6E7; border: 1px solid #FDE3B0;}}
+        .callout-box.callout-info {{background: #EEF2FF; border: 1px solid #C7D2FE;}}
+        .callout-title {{font-weight: 700; color: {INK}; margin-bottom: 4px;}}
+        .callout-body {{color: {BODY};}}
+        .callout-list {{margin: 4px 0 0 16px; padding: 0; color: {BODY};}}
+        .callout-list li {{margin-bottom: 3px;}}
+        .resolved-banner {{
+            background: #E7F5EF; border: 1px solid #BFE8D4; border-radius: 10px; padding: 14px 16px;
+        }}
+        .resolved-banner-title {{font-size: 14px; font-weight: 700; color: {MATCHED}; margin-bottom: 8px;}}
+        .resolved-comment-box {{
+            background: {BG}; border: 1px solid {LINE}; border-radius: 8px; padding: 10px 12px; margin-top: 10px;
+        }}
+        .st-key-ticketsummarycard, .st-key-ticketanalysiscard, .st-key-ticketdocscard {{
+            background: {BG} !important; border: 1px solid {LINE} !important;
+            border-radius: 12px !important; padding: 18px 20px !important; height: 100%;
+        }}
+        [class*="st-key-ticketchip_"] {{margin-bottom: 8px;}}
+        [class*="st-key-ticketchip_"] button {{
+            background: {SOFT} !important; color: {ACC} !important; border: 1px solid {LINE} !important;
+            border-radius: 8px !important; font-weight: 600 !important; font-size: 12.5px !important;
+            text-align: left !important; justify-content: flex-start !important; padding: 8px 12px !important;
+        }}
+        [class*="st-key-ticketchip_"] button:hover {{
+            background: #EEF2FF !important; border-color: #C7D2FE !important;
+        }}
+        .st-key-ticketcommentbox {{padding-top: 4px;}}
         .st-key-ticketbackbtn button {{
             background: transparent !important; border: none !important; color: {ACC} !important;
             font-weight: 600 !important; width: auto !important;
@@ -1793,16 +2000,28 @@ def _shell_css():
             background: transparent !important; color: {PURPLE} !important; border: 1px solid #DDD6FE !important;
             font-weight: 600 !important;
         }}
+        /* Disabled action buttons must actually LOOK unclickable -- without
+           this, the :disabled state was hidden underneath the !important
+           color overrides above, so a disabled button (e.g. Accept &
+           Reconcile when AI recommends escalate, not resolve) looked just
+           as clickable as an enabled one. */
+        .st-key-ticketacceptbtn button:disabled,
+        .st-key-ticketmanualbtn button:disabled,
+        .st-key-ticketfollowupbtn button:disabled {{
+            background: {SOFT} !important; color: {DIM} !important; border: 1px solid {LINE} !important;
+            cursor: not-allowed !important; opacity: .7 !important;
+        }}
         .st-key-ticketretrybtn button {{
             background: {ACC} !important; color: #fff !important; border: none !important;
             font-weight: 600 !important; padding: 6px 16px !important;
         }}
-        .ai-pending-banner {{
-            background: #F1F2F4; color: {BODY}; border-radius: 8px; padding: 12px 14px;
-            font-size: 12.5px; line-height: 1.6; margin-bottom: 10px;
+        .st-key-ticketbookmarkbtn_off button {{
+            background: transparent !important; color: {BODY} !important; border: 1px solid {LINE} !important;
+            font-weight: 600 !important; font-size: 12.5px !important;
         }}
-        .missing-evidence-note {{
-            font-size: 11.5px; color: {PURPLE}; margin-top: 8px; font-style: italic;
+        .st-key-ticketbookmarkbtn_on button {{
+            background: #FEF3E2 !important; color: #B45309 !important; border: 1px solid #FDE3B0 !important;
+            font-weight: 600 !important; font-size: 12.5px !important;
         }}
         </style>
     """)

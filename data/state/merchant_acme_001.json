@@ -1,5 +1,5 @@
 {
-  "current_batch": 2,
+  "current_batch": 3,
   "processed_record_ids": [
     "ORD-00001",
     "ORD-00002",
@@ -96,9 +96,501 @@
     "STL-00015",
     "STL-00046",
     "STL-00018",
-    "STL-00016"
+    "STL-00016",
+    "ORD-00051",
+    "ORD-00052",
+    "ORD-00053",
+    "ORD-00054",
+    "ORD-00055",
+    "ORD-00056",
+    "ORD-00057",
+    "ORD-00058",
+    "ORD-00059",
+    "ORD-00060",
+    "ORD-00061",
+    "ORD-00062",
+    "ORD-00063",
+    "ORD-00064",
+    "ORD-00065",
+    "ORD-00066",
+    "ORD-00067",
+    "ORD-00068",
+    "ORD-00069",
+    "ORD-00070",
+    "ORD-00071",
+    "ORD-00072",
+    "ORD-00073",
+    "ORD-00074",
+    "ORD-00075",
+    "ORD-00076",
+    "ORD-00077",
+    "ORD-00078",
+    "ORD-00079",
+    "ORD-00080",
+    "ORD-00081",
+    "ORD-00082",
+    "ORD-00083",
+    "ORD-00084",
+    "ORD-00085",
+    "ORD-00086",
+    "ORD-00087",
+    "ORD-00088",
+    "ORD-00089",
+    "ORD-00090",
+    "ORD-00091",
+    "ORD-00092",
+    "ORD-00093",
+    "ORD-00094",
+    "ORD-00095",
+    "ORD-00096",
+    "ORD-00097",
+    "ORD-00098",
+    "ORD-00099",
+    "ORD-00100",
+    "ORD-BULK201",
+    "ORD-BULK202",
+    "STL-00051-D",
+    "STL-00027",
+    "STL-00063",
+    "STL-00084",
+    "STL-00064",
+    "STL-00067",
+    "STL-00057",
+    "STL-00051",
+    "STL-X2002",
+    "STL-BULK02",
+    "STL-00088",
+    "STL-00053",
+    "STL-00082",
+    "STL-X2001",
+    "STL-00030",
+    "STL-00086",
+    "STL-00092",
+    "STL-00087",
+    "STL-00094",
+    "STL-00089",
+    "STL-00065",
+    "STL-00055",
+    "STL-00066",
+    "STL-00076",
+    "STL-00071",
+    "STL-00098",
+    "STL-00075",
+    "STL-00056",
+    "STL-00085",
+    "STL-00073",
+    "STL-00093",
+    "STL-00070",
+    "STL-00096",
+    "STL-00090",
+    "STL-00095",
+    "STL-00077",
+    "STL-00072",
+    "STL-00052",
+    "STL-00083",
+    "STL-00061",
+    "STL-00054",
+    "STL-00059",
+    "STL-00062",
+    "STL-00068",
+    "STL-00060",
+    "STL-00099",
+    "STL-00069",
+    "STL-00080",
+    "STL-00081",
+    "STL-SHADOW02",
+    "STL-00100"
   ],
   "reconciliation_runs": [
+    {
+      "run_id": "RUN-merchant_acme_001-B2",
+      "batch_id": 2,
+      "timestamp": "2026-08-29T16:30:52.918272",
+      "sources": "Shopify + Razorpay + Bank",
+      "status": "Completed",
+      "flagged_records": [
+        {
+          "record_id": "STL-SHADOW02",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 0,
+          "received": 999999,
+          "delta": 999999,
+          "amount_at_risk": 999999,
+          "priority": "High",
+          "explanation": "Credit of Rs 9,999.99 in the feed with no order behind it. Narration: RAZORPAY SETTLEMENT UTR000800002",
+          "matched_settlement": "STL-SHADOW02",
+          "age_days": null,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00078",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 649950,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 649950,
+          "priority": "High",
+          "explanation": "No settlement in the feed carries pay_000078D. The full order value is unaccounted for.",
+          "matched_settlement": "",
+          "age_days": 30,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00049",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 649900,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 649900,
+          "priority": "High",
+          "explanation": "No settlement in the feed carries pay_000049C. The full order value is unaccounted for.",
+          "matched_settlement": "",
+          "age_days": 14,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "STL-X2002",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 0,
+          "received": 616000,
+          "delta": 616000,
+          "amount_at_risk": 616000,
+          "priority": "High",
+          "explanation": "Credit of Rs 6,160.00 in the feed with no order behind it. Narration: IMPS/UTR000700202/MISC CREDIT",
+          "matched_settlement": "STL-X2002",
+          "age_days": null,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00079",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 399950,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 399950,
+          "priority": "Medium",
+          "explanation": "No settlement in the feed carries pay_000079F. The full order value is unaccounted for.",
+          "matched_settlement": "",
+          "age_days": 30,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "STL-BULK02",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 0,
+          "received": 341056,
+          "delta": 341056,
+          "amount_at_risk": 341056,
+          "priority": "Medium",
+          "explanation": "Credit of Rs 3,410.56 in the feed with no order behind it. Narration: IMPS/BLUEDART/COD-SETL/BATCH02",
+          "matched_settlement": "STL-BULK02",
+          "age_days": null,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "STL-X2001",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 0,
+          "received": 299100,
+          "delta": 299100,
+          "amount_at_risk": 299100,
+          "priority": "Medium",
+          "explanation": "Credit of Rs 2,991.00 in the feed with no order behind it. Narration: IMPS/UTR000700201/MISC CREDIT",
+          "matched_settlement": "STL-X2001",
+          "age_days": null,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00008",
+          "batch_id": 2,
+          "tier": 0,
+          "tier_name": "COD timing pre-check",
+          "status": "EXCEPTION",
+          "reason": "R2_REMITTANCE_OVERDUE",
+          "reason_label": "Remittance overdue",
+          "fee_type": "",
+          "expected": 124999,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 124999,
+          "priority": "Medium",
+          "explanation": "COD order is 28 days old with no courier remittance. Past the 14-day threshold; chase the courier.",
+          "matched_settlement": "",
+          "age_days": 28,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-BULK101",
+          "batch_id": 2,
+          "tier": 0,
+          "tier_name": "COD timing pre-check",
+          "status": "EXCEPTION",
+          "reason": "R2_REMITTANCE_OVERDUE",
+          "reason_label": "Remittance overdue",
+          "fee_type": "",
+          "expected": 99900,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 99900,
+          "priority": "Low",
+          "explanation": "COD order is 15 days old with no courier remittance. Past the 14-day threshold; chase the courier.",
+          "matched_settlement": "",
+          "age_days": 15,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-BULK102",
+          "batch_id": 2,
+          "tier": 0,
+          "tier_name": "COD timing pre-check",
+          "status": "EXCEPTION",
+          "reason": "R2_REMITTANCE_OVERDUE",
+          "reason_label": "Remittance overdue",
+          "fee_type": "",
+          "expected": 69900,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 69900,
+          "priority": "Low",
+          "explanation": "COD order is 15 days old with no courier remittance. Past the 14-day threshold; chase the courier.",
+          "matched_settlement": "",
+          "age_days": 15,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00051",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 59950,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 59950,
+          "priority": "Low",
+          "explanation": "2 settlements claim pay_000051A (STL-00051-D, STL-00051). Refusing to pick one; a wrong match here books the wrong revenue.",
+          "matched_settlement": "",
+          "age_days": 20,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00002",
+          "batch_id": 2,
+          "tier": 5,
+          "tier_name": "Unmatched - exception",
+          "status": "EXCEPTION",
+          "reason": "R3_UNMATCHED_AMBIGUOUS",
+          "reason_label": "Unmatched / ambiguous",
+          "fee_type": "",
+          "expected": 34950,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 34950,
+          "priority": "Low",
+          "explanation": "No settlement in the feed carries pay_000002F. The full order value is unaccounted for.",
+          "matched_settlement": "",
+          "age_days": 28,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00097",
+          "batch_id": 2,
+          "tier": 0,
+          "tier_name": "COD timing pre-check",
+          "status": "EXCEPTION",
+          "reason": "R2_REMITTANCE_OVERDUE",
+          "reason_label": "Remittance overdue",
+          "fee_type": "",
+          "expected": 34950,
+          "received": 0,
+          "delta": 0,
+          "amount_at_risk": 34950,
+          "priority": "Low",
+          "explanation": "COD order is 21 days old with no courier remittance. Past the 14-day threshold; chase the courier.",
+          "matched_settlement": "",
+          "age_days": 21,
+          "ai_assisted": false,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00093",
+          "batch_id": 2,
+          "tier": 3,
+          "tier_name": "Variance - AI diagnostic",
+          "status": "MANUAL_REVIEW",
+          "reason": "R5_AI_VARIANCE",
+          "reason_label": "Large variance flagged by AI",
+          "fee_type": "",
+          "expected": 189900,
+          "received": 208890,
+          "delta": 18990,
+          "amount_at_risk": 18990,
+          "priority": "Low",
+          "explanation": "Received Rs 189.90 more than the order value (10.0% over) on a matched reference. Overpayment of this shape is usually a duplicate capture or a misapplied credit. Route to gateway ops.",
+          "matched_settlement": "STL-00093",
+          "age_days": 12,
+          "ai_assisted": true,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00053",
+          "batch_id": 2,
+          "tier": 4,
+          "tier_name": "UTR fallback match",
+          "status": "MANUAL_REVIEW",
+          "reason": "R4_PARTIAL_PAYMENT",
+          "reason_label": "Partial payment",
+          "fee_type": "",
+          "expected": 59900,
+          "received": 46125,
+          "delta": -13775,
+          "amount_at_risk": 13775,
+          "priority": "Low",
+          "explanation": "COD remittance is Rs 137.75 short (23.0% of order value), beyond the Rs 50.00 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",
+          "matched_settlement": "STL-00053",
+          "age_days": 15,
+          "ai_assisted": true,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00068",
+          "batch_id": 2,
+          "tier": 3,
+          "tier_name": "Variance - AI diagnostic",
+          "status": "MANUAL_REVIEW",
+          "reason": "R5_AI_VARIANCE",
+          "reason_label": "Large variance flagged by AI",
+          "fee_type": "",
+          "expected": 89950,
+          "received": 86298,
+          "delta": -3652,
+          "amount_at_risk": 3652,
+          "priority": "Low",
+          "explanation": "Deduction of Rs 36.52 (4.06%) exceeds the contracted Rs 17.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",
+          "matched_settlement": "STL-00068",
+          "age_days": 30,
+          "ai_assisted": true,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        },
+        {
+          "record_id": "ORD-00052",
+          "batch_id": 2,
+          "tier": 3,
+          "tier_name": "Variance - AI diagnostic",
+          "status": "MANUAL_REVIEW",
+          "reason": "R5_AI_VARIANCE",
+          "reason_label": "Large variance flagged by AI",
+          "fee_type": "",
+          "expected": 59950,
+          "received": 58029,
+          "delta": -1921,
+          "amount_at_risk": 1921,
+          "priority": "Low",
+          "explanation": "Deduction of Rs 19.21 (3.20%) exceeds the contracted Rs 11.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",
+          "matched_settlement": "STL-00052",
+          "age_days": 9,
+          "ai_assisted": true,
+          "confidence": null,
+          "evidence": [],
+          "recommendation": null
+        }
+      ],
+      "auto_matched": 51,
+      "ai_resolved": 4,
+      "exceptions": 13,
+      "total_records": 68,
+      "expected_paise": 18041184,
+      "received_paise": 15522923
+    },
     {
       "run_id": "RUN-merchant_acme_001-B1",
       "batch_id": 1,
@@ -533,9 +1025,9 @@
       "received_paise": 14596255
     }
   ],
-  "next_batch_available_at": "2026-08-29T02:16:03.950743",
+  "next_batch_available_at": null,
   "notification_batch": 2,
-  "notification_created": false,
+  "notification_created": true,
   "notification_seen": false,
   "notification_overlay_open": false,
   "cases": {
@@ -583,6 +1075,22 @@
         {
           "at": "2026-08-29T02:15:54.247920",
           "event": "user action: manual_review"
+        },
+        {
+          "at": "2026-08-29T15:34:09.087114",
+          "event": "bookmarked"
+        },
+        {
+          "at": "2026-08-29T15:34:09.130938",
+          "event": "bookmark removed"
+        },
+        {
+          "at": "2026-08-29T15:35:31.327744",
+          "event": "bookmarked"
+        },
+        {
+          "at": "2026-08-29T15:35:32.894028",
+          "event": "bookmark removed"
         }
       ],
       "resolution": {
@@ -591,7 +1099,8 @@
         "resolved_at": "2026-08-29T02:15:54.247920",
         "resolved_by": "user"
       },
-      "updated_at": "2026-08-29T02:15:54.247920"
+      "updated_at": "2026-08-29T15:35:32.894028",
+      "bookmarked": false
     },
     "CASE-STL-X1001": {
       "case_id": "CASE-STL-X1001",
@@ -604,7 +1113,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 842000,
       "delta": 842000,
@@ -616,23 +1125,33 @@
       "candidates": [],
       "evidence_hash": "35d2b8589265ed0d",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "Settlement STL-X1001 was received for Rs 8,420.00 but no candidate matches or corresponding orders exist in the provided records.",
+        "next_step": "Escalate to the payment gateway team to trace the order associated with settlement STL-X1001.",
+        "evidence": [
+          "Received settlement STL-X1001 of Rs 8,420.00",
+          "No candidate matches were found"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction log",
+          "Courier remittance statement"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:33:33.303527",
+        "error": null
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:33:33.304032",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -641,7 +1160,9 @@
         "resolved_at": null,
         "resolved_by": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:33:33.304032",
+      "bookmarked": false,
+      "comment": ""
     },
     "CASE-ORD-00014": {
       "case_id": "CASE-ORD-00014",
@@ -713,11 +1234,11 @@
       "settlement_id": null,
       "customer_name": "Sara Khan",
       "order_date": "2026-08-18",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 649900,
       "received": 0,
       "delta": 0,
@@ -729,32 +1250,45 @@
       "candidates": [],
       "evidence_hash": "a0909189c56cede6",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate settlements were found for order ORD-00049 with expected amount Rs 6,499.00.",
+        "next_step": "Escalate to courier or gateway support to trace remittance for order ORD-00049.",
+        "evidence": [
+          "Order ORD-00049 expected amount Rs 6,499.00",
+          "Candidate matches array is empty"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction logs",
+          "Courier remittance statement"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:13.494184",
+        "error": null
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-STL-X1002": {
       "case_id": "CASE-STL-X1002",
@@ -810,101 +1344,85 @@
       "case_id": "CASE-ORD-00027",
       "record_id": "ORD-00027",
       "order_id": "ORD-00027",
-      "settlement_id": null,
-      "customer_name": "Aditya Rao",
-      "order_date": "2026-08-06",
-      "batch_id": 1,
-      "case_type": "unmatched_order",
-      "tier": 5,
-      "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "settlement_id": "STL-00027",
+      "batch_id": 2,
+      "case_type": "settlement_matched",
+      "tier": 4,
+      "status": "AUTO_CLEARED",
+      "case_status": "resolved",
       "expected": 249999,
-      "received": 0,
+      "received": 249999,
       "delta": 0,
-      "amount_at_risk": 249999,
-      "reason": "R3_UNMATCHED_AMBIGUOUS",
-      "reason_label": "Unmatched / ambiguous",
-      "explanation": "No settlement in the feed carries UTR000400027. The full order value is unaccounted for.",
-      "priority": "Medium",
+      "amount_at_risk": 0,
+      "reason": "",
+      "reason_label": "",
+      "explanation": "Settlement arrived and matched cleanly. Matched on UTR000400027; amount identical to the paise.",
+      "priority": "",
       "candidates": [],
-      "evidence_hash": "0fcda1550235ce47",
-      "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+      "evidence_hash": null,
+      "ai": null,
+      "resolution": {
+        "resolved": true,
+        "resolution_type": "auto_resolved",
+        "resolved_at": "2026-08-29T16:30:52.937470",
+        "resolved_by": "system"
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "settlement arrived, resolved automatically"
         }
       ],
-      "resolution": {
-        "resolved": false,
-        "resolution_type": null,
-        "resolved_at": null,
-        "resolved_by": null
-      },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00030": {
       "case_id": "CASE-ORD-00030",
       "record_id": "ORD-00030",
       "order_id": "ORD-00030",
-      "settlement_id": null,
-      "customer_name": "Sara Khan",
-      "order_date": "2026-08-17",
-      "batch_id": 1,
-      "case_type": "unmatched_order",
-      "tier": 5,
-      "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "settlement_id": "STL-00030",
+      "batch_id": 2,
+      "case_type": "settlement_matched",
+      "tier": 4,
+      "status": "AUTO_CLEARED",
+      "case_status": "resolved",
       "expected": 249950,
-      "received": 0,
+      "received": 249950,
       "delta": 0,
-      "amount_at_risk": 249950,
-      "reason": "R3_UNMATCHED_AMBIGUOUS",
-      "reason_label": "Unmatched / ambiguous",
-      "explanation": "No settlement in the feed carries UTR000400030. The full order value is unaccounted for.",
-      "priority": "Medium",
+      "amount_at_risk": 0,
+      "reason": "",
+      "reason_label": "",
+      "explanation": "Settlement arrived and matched cleanly. Matched on UTR000400030; amount identical to the paise.",
+      "priority": "",
       "candidates": [],
-      "evidence_hash": "22d5d9e92484fa28",
-      "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+      "evidence_hash": null,
+      "ai": null,
+      "resolution": {
+        "resolved": true,
+        "resolution_type": "auto_resolved",
+        "resolved_at": "2026-08-29T16:30:52.937470",
+        "resolved_by": "system"
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "settlement arrived, resolved automatically"
         }
       ],
-      "resolution": {
-        "resolved": false,
-        "resolution_type": null,
-        "resolved_at": null,
-        "resolved_by": null
-      },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00024": {
       "case_id": "CASE-ORD-00024",
@@ -967,7 +1485,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 165556,
       "delta": 165556,
@@ -979,23 +1497,41 @@
       "candidates": [],
       "evidence_hash": "efcf776e76b83781",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
+        "classification": "unmatched_settlement_unresolved",
+        "recommendation": "escalate",
+        "confidence": 15,
+        "reason": "The requested payment gateway transaction logs and courier remittance reports are not available in the system. Without candidate matches or external remittance documentation for settlement STL-BULK01 (received Rs 1,655.56 vs expected Rs 0.00), the record cannot be reconciled automatically.",
+        "next_step": "Escalate settlement STL-BULK01 to the finance team to obtain external remittance statements directly from the payment vendor.",
+        "evidence": [
+          "Settlement STL-BULK01 record showing received amount of Rs 1,655.56 with expected amount of Rs 0.00",
+          "System notification confirming requested external logs and remittance reports are unavailable"
+        ],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+        "candidate_rankings": [
+          {
+            "id": "NONE",
+            "confidence": 15,
+            "reason": "The requested payment gateway transaction logs and courier remittance reports are not available in the system. Without candidate matches or external remittance documentation for settlement STL-BULK01 (received Rs 1,655.56 vs expected Rs 0.00), the record cannot be reconciled automatically."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:23:18.935516",
+        "error": null,
+        "previous_confidence": 15
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T15:37:51.296568",
+          "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-29T16:23:18.935516",
+          "event": "ai follow-up investigation completed"
         }
       ],
       "resolution": {
@@ -1004,7 +1540,9 @@
         "resolved_at": null,
         "resolved_by": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:23:18.935516",
+      "bookmarked": false,
+      "comment": ""
     },
     "CASE-ORD-00008": {
       "case_id": "CASE-ORD-00008",
@@ -1013,11 +1551,11 @@
       "settlement_id": null,
       "customer_name": "Aditya Rao",
       "order_date": "2026-08-04",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 124999,
       "received": 0,
       "delta": 0,
@@ -1029,32 +1567,47 @@
       "candidates": [],
       "evidence_hash": "900e3759c5805528",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "Order ORD-00008 expects Rs 1,249.99 with Rs 0.00 received and no candidate settlements exist.",
+        "next_step": "Chase the courier partner for remittance status on order ORD-00008.",
+        "evidence": [
+          "Order ID: ORD-00008",
+          "Expected amount: Rs 1,249.99",
+          "Received amount: Rs 0.00",
+          "Candidate matches: none"
+        ],
+        "missing_evidence": [
+          "Courier remittance manifest",
+          "Payment gateway settlement report"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:23.429744",
+        "error": null
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-STL-SHADOW01": {
       "case_id": "CASE-STL-SHADOW01",
@@ -1204,11 +1757,11 @@
       "settlement_id": null,
       "customer_name": "Yash Malhotra",
       "order_date": "2026-08-17",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 99900,
       "received": 0,
       "delta": 0,
@@ -1220,32 +1773,47 @@
       "candidates": [],
       "evidence_hash": "4e2b0b7cd6346b91",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "Order ORD-BULK101 is overdue for Rs 999.00 with Rs 0.00 received and no candidate matches found.",
+        "next_step": "Contact the courier to verify remittance payment for order ORD-BULK101.",
+        "evidence": [
+          "Order ID: ORD-BULK101",
+          "Expected amount: Rs 999.00",
+          "Received amount: Rs 0.00",
+          "Candidate matches: none"
+        ],
+        "missing_evidence": [
+          "Courier remittance proof",
+          "Gateway payout records"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:23.429744",
+        "error": null
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-BULK102": {
       "case_id": "CASE-ORD-BULK102",
@@ -1254,11 +1822,11 @@
       "settlement_id": null,
       "customer_name": "Aditya Rao",
       "order_date": "2026-08-17",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 69900,
       "received": 0,
       "delta": 0,
@@ -1270,32 +1838,46 @@
       "candidates": [],
       "evidence_hash": "3904461e2829f8b8",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "Order ORD-BULK102 expects Rs 699.00 with zero received and no matching settlement candidate available.",
+        "next_step": "Escalate to the courier team to confirm remittance for order ORD-BULK102.",
+        "evidence": [
+          "Order ID: ORD-BULK102",
+          "Expected amount: Rs 699.00",
+          "Received amount: Rs 0.00",
+          "Candidate matches: none"
+        ],
+        "missing_evidence": [
+          "Courier delivery and remittance log"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:23.429744",
+        "error": null
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00002": {
       "case_id": "CASE-ORD-00002",
@@ -1304,11 +1886,11 @@
       "settlement_id": null,
       "customer_name": "Yash Malhotra",
       "order_date": "2026-08-04",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 34950,
       "received": 0,
       "delta": 0,
@@ -1320,32 +1902,45 @@
       "candidates": [],
       "evidence_hash": "927d65c79741dd56",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate settlements were found for order ORD-00002 with expected amount of Rs 349.50 and received amount of Rs 0.00.",
+        "next_step": "Escalate to payment gateway to locate missing settlement for order ORD-00002.",
+        "evidence": [
+          "Expected amount of Rs 349.50",
+          "Received amount of Rs 0.00",
+          "Zero candidate matches found"
+        ],
+        "missing_evidence": [
+          "Payment gateway settlement records"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "Gemini rate-limited this request (429): {\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota ex"
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:45.414729",
+        "error": null
       },
       "created_at": "2026-08-29T02:15:20.246476",
       "history": [
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00016": {
       "case_id": "CASE-ORD-00016",
@@ -1554,7 +2149,7 @@
       "settlement_id": null,
       "customer_name": "Nisha Verma",
       "order_date": "2026-09-01",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "pending_settlement",
       "tier": 0,
       "status": "AWAITING_REMITTANCE",
@@ -1575,15 +2170,22 @@
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "awaiting settlement"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00006": {
       "case_id": "CASE-ORD-00006",
@@ -1592,7 +2194,7 @@
       "settlement_id": null,
       "customer_name": "Vihaan Reddy",
       "order_date": "2026-08-22",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "pending_settlement",
       "tier": 0,
       "status": "APPROACHING_THRESHOLD",
@@ -1613,15 +2215,22 @@
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "awaiting settlement"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00012": {
       "case_id": "CASE-ORD-00012",
@@ -1630,7 +2239,7 @@
       "settlement_id": null,
       "customer_name": "Kartik Joshi",
       "order_date": "2026-08-30",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "pending_settlement",
       "tier": 0,
       "status": "AWAITING_REMITTANCE",
@@ -1651,15 +2260,22 @@
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "awaiting settlement"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00028": {
       "case_id": "CASE-ORD-00028",
@@ -1668,7 +2284,7 @@
       "settlement_id": null,
       "customer_name": "Nisha Verma",
       "order_date": "2026-08-29",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "pending_settlement",
       "tier": 0,
       "status": "AWAITING_REMITTANCE",
@@ -1689,15 +2305,22 @@
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "awaiting settlement"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
         }
       ],
+      "bookmarked": false,
+      "comment": "",
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "updated_at": "2026-08-29T16:31:58.512526"
     },
     "CASE-ORD-00037": {
       "case_id": "CASE-ORD-00037",
@@ -1706,7 +2329,7 @@
       "settlement_id": null,
       "customer_name": "Nisha Verma",
       "order_date": "2026-08-27",
-      "batch_id": 1,
+      "batch_id": 2,
       "case_type": "pending_settlement",
       "tier": 0,
       "status": "AWAITING_REMITTANCE",
@@ -1727,15 +2350,998 @@
         {
           "at": "2026-08-29T02:15:20.246476",
           "event": "awaiting settlement"
+        },
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
+        }
+      ],
+      "bookmarked": false,
+      "comment": "",
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-STL-SHADOW02": {
+      "case_id": "CASE-STL-SHADOW02",
+      "record_id": "STL-SHADOW02",
+      "order_id": null,
+      "settlement_id": "STL-SHADOW02",
+      "customer_name": "Sara Khan",
+      "order_date": "",
+      "batch_id": 2,
+      "case_type": "unmatched_settlement",
+      "tier": 5,
+      "status": "EXCEPTION",
+      "case_status": "resolved",
+      "expected": 0,
+      "received": 999999,
+      "delta": 999999,
+      "amount_at_risk": 999999,
+      "reason": "R3_UNMATCHED_AMBIGUOUS",
+      "reason_label": "Unmatched / ambiguous",
+      "explanation": "Credit of Rs 9,999.99 in the feed with no order behind it. Narration: RAZORPAY SETTLEMENT UTR000800002",
+      "priority": "High",
+      "candidates": [
+        {
+          "order_id": "ORD-00073",
+          "amount_paise": 999999,
+          "order_date": "2026-08-02",
+          "days_from_settlement": 1,
+          "customer_name": "Sara Khan",
+          "payment_mode": "UPI"
+        },
+        {
+          "order_id": "ORD-00057",
+          "amount_paise": 999950,
+          "order_date": "2026-08-14",
+          "days_from_settlement": 11,
+          "customer_name": "Sara Khan",
+          "payment_mode": "COD"
+        },
+        {
+          "order_id": "ORD-00072",
+          "amount_paise": 999900,
+          "order_date": "2026-08-07",
+          "days_from_settlement": 4,
+          "customer_name": "Priya Desai",
+          "payment_mode": "CARD"
+        },
+        {
+          "order_id": "ORD-00083",
+          "amount_paise": 999900,
+          "order_date": "2026-08-12",
+          "days_from_settlement": 9,
+          "customer_name": "Aarav Sharma",
+          "payment_mode": "UPI"
+        },
+        {
+          "order_id": "ORD-00081",
+          "amount_paise": 999900,
+          "order_date": "2026-08-14",
+          "days_from_settlement": 11,
+          "customer_name": "Kartik Joshi",
+          "payment_mode": "WALLET"
+        }
+      ],
+      "evidence_hash": "902cc7b615c5eabe",
+      "ai": {
+        "classification": "exact_match",
+        "recommendation": "resolve",
+        "confidence": 95,
+        "reason": "Settlement STL-SHADOW02 for Rs 9,999.99 matches candidate order ORD-00073 (999999 paise) exactly in amount with 1 day settlement lag via UPI.",
+        "next_step": "Link settlement STL-SHADOW02 to order ORD-00073 and update ledger status.",
+        "evidence": [
+          "Settlement received amount Rs 9,999.99 matches order ORD-00073 amount of 999999 paise",
+          "Days from settlement is 1 day"
+        ],
+        "missing_evidence": [],
+        "candidate_rankings": [
+          {
+            "id": "ORD-00073",
+            "confidence": 95,
+            "reason": "Settlement STL-SHADOW02 for Rs 9,999.99 matches candidate order ORD-00073 (999999 paise) exactly in amount with 1 day settlement lag via UPI."
+          }
+        ],
+        "action": "resolve",
+        "investigated_at": "2026-08-29T16:31:13.494184",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-29T16:32:12.274149",
+          "event": "user action: accepted"
+        }
+      ],
+      "resolution": {
+        "resolved": true,
+        "resolution_type": "accepted",
+        "resolved_at": "2026-08-29T16:32:12.274149",
+        "resolved_by": "user",
+        "comment": "Link settlement STL-SHADOW02 to order ORD-00073 and update ledger status."
+      },
+      "bookmarked": false,
+      "comment": "Link settlement STL-SHADOW02 to order ORD-00073 and update ledger status.",
+      "updated_at": "2026-08-29T16:32:12.274149"
+    },
+    "CASE-ORD-00078": {
+      "case_id": "CASE-ORD-00078",
+      "record_id": "ORD-00078",
+      "order_id": "ORD-00078",
+      "settlement_id": null,
+      "customer_name": "Rohan Gupta",
+      "order_date": "2026-08-02",
+      "batch_id": 2,
+      "case_type": "unmatched_order",
+      "tier": 5,
+      "status": "EXCEPTION",
+      "case_status": "exception",
+      "expected": 649950,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 649950,
+      "reason": "R3_UNMATCHED_AMBIGUOUS",
+      "reason_label": "Unmatched / ambiguous",
+      "explanation": "No settlement in the feed carries pay_000078D. The full order value is unaccounted for.",
+      "priority": "High",
+      "candidates": [],
+      "evidence_hash": "125b70783cfacd0b",
+      "ai": {
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate settlements were found for order ORD-00078 with expected amount Rs 6,499.50.",
+        "next_step": "Escalate to payment gateway team to verify missing settlement for order ORD-00078.",
+        "evidence": [
+          "Order ORD-00078 expected amount Rs 6,499.50",
+          "Candidate matches array is empty"
+        ],
+        "missing_evidence": [
+          "Payment gateway settlement report",
+          "Courier remittance report"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:13.494184",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
         "resolved": false,
         "resolution_type": null,
         "resolved_at": null,
-        "resolved_by": null
+        "resolved_by": null,
+        "comment": null
       },
-      "updated_at": "2026-08-29T02:15:20.246476"
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-STL-X2002": {
+      "case_id": "CASE-STL-X2002",
+      "record_id": "STL-X2002",
+      "order_id": null,
+      "settlement_id": "STL-X2002",
+      "customer_name": "",
+      "order_date": "",
+      "batch_id": 2,
+      "case_type": "unmatched_settlement",
+      "tier": 5,
+      "status": "EXCEPTION",
+      "case_status": "exception",
+      "expected": 0,
+      "received": 616000,
+      "delta": 616000,
+      "amount_at_risk": 616000,
+      "reason": "R3_UNMATCHED_AMBIGUOUS",
+      "reason_label": "Unmatched / ambiguous",
+      "explanation": "Credit of Rs 6,160.00 in the feed with no order behind it. Narration: IMPS/UTR000700202/MISC CREDIT",
+      "priority": "High",
+      "candidates": [],
+      "evidence_hash": "6110070af024703c",
+      "ai": {
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate orders were found for settlement STL-X2002 with received amount Rs 6,160.00.",
+        "next_step": "Contact payment gateway support to identify transaction details for settlement STL-X2002.",
+        "evidence": [
+          "Settlement STL-X2002 received amount Rs 6,160.00",
+          "Candidate matches array is empty"
+        ],
+        "missing_evidence": [
+          "Bank deposit breakdown",
+          "Payment gateway transaction reference"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:13.494184",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00079": {
+      "case_id": "CASE-ORD-00079",
+      "record_id": "ORD-00079",
+      "order_id": "ORD-00079",
+      "settlement_id": null,
+      "customer_name": "Vihaan Reddy",
+      "order_date": "2026-08-02",
+      "batch_id": 2,
+      "case_type": "unmatched_order",
+      "tier": 5,
+      "status": "EXCEPTION",
+      "case_status": "exception",
+      "expected": 399950,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 399950,
+      "reason": "R3_UNMATCHED_AMBIGUOUS",
+      "reason_label": "Unmatched / ambiguous",
+      "explanation": "No settlement in the feed carries pay_000079F. The full order value is unaccounted for.",
+      "priority": "Medium",
+      "candidates": [],
+      "evidence_hash": "027e4e54b21c1029",
+      "ai": {
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate settlements were found for order ORD-00079 with expected amount Rs 3,999.50.",
+        "next_step": "Escalate to payment gateway to trace remittance for order ORD-00079.",
+        "evidence": [
+          "Order ORD-00079 expected amount Rs 3,999.50",
+          "Candidate matches array is empty"
+        ],
+        "missing_evidence": [
+          "Payment gateway remittance report",
+          "Courier delivery confirmation"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:13.494184",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-STL-BULK02": {
+      "case_id": "CASE-STL-BULK02",
+      "record_id": "STL-BULK02",
+      "order_id": null,
+      "settlement_id": "STL-BULK02",
+      "customer_name": "",
+      "order_date": "",
+      "batch_id": 2,
+      "case_type": "unmatched_settlement",
+      "tier": 5,
+      "status": "EXCEPTION",
+      "case_status": "exception",
+      "expected": 0,
+      "received": 341056,
+      "delta": 341056,
+      "amount_at_risk": 341056,
+      "reason": "R3_UNMATCHED_AMBIGUOUS",
+      "reason_label": "Unmatched / ambiguous",
+      "explanation": "Credit of Rs 3,410.56 in the feed with no order behind it. Narration: IMPS/BLUEDART/COD-SETL/BATCH02",
+      "priority": "Medium",
+      "candidates": [],
+      "evidence_hash": "fa8d368daeffa35b",
+      "ai": {
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "Settlement STL-BULK02 received Rs 3,410.56 but no candidate matches were found in the system records.",
+        "next_step": "Contact the payment gateway to obtain transaction logs for settlement STL-BULK02.",
+        "evidence": [
+          "Settlement ID: STL-BULK02",
+          "Received amount: Rs 3,410.56",
+          "Candidate matches: none"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction report",
+          "Bank deposit breakdown"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:23.429744",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-STL-X2001": {
+      "case_id": "CASE-STL-X2001",
+      "record_id": "STL-X2001",
+      "order_id": null,
+      "settlement_id": "STL-X2001",
+      "customer_name": "",
+      "order_date": "",
+      "batch_id": 2,
+      "case_type": "unmatched_settlement",
+      "tier": 5,
+      "status": "EXCEPTION",
+      "case_status": "exception",
+      "expected": 0,
+      "received": 299100,
+      "delta": 299100,
+      "amount_at_risk": 299100,
+      "reason": "R3_UNMATCHED_AMBIGUOUS",
+      "reason_label": "Unmatched / ambiguous",
+      "explanation": "Credit of Rs 2,991.00 in the feed with no order behind it. Narration: IMPS/UTR000700201/MISC CREDIT",
+      "priority": "Medium",
+      "candidates": [],
+      "evidence_hash": "2a14847bfbf332e3",
+      "ai": {
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "Settlement STL-X2001 received Rs 2,991.00 but has no candidate matches available for matching.",
+        "next_step": "Verify settlement details with the payment gateway to identify the underlying order.",
+        "evidence": [
+          "Settlement ID: STL-X2001",
+          "Received amount: Rs 2,991.00",
+          "Candidate matches: none"
+        ],
+        "missing_evidence": [
+          "Gateway settlement breakdown",
+          "Order reference records"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:23.429744",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00051": {
+      "case_id": "CASE-ORD-00051",
+      "record_id": "ORD-00051",
+      "order_id": "ORD-00051",
+      "settlement_id": null,
+      "customer_name": "Rohan Gupta",
+      "order_date": "2026-08-12",
+      "batch_id": 2,
+      "case_type": "ambiguous_match",
+      "tier": 5,
+      "status": "EXCEPTION",
+      "case_status": "manual_review",
+      "expected": 59950,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 59950,
+      "reason": "R3_UNMATCHED_AMBIGUOUS",
+      "reason_label": "Unmatched / ambiguous",
+      "explanation": "2 settlements claim pay_000051A (STL-00051-D, STL-00051). Refusing to pick one; a wrong match here books the wrong revenue.",
+      "priority": "Low",
+      "candidates": [
+        {
+          "settlement_id": "STL-00051-D",
+          "amount_paise": 59950,
+          "settled_on": "2026-08-14",
+          "narration": "RAZORPAY SETTLEMENT REPOST UTR000400051"
+        },
+        {
+          "settlement_id": "STL-00051",
+          "amount_paise": 59950,
+          "settled_on": "2026-08-13",
+          "narration": "RAZORPAY SETTLEMENT UTR000400051"
+        }
+      ],
+      "evidence_hash": "8bd22d5b22f6f922",
+      "ai": {
+        "classification": "ambiguous_match",
+        "recommendation": "manual_review",
+        "confidence": 50,
+        "reason": "Two candidate settlements STL-00051 and STL-00051-D both match the expected amount of Rs 599.50 for order ORD-00051 with the same UTR number UTR000400051.",
+        "next_step": "Verify with Razorpay whether STL-00051-D is a duplicate settlement or a valid repost.",
+        "evidence": [
+          "Expected amount of Rs 599.50",
+          "Candidate STL-00051 settled on 2026-08-13 for 59950 paise",
+          "Candidate STL-00051-D repost settled on 2026-08-14 for 59950 paise"
+        ],
+        "missing_evidence": [
+          "Payment gateway settlement log clarifying duplicate versus repost status"
+        ],
+        "candidate_rankings": [],
+        "action": "manual_review",
+        "investigated_at": "2026-08-29T16:31:45.414729",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00097": {
+      "case_id": "CASE-ORD-00097",
+      "record_id": "ORD-00097",
+      "order_id": "ORD-00097",
+      "settlement_id": null,
+      "customer_name": "Kartik Joshi",
+      "order_date": "2026-08-11",
+      "batch_id": 2,
+      "case_type": "remittance_overdue",
+      "tier": 0,
+      "status": "EXCEPTION",
+      "case_status": "exception",
+      "expected": 34950,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 34950,
+      "reason": "R2_REMITTANCE_OVERDUE",
+      "reason_label": "Remittance overdue",
+      "explanation": "COD order is 21 days old with no courier remittance. Past the 14-day threshold; chase the courier.",
+      "priority": "Low",
+      "candidates": [],
+      "evidence_hash": "6ca188c587fd940c",
+      "ai": {
+        "classification": "remittance_overdue",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate settlements were found for order ORD-00097, leaving expected amount of Rs 349.50 unremitted.",
+        "next_step": "Escalate to courier partner to request remittance confirmation for order ORD-00097.",
+        "evidence": [
+          "Expected amount of Rs 349.50",
+          "Received amount of Rs 0.00",
+          "Zero candidate matches found"
+        ],
+        "missing_evidence": [
+          "Courier remittance manifest"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:45.414729",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00093": {
+      "case_id": "CASE-ORD-00093",
+      "record_id": "ORD-00093",
+      "order_id": "ORD-00093",
+      "settlement_id": "STL-00093",
+      "customer_name": "Arjun Menon",
+      "order_date": "2026-08-20",
+      "batch_id": 2,
+      "case_type": "overpayment",
+      "tier": 3,
+      "status": "MANUAL_REVIEW",
+      "case_status": "manual_review",
+      "expected": 189900,
+      "received": 208890,
+      "delta": 18990,
+      "amount_at_risk": 18990,
+      "reason": "R5_AI_VARIANCE",
+      "reason_label": "Large variance flagged by AI",
+      "explanation": "Received Rs 189.90 more than the order value (10.0% over) on a matched reference. Overpayment of this shape is usually a duplicate capture or a misapplied credit. Route to gateway ops.",
+      "priority": "Low",
+      "candidates": [],
+      "evidence_hash": "9759e1517af7b8a8",
+      "ai": {
+        "classification": "overpayment",
+        "recommendation": "manual_review",
+        "confidence": 80,
+        "reason": "Order ORD-00093 records a received amount of Rs 2,088.90 against an expected amount of Rs 1,899.00.",
+        "next_step": "Review order invoice details and gateway charges to verify overpayment reason for order ORD-00093.",
+        "evidence": [
+          "Expected amount of Rs 1,899.00",
+          "Received amount of Rs 2,088.90"
+        ],
+        "missing_evidence": [
+          "Itemized payment breakdown or fee schedule"
+        ],
+        "candidate_rankings": [],
+        "action": "manual_review",
+        "investigated_at": "2026-08-29T16:31:45.414729",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00053": {
+      "case_id": "CASE-ORD-00053",
+      "record_id": "ORD-00053",
+      "order_id": "ORD-00053",
+      "settlement_id": "STL-00053",
+      "customer_name": "Yash Malhotra",
+      "order_date": "2026-08-17",
+      "batch_id": 2,
+      "case_type": "partial_payment",
+      "tier": 4,
+      "status": "MANUAL_REVIEW",
+      "case_status": "manual_review",
+      "expected": 59900,
+      "received": 46125,
+      "delta": -13775,
+      "amount_at_risk": 13775,
+      "reason": "R4_PARTIAL_PAYMENT",
+      "reason_label": "Partial payment",
+      "explanation": "COD remittance is Rs 137.75 short (23.0% of order value), beyond the Rs 50.00 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",
+      "priority": "Low",
+      "candidates": [],
+      "evidence_hash": "47030734e51ea6d9",
+      "ai": {
+        "classification": "partial_payment",
+        "recommendation": "manual_review",
+        "confidence": 80,
+        "reason": "Order ORD-00053 records a received amount of Rs 461.25 against an expected amount of Rs 599.00.",
+        "next_step": "Check fee deductions or contact customer to recover remaining balance for order ORD-00053.",
+        "evidence": [
+          "Expected amount of Rs 599.00",
+          "Received amount of Rs 461.25"
+        ],
+        "missing_evidence": [
+          "Deduction or discount schedule"
+        ],
+        "candidate_rankings": [],
+        "action": "manual_review",
+        "investigated_at": "2026-08-29T16:31:45.414729",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00068": {
+      "case_id": "CASE-ORD-00068",
+      "record_id": "ORD-00068",
+      "order_id": "ORD-00068",
+      "settlement_id": "STL-00068",
+      "customer_name": "Diya Patel",
+      "order_date": "2026-08-02",
+      "batch_id": 2,
+      "case_type": "partial_payment",
+      "tier": 3,
+      "status": "MANUAL_REVIEW",
+      "case_status": "exception",
+      "expected": 89950,
+      "received": 86298,
+      "delta": -3652,
+      "amount_at_risk": 3652,
+      "reason": "R5_AI_VARIANCE",
+      "reason_label": "Large variance flagged by AI",
+      "explanation": "Deduction of Rs 36.52 (4.06%) exceeds the contracted Rs 17.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",
+      "priority": "Low",
+      "candidates": [],
+      "evidence_hash": "4bd2f69fd29e5d77",
+      "ai": {
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 15,
+        "reason": "No candidate matches were provided to reconcile the variance between expected Rs 899.50 and received Rs 862.98 for order ORD-00068.",
+        "next_step": "Escalate to payment gateway to trace the underpayment for order ORD-00068.",
+        "evidence": [
+          "Expected amount of Rs 899.50",
+          "Received amount of Rs 862.98",
+          "No candidate matches found in records"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction log",
+          "Settlement breakdown"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:58.512526",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00052": {
+      "case_id": "CASE-ORD-00052",
+      "record_id": "ORD-00052",
+      "order_id": "ORD-00052",
+      "settlement_id": "STL-00052",
+      "customer_name": "Vihaan Reddy",
+      "order_date": "2026-08-23",
+      "batch_id": 2,
+      "case_type": "partial_payment",
+      "tier": 3,
+      "status": "MANUAL_REVIEW",
+      "case_status": "exception",
+      "expected": 59950,
+      "received": 58029,
+      "delta": -1921,
+      "amount_at_risk": 1921,
+      "reason": "R5_AI_VARIANCE",
+      "reason_label": "Large variance flagged by AI",
+      "explanation": "Deduction of Rs 19.21 (3.20%) exceeds the contracted Rs 11.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",
+      "priority": "Low",
+      "candidates": [],
+      "evidence_hash": "703cd1a58affef2d",
+      "ai": {
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 15,
+        "reason": "No candidate matches were provided to reconcile the variance between expected Rs 599.50 and received Rs 580.29 for order ORD-00052.",
+        "next_step": "Escalate to payment gateway to trace the underpayment for order ORD-00052.",
+        "evidence": [
+          "Expected amount of Rs 599.50",
+          "Received amount of Rs 580.29",
+          "No candidate matches found in records"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction log",
+          "Settlement breakdown"
+        ],
+        "candidate_rankings": [],
+        "action": "escalate",
+        "investigated_at": "2026-08-29T16:31:58.512526",
+        "error": null
+      },
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "ai investigated"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00058": {
+      "case_id": "CASE-ORD-00058",
+      "record_id": "ORD-00058",
+      "order_id": "ORD-00058",
+      "settlement_id": null,
+      "customer_name": "Aditya Rao",
+      "order_date": "2026-08-23",
+      "batch_id": 2,
+      "case_type": "pending_settlement",
+      "tier": 0,
+      "status": "APPROACHING_THRESHOLD",
+      "case_status": "pending_settlement",
+      "expected": 649999,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 0,
+      "reason": "R1_AWAITING_REMITTANCE",
+      "reason_label": "Awaiting courier remittance",
+      "explanation": "COD order placed 9 days ago, inside the normal 0-14 day collection window. No action needed.",
+      "priority": "",
+      "candidates": [],
+      "evidence_hash": null,
+      "ai": null,
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00074": {
+      "case_id": "CASE-ORD-00074",
+      "record_id": "ORD-00074",
+      "order_id": "ORD-00074",
+      "settlement_id": null,
+      "customer_name": "Kabir Singh",
+      "order_date": "2026-08-19",
+      "batch_id": 2,
+      "case_type": "pending_settlement",
+      "tier": 0,
+      "status": "APPROACHING_THRESHOLD",
+      "case_status": "pending_settlement",
+      "expected": 124999,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 0,
+      "reason": "R1_AWAITING_REMITTANCE",
+      "reason_label": "Awaiting courier remittance",
+      "explanation": "COD order placed 13 days ago, inside the normal 0-14 day collection window. No action needed.",
+      "priority": "",
+      "candidates": [],
+      "evidence_hash": null,
+      "ai": null,
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-00091": {
+      "case_id": "CASE-ORD-00091",
+      "record_id": "ORD-00091",
+      "order_id": "ORD-00091",
+      "settlement_id": null,
+      "customer_name": "Rohan Gupta",
+      "order_date": "2026-09-01",
+      "batch_id": 2,
+      "case_type": "pending_settlement",
+      "tier": 0,
+      "status": "AWAITING_REMITTANCE",
+      "case_status": "pending_settlement",
+      "expected": 89900,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 0,
+      "reason": "R1_AWAITING_REMITTANCE",
+      "reason_label": "Awaiting courier remittance",
+      "explanation": "COD order placed 0 days ago, inside the normal 0-14 day collection window. No action needed.",
+      "priority": "",
+      "candidates": [],
+      "evidence_hash": null,
+      "ai": null,
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-BULK201": {
+      "case_id": "CASE-ORD-BULK201",
+      "record_id": "ORD-BULK201",
+      "order_id": "ORD-BULK201",
+      "settlement_id": null,
+      "customer_name": "Ananya Iyer",
+      "order_date": "2026-08-18",
+      "batch_id": 2,
+      "case_type": "pending_settlement",
+      "tier": 0,
+      "status": "APPROACHING_THRESHOLD",
+      "case_status": "pending_settlement",
+      "expected": 99900,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 0,
+      "reason": "R1_AWAITING_REMITTANCE",
+      "reason_label": "Awaiting courier remittance",
+      "explanation": "COD order placed 14 days ago, inside the normal 0-14 day collection window. No action needed.",
+      "priority": "",
+      "candidates": [],
+      "evidence_hash": null,
+      "ai": null,
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
+    },
+    "CASE-ORD-BULK202": {
+      "case_id": "CASE-ORD-BULK202",
+      "record_id": "ORD-BULK202",
+      "order_id": "ORD-BULK202",
+      "settlement_id": null,
+      "customer_name": "Ishita Bose",
+      "order_date": "2026-08-18",
+      "batch_id": 2,
+      "case_type": "pending_settlement",
+      "tier": 0,
+      "status": "APPROACHING_THRESHOLD",
+      "case_status": "pending_settlement",
+      "expected": 249900,
+      "received": 0,
+      "delta": 0,
+      "amount_at_risk": 0,
+      "reason": "R1_AWAITING_REMITTANCE",
+      "reason_label": "Awaiting courier remittance",
+      "explanation": "COD order placed 14 days ago, inside the normal 0-14 day collection window. No action needed.",
+      "priority": "",
+      "candidates": [],
+      "evidence_hash": null,
+      "ai": null,
+      "created_at": "2026-08-29T16:31:58.512526",
+      "history": [
+        {
+          "at": "2026-08-29T16:31:58.512526",
+          "event": "awaiting settlement"
+        }
+      ],
+      "resolution": {
+        "resolved": false,
+        "resolution_type": null,
+        "resolved_at": null,
+        "resolved_by": null,
+        "comment": null
+      },
+      "bookmarked": false,
+      "comment": "",
+      "updated_at": "2026-08-29T16:31:58.512526"
     }
   }
 }

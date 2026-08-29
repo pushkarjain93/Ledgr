@@ -152,12 +152,16 @@ def upsert_case(state, case):
         case["history"] = list(existing.get("history", []))
         if existing.get("resolution", {}).get("resolved") and not case.get("resolution"):
             case["resolution"] = existing["resolution"]
+        case.setdefault("bookmarked", existing.get("bookmarked", False))
+        case.setdefault("comment", existing.get("comment", ""))
     else:
         case["created_at"] = now
         case.setdefault("history", [])
 
     case.setdefault("resolution", {"resolved": False, "resolution_type": None,
-                                    "resolved_at": None, "resolved_by": None})
+                                    "resolved_at": None, "resolved_by": None, "comment": None})
+    case.setdefault("bookmarked", False)
+    case.setdefault("comment", "")
     case["updated_at"] = now
     case["history"].append({"at": now, "event": event})
     cases[cid] = case
@@ -205,20 +209,56 @@ def pending_settlement_order_ids(state):
             and not c.get("resolution", {}).get("resolved")]
 
 
-def record_resolution(state, case_id, resolution_type, resolved_by="user"):
-    """Accept & Reconcile / Keep for Manual Review / Reject -- persists a
-    real human decision onto an existing case. Returns None if the case
-    doesn't exist (never fabricates one)."""
+def record_resolution(state, case_id, resolution_type, resolved_by="user", comment=None):
+    """Accept Recommendation / Keep for Manual Review -- persists a real
+    human decision onto an existing case, along with the comment that
+    justified it (auto-filled from AI's own recommendation on accept,
+    required and user-typed on manual review -- see app_new.py's ticket
+    page for that rule). Returns None if the case doesn't exist (never
+    fabricates one)."""
     case = state.get("cases", {}).get(case_id)
     if not case:
         return None
     now = datetime.now().isoformat()
+    if comment is not None:
+        case["comment"] = comment
     case["resolution"] = {"resolved": True, "resolution_type": resolution_type,
-                           "resolved_at": now, "resolved_by": resolved_by}
+                           "resolved_at": now, "resolved_by": resolved_by,
+                           "comment": comment}
     case["case_status"] = "resolved" if resolution_type == "accepted" else "manual_review"
     case["updated_at"] = now
     case.setdefault("history", []).append({"at": now, "event": f"user action: {resolution_type}"})
     return case
+
+
+def set_comment(state, case_id, comment):
+    """Save the case's working comment (not yet a resolution) -- e.g. the
+    'Save Comment' button while still investigating. Returns None if the
+    case doesn't exist."""
+    case = state.get("cases", {}).get(case_id)
+    if not case:
+        return None
+    now = datetime.now().isoformat()
+    case["comment"] = comment
+    case["updated_at"] = now
+    case.setdefault("history", []).append({"at": now, "event": "comment saved"})
+    return case
+
+
+def toggle_bookmark(state, case_id):
+    """Flip a case's bookmarked flag -- a plain per-case marker for quick
+    reference later, independent of case_status/resolution (bookmarking a
+    case never changes its lifecycle state). Returns the new value, or
+    None if the case doesn't exist (never fabricates one)."""
+    case = state.get("cases", {}).get(case_id)
+    if not case:
+        return None
+    now = datetime.now().isoformat()
+    case["bookmarked"] = not case.get("bookmarked", False)
+    case["updated_at"] = now
+    case.setdefault("history", []).append(
+        {"at": now, "event": "bookmarked" if case["bookmarked"] else "bookmark removed"})
+    return case["bookmarked"]
 
 
 def batch_is_available(state):
