@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { ReconciliationDashboard } from '../../lib/reconciliationMetrics'
+import { scrollAppMainToTop } from '../../lib/scrollAppMain'
 
 type StatsSegmentProps = {
   recon: ReconciliationDashboard
@@ -12,8 +13,8 @@ export function StatsSegment({ recon, needsDecisionCount, openCasesCount }: Stat
     { label: 'Total recon runs', value: String(recon.totalRuns), sub: 'On selected date' },
     { label: 'Records processed', value: String(recon.cumulativeRecordsProcessed), sub: 'On selected date' },
     {
-      label: 'AI contribution (latest)',
-      value: recon.latestRun ? `${recon.latestRun.aiContributionPct}%` : '0%',
+      label: 'Manual work eliminated',
+      value: recon.latestRun ? `${recon.latestRun.manualWorkEliminationPct}%` : '0%',
       sub: recon.latestRun?.label ?? 'No runs yet',
     },
     { label: 'Open cases', value: String(openCasesCount), sub: 'Unresolved', link: '/cases' },
@@ -40,7 +41,8 @@ export function StatsSegment({ recon, needsDecisionCount, openCasesCount }: Stat
           <Link
             key={label}
             to={link}
-            className="rounded-2xl border border-zinc-200 bg-white p-4 transition-colors hover:border-blue-200 hover:shadow-sm"
+            onClick={scrollAppMainToTop}
+            className="rounded-2xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
           >
             {inner}
           </Link>

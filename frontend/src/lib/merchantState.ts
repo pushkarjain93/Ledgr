@@ -44,6 +44,16 @@ export function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
+/** Add or subtract days from an ISO date string (YYYY-MM-DD). */
+export function shiftISODate(isoDate: string, days: number): string {
+  const d = new Date(`${isoDate}T12:00:00`)
+  d.setDate(d.getDate() + days)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export function formatDisplayDate(isoDate: string): string {
   const d = new Date(`${isoDate}T12:00:00`)
   return d.toLocaleDateString('en-IN', {
@@ -59,6 +69,66 @@ export function filterRunsByDate(
   selectedDate: string,
 ) {
   return runs.filter((r) => r.timestamp.slice(0, 10) === selectedDate)
+}
+
+export type ReconciliationPeriod = 'day' | 'month' | 'year'
+
+function toISODate(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+export function monthRange(isoDate: string): { start: string; end: string } {
+  const d = new Date(`${isoDate}T12:00:00`)
+  const y = d.getFullYear()
+  const m = d.getMonth()
+  const start = toISODate(new Date(y, m, 1))
+  const end = toISODate(new Date(y, m + 1, 0))
+  return { start, end }
+}
+
+export function yearRange(isoDate: string): { start: string; end: string } {
+  const year = new Date(`${isoDate}T12:00:00`).getFullYear()
+  return {
+    start: `${year}-01-01`,
+    end: `${year}-12-31`,
+  }
+}
+
+export function filterRunsByPeriod(
+  runs: MerchantState['reconciliation_runs'],
+  period: ReconciliationPeriod,
+  referenceDate: string,
+): MerchantState['reconciliation_runs'] {
+  if (period === 'day') {
+    return filterRunsByDate(runs, referenceDate)
+  }
+
+  if (period === 'month') {
+    const { start, end } = monthRange(referenceDate)
+    return runs.filter((r) => {
+      const day = r.timestamp.slice(0, 10)
+      return day >= start && day <= end
+    })
+  }
+
+  const year = referenceDate.slice(0, 4)
+  return runs.filter((r) => r.timestamp.slice(0, 4) === year)
+}
+
+export function periodLabel(period: ReconciliationPeriod, referenceDate: string): string {
+  if (period === 'day') {
+    return formatDisplayDate(referenceDate)
+  }
+  if (period === 'month') {
+    return new Date(`${referenceDate}T12:00:00`).toLocaleDateString('en-IN', {
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+  return referenceDate.slice(0, 4)
 }
 
 export function hasPendingBatch(state: MerchantState): boolean {

@@ -18,6 +18,25 @@ export type CaseStatus =
   | 'exception'
   | 'resolved'
 
+export type CaseAiBlock = {
+  classification?: string | null
+  recommendation?: string | null
+  confidence: number | null
+  reason: string | null
+  next_step: string | null
+  evidence?: string[]
+  missing_evidence?: string[]
+  candidate_rankings?: Array<{ id: string; confidence: number; reason: string }>
+  action: 'resolve' | 'manual_review' | 'escalate' | null
+  investigated_at?: string | null
+  error: string | null
+}
+
+export type CaseHistoryEvent = {
+  at: string
+  event: string
+}
+
 export type Case = {
   case_id: string
   record_id: string
@@ -36,19 +55,17 @@ export type Case = {
   explanation: string
   priority: string
   bookmarked: boolean
-  ai: {
-    confidence: number | null
-    reason: string | null
-    next_step: string | null
-    action: 'resolve' | 'manual_review' | 'escalate' | null
-    error: string | null
-  } | null
+  comment?: string
+  updated_at?: string
+  ai: CaseAiBlock | null
   resolution: {
     resolved: boolean
     resolution_type: 'accepted' | 'manual_review' | 'auto_resolved' | null
     resolved_at: string | null
+    resolved_by?: string | null
     comment: string | null
   }
+  history?: CaseHistoryEvent[]
   created_at: string
 }
 
@@ -62,6 +79,8 @@ export type ReconciliationRun = {
   ai_resolved?: number
   exceptions?: number
   total_records?: number
+  expected_paise?: number
+  received_paise?: number
 }
 
 export type MerchantState = {

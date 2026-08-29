@@ -109,6 +109,10 @@ class CommentBody(BaseModel):
     comment: str
 
 
+class ReopenBody(BaseModel):
+    reason: str
+
+
 class AskBody(BaseModel):
     question: str
     case_id: str | None = None
@@ -385,17 +389,21 @@ def transactions(merchant: dict = Depends(current_merchant)):
     if not batch_ids:
         return {"records": [], "total": 0}
 
-    orders_df, settlements_df, _o, _s = _batch_frames(batch_ids)
+    orders_df, settlements_df, order_rows, _s = _batch_frames(batch_ids)
     if orders_df.empty:
         return {"records": [], "total": 0}
     result_df = reconcile(orders_df, settlements_df)
 
+    orders_by_id = {o["order_id"]: o for o in order_rows}
     cases_by_record = {c["record_id"]: c["case_id"] for c in state.get("cases", {}).values()}
     records = []
     for r in result_df.to_dict("records"):
         age = r.get("age_days")
+        order = orders_by_id.get(r["record_id"])
         records.append({
             "record_id": r["record_id"],
+            "order_date": order.get("order_date", "") if order else "",
+            "payment_mode": order.get("payment_mode", "") if order else "",
             "tier": int(r["tier"]),
             "tier_name": r["tier_name"],
             "status": r["status"],
@@ -464,6 +472,34 @@ def resolve_case(case_id: str, body: ResolveBody,
 
     updated = state_store.record_resolution(state, case_id, body.resolution_type,
                                             comment=comment)
+    _save(merchant, state)
+    return updated
+
+
+@app.post("/api/cases/{case_id}/reopen")
+def reopen_case(case_id: str, body: ReopenBody,
+                merchant: dict = Depends(current_merchant)):
+    """Send a resolved case back to the review queue after a mistaken click.
+    Requires a reason for the audit trail. System auto-resolved cases cannot
+    be reopened through this endpoint."""
+    reason = (body.reason or "").strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="A reason is required to reopen a case")
+
+    state = _load(merchant)
+    case = state_store.get_case(state, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if not case.get("resolution", {}).get("resolved"):
+        raise HTTPException(status_code=400, detail="Case is not resolved")
+    if case.get("resolution", {}).get("resolution_type") == "auto_resolved":
+        raise HTTPException(
+            status_code=400,
+            detail="Auto-resolved cases cannot be reopened — bookmark the case to flag it")
+
+    updated = state_store.record_reopen(state, case_id, reason)
+    if updated is None:
+        raise HTTPException(status_code=400, detail="Case could not be reopened")
     _save(merchant, state)
     return updated
 

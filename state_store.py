@@ -259,6 +259,49 @@ def record_resolution(state, case_id, resolution_type, resolved_by="user", comme
     return case
 
 
+def _status_on_reopen(case):
+    """Pick a sensible open status when undoing a human resolution."""
+    if case.get("case_type") == "pending_settlement":
+        return "pending_settlement"
+    ai = case.get("ai") or {}
+    if case.get("case_status") == "ai_pending" or ai.get("error"):
+        return "ai_pending"
+    action = ai.get("action")
+    if action:
+        return {"resolve": "ai_recommendation", "manual_review": "manual_review",
+                "escalate": "exception"}.get(action, "manual_review")
+    if ai.get("confidence") is not None or ai.get("recommendation"):
+        return "ai_recommendation"
+    return "manual_review"
+
+
+def record_reopen(state, case_id, reason, reopened_by="user"):
+    """Undo a human resolution and send the case back to the review queue.
+    Auto-resolved cases (system settlement match) cannot be reopened here."""
+    case = state.get("cases", {}).get(case_id)
+    if not case:
+        return None
+    resolution = case.get("resolution") or {}
+    if not resolution.get("resolved"):
+        return None
+    if resolution.get("resolution_type") == "auto_resolved":
+        return None
+
+    now = datetime.now().isoformat()
+    prev_type = resolution.get("resolution_type") or "resolved"
+    case["resolution"] = {"resolved": False, "resolution_type": None,
+                          "resolved_at": None, "resolved_by": None, "comment": None}
+    case["case_status"] = _status_on_reopen(case)
+    case["comment"] = reason.strip()
+    case["updated_at"] = now
+    case.setdefault("history", []).append({
+        "at": now,
+        "event": (f"reopened for review by {reopened_by} "
+                  f"(undid {prev_type}): {reason.strip()}"),
+    })
+    return case
+
+
 def set_comment(state, case_id, comment):
     """Save the case's working comment (not yet a resolution) -- e.g. the
     'Save Comment' button while still investigating. Returns None if the

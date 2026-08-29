@@ -1,6 +1,9 @@
 /** Mirrors config.py — demo "as of" date, not browser clock. */
 export const RUN_DATE = '2026-09-01'
 
+/** COD orders inside this window are informational only — not case review. */
+export const COD_WARN_DAYS = 14
+
 export const TOTAL_BATCHES = 2
 
 export const DEMO_MERCHANT = {

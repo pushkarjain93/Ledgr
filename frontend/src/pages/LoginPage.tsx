@@ -60,15 +60,15 @@ export function LoginPage() {
     if (!validate()) return
 
     setIsSubmitting(true)
-    const ok = await login(email, password)
+    const result = await login(email, password)
     setIsSubmitting(false)
 
-    if (ok) {
+    if (result.ok) {
       navigate('/dashboard')
       return
     }
 
-    setError('Invalid email or password. Try the demo account below.')
+    setError(result.message)
   }
 
   function handleDemoAccess() {

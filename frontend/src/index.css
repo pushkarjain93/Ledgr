@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Albert Sans', ui-sans-serif, system-ui, sans-serif;
 
@@ -10,6 +12,24 @@
   --color-ledgr-primary: #2563eb;
   --color-ledgr-primary-hover: #1d4ed8;
   --color-ledgr-primary-soft: #eff6ff;
+
+  --color-ledgr-card-border: rgba(26, 35, 53, 0.12);
+  --color-ledgr-card: #ffffff;
+  --color-ledgr-error: #dc2626;
+  --color-ledgr-error-border: #fecaca;
+  --color-ledgr-error-soft: #fef2f2;
+}
+
+.dark {
+  --color-ledgr-ink: #fafafa;
+  --color-ledgr-body: #d4d4d8;
+  --color-ledgr-muted: #a1a1aa;
+  --color-ledgr-primary-soft: rgba(59, 130, 246, 0.18);
+  --color-ledgr-card-border: rgba(255, 255, 255, 0.12);
+  --color-ledgr-card: #18181b;
+  --color-ledgr-error: #fca5a5;
+  --color-ledgr-error-border: rgba(252, 165, 165, 0.35);
+  --color-ledgr-error-soft: rgba(127, 29, 29, 0.45);
 }
 
 *,
@@ -31,4 +51,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #fafafa;
+}
+
+html.dark body {
+  background: #0a0a0c;
+  color: #fafafa;
 }

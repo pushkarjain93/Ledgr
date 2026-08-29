@@ -15,7 +15,7 @@ export function RecentActivity({ runs }: RecentActivityProps) {
           <h2 className="text-[15px] font-semibold text-zinc-900">Recent activity</h2>
           <p className="mt-0.5 text-[12.5px] text-zinc-500">Reconciliation run history</p>
         </div>
-        <Link to="/reconciliations" className="text-[13px] font-medium text-blue-600 hover:underline">
+        <Link to="/reconciliations" className="text-[13px] font-medium text-zinc-600 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100">
           View all →
         </Link>
       </div>

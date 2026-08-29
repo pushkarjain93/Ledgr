@@ -9,12 +9,13 @@ import {
 } from 'react'
 import { api, ApiError, getToken } from '../lib/api'
 import { computeDashboardMetrics, listCases } from '../lib/dashboardMetrics'
+import { TOTAL_BATCHES } from '../lib/constants'
 import {
   hasPendingBatch,
   stateForSelectedDate,
   todayISO,
 } from '../lib/merchantState'
-import type { Case, MerchantSession, MerchantState } from '../types/case'
+import type { Case, MerchantSession, MerchantState, ReconciliationRun } from '../types/case'
 
 /**
  * Server state, sourced from the Ledgr API (../../api.py).
@@ -36,11 +37,18 @@ type AppContextValue = {
   cases: Case[]
   dashboard: ReturnType<typeof computeDashboardMetrics> | null
   hasNewBatch: boolean
+  /** All reconciliation runs (not date-filtered). */
+  allRuns: ReconciliationRun[]
+  batchAvailable: boolean
+  currentBatch: number
+  nextBatchAvailableAt: string | null
+  totalBatches: number
+  /** ISO timestamp of the most recent reconciliation run (any date). */
+  lastSyncAt: string | null
   /** Refetch server state — call after any mutation (reconcile, resolve…). */
   refresh: () => Promise<void>
-  dismissNotification: () => void
   resetDemoData: () => Promise<void>
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<{ ok: true } | { ok: false; message: string }>
   logout: () => Promise<void>
   loading: boolean
   error: string | null
@@ -54,10 +62,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedDate, setSelectedDate] = useState(todayISO)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  // Which batch the user has dismissed the bell for. Tracked per-batch (not
-  // a plain boolean) so dismissing batch 1 doesn't also silence batch 2 when
-  // it arrives later.
-  const [dismissedBatch, setDismissedBatch] = useState<number | null>(null)
 
   const refresh = useCallback(async () => {
     try {
@@ -121,11 +125,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const m = await api.login(email, password)
         setMerchant(m)
-        setDismissedBatch(null)
         await refresh()
-        return true
-      } catch {
-        return false
+        return { ok: true as const }
+      } catch (err) {
+        const message =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : 'Sign-in failed'
+        return { ok: false as const, message }
       }
     },
     [refresh],
@@ -137,14 +146,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMerchantState(null)
   }, [])
 
-  const dismissNotification = useCallback(
-    () => setDismissedBatch(merchantState?.current_batch ?? null),
-    [merchantState?.current_batch],
-  )
-
   const resetDemoData = useCallback(async () => {
     await api.reset()
-    setDismissedBatch(null)
     setSelectedDate(todayISO())
     await refresh()
   }, [refresh])
@@ -164,13 +167,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [dateFilteredState],
   )
 
-  // The bell rings whenever a real batch is sitting there unreconciled and
-  // the user hasn't dismissed THAT batch. Reconciling it clears the bell on
-  // its own (the batch stops being available), and the next batch re-rings it
-  // once its timer passes.
-  const hasNewBatch = merchantState
-    ? hasPendingBatch(merchantState) && dismissedBatch !== merchantState.current_batch
-    : false
+  // Red dot + batch notification stay until the batch is actually reconciled.
+  const hasNewBatch = merchantState ? hasPendingBatch(merchantState) : false
+
+  const allRuns = merchantState?.reconciliation_runs ?? []
+  const batchAvailable = merchantState?.notification_created ?? false
+  const currentBatch = merchantState?.current_batch ?? 1
+  const nextBatchAvailableAt = merchantState?.next_batch_available_at ?? null
+
+  const lastSyncAt = merchantState?.reconciliation_runs[0]?.timestamp ?? null
 
   // A scheduled batch unlocks on a persisted server timestamp. Poll only
   // while one is genuinely pending; stop the moment it lands. No permanent
@@ -194,16 +199,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       cases,
       dashboard,
       hasNewBatch,
+      allRuns,
+      batchAvailable,
+      currentBatch,
+      nextBatchAvailableAt,
+      totalBatches: TOTAL_BATCHES,
+      lastSyncAt,
       refresh,
-      dismissNotification,
       resetDemoData,
       login,
       logout,
       loading,
       error,
     }),
-    [merchant, dateFilteredState, selectedDate, cases, dashboard, hasNewBatch,
-     refresh, dismissNotification, resetDemoData, login, logout, loading, error],
+    [merchant, dateFilteredState, selectedDate, cases, dashboard, hasNewBatch, allRuns,
+     batchAvailable, currentBatch, nextBatchAvailableAt, lastSyncAt,
+     refresh, resetDemoData, login, logout, loading, error],
   )
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

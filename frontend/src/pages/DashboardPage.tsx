@@ -1,30 +1,26 @@
 import { Link } from 'react-router-dom'
-import { PageHeader } from '../components/layout/PageHeader'
 import {
-  ImprovementChart,
+  ManualWorkEliminatedCard,
   ReconciliationChart,
 } from '../components/dashboard/ReconciliationCharts'
 import { StatsSegment } from '../components/dashboard/StatsSegment'
 import { RecentActivity } from '../components/dashboard/RecentActivity'
 import { useApp } from '../context/AppContext'
-import { isUnresolved } from '../lib/caseUtils'
+import { isOpenForReview } from '../lib/caseUtils'
 import { formatDisplayDate } from '../lib/merchantState'
 import { computeReconciliationDashboard } from '../lib/reconciliationMetrics'
 
 export function DashboardPage() {
-  const { state, cases, dashboard, selectedDate, hasNewBatch } = useApp()
+  const { state, cases, dashboard, selectedDate, allRuns } = useApp()
 
   if (!state || !dashboard) return null
 
   const recon = computeReconciliationDashboard(state.reconciliation_runs, true)
-  const openCasesCount = cases.filter(isUnresolved).length
+  const openCasesCount = cases.filter((c) => isOpenForReview(c)).length
   const isEmpty = recon.totalRuns === 0
 
   return (
-    <div className="flex min-h-full flex-col">
-      <PageHeader title="Dashboard" showWelcome />
-
-      <div className="mx-auto w-full max-w-[1160px] flex-1 space-y-6 px-6 py-6 lg:px-8 lg:py-8">
+    <div className="mx-auto w-full max-w-[1160px] space-y-6 px-6 py-6 lg:px-8 lg:py-8">
         {/* Sync & Reconcile CTA */}
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5">
           <div>
@@ -48,17 +44,6 @@ export function DashboardPage() {
           </Link>
         </div>
 
-        {hasNewBatch && (
-          <button
-            type="button"
-            onClick={() => document.querySelector<HTMLButtonElement>('[aria-label="Notifications"]')?.click()}
-            className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-[13px] text-amber-800 transition-colors hover:bg-amber-100"
-          >
-            <span className="font-medium">New batch waiting</span>
-            {' — '}click the bell to reconcile or ignore
-          </button>
-        )}
-
         <StatsSegment
           recon={recon}
           needsDecisionCount={dashboard.needsDecisionCount}
@@ -66,16 +51,11 @@ export function DashboardPage() {
         />
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <ReconciliationChart runs={recon.runs} />
-          <ImprovementChart
-            latest={recon.latestRun}
-            previous={recon.previousRun}
-            aiContributionDelta={recon.improvement.aiContributionDelta}
-          />
+          <ReconciliationChart allRuns={allRuns} referenceDate={selectedDate} />
+          <ManualWorkEliminatedCard runs={recon.runs} />
         </div>
 
         <RecentActivity runs={recon.runs} />
-      </div>
     </div>
   )
 }

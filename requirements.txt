@@ -3,5 +3,7 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 
 # API layer (api.py) -- serves the React frontend in frontend/
-fastapi>=0.115.0
+# Starlette must match FastAPI — an old global starlette (e.g. 1.6) breaks import.
+fastapi>=0.115.0,<0.117.0
+starlette>=0.40.0,<0.48.0
 uvicorn[standard]>=0.30.0

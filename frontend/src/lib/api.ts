@@ -11,7 +11,7 @@
  */
 import type { Case, MerchantSession, ReconciliationRun } from '../types/case'
 
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const BASE = import.meta.env.VITE_API_URL ?? ''
 const TOKEN_KEY = 'ledgr_token'
 
 export function getToken(): string | null {
@@ -132,6 +132,8 @@ export type SyncResult = {
 
 export type TransactionRecord = {
   record_id: string
+  order_date: string
+  payment_mode: string
   tier: number
   tier_name: string
   status: string
@@ -207,6 +209,12 @@ export const api = {
     request<Case>(`/api/cases/${caseId}/resolve`, {
       method: 'POST',
       body: JSON.stringify({ resolution_type: resolutionType, comment }),
+    }),
+
+  reopenCase: (caseId: string, reason: string) =>
+    request<Case>(`/api/cases/${caseId}/reopen`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
     }),
 
   toggleBookmark: (caseId: string) =>

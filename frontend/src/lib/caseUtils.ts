@@ -1,8 +1,39 @@
-import { ISSUE_TYPE_LABELS, RUN_DATE } from './constants'
+import { COD_WARN_DAYS, ISSUE_TYPE_LABELS, RUN_DATE } from './constants'
 import type { Case, CaseStatus, CaseType } from '../types/case'
 
 export function isUnresolved(caseItem: Case): boolean {
   return !caseItem.resolution?.resolved
+}
+
+/** COD still inside the 0–14 day collection window (informational only). */
+export function isWithinCodSettlementWindow(
+  caseItem: Case,
+  referenceDate = RUN_DATE,
+): boolean {
+  return caseAgeDays(caseItem, referenceDate) <= COD_WARN_DAYS
+}
+
+export function isAwaitingSettlementCase(
+  caseItem: Case,
+  referenceDate = RUN_DATE,
+): boolean {
+  return (
+    isUnresolved(caseItem) &&
+    caseItem.case_status === 'pending_settlement' &&
+    isWithinCodSettlementWindow(caseItem, referenceDate)
+  )
+}
+
+/** Open cases that actually need human or AI review — excludes in-window COD waits. */
+export function isOpenForReview(caseItem: Case, referenceDate = RUN_DATE): boolean {
+  if (!isUnresolved(caseItem)) return false
+  if (
+    caseItem.case_status === 'pending_settlement' &&
+    isWithinCodSettlementWindow(caseItem, referenceDate)
+  ) {
+    return false
+  }
+  return true
 }
 
 export function caseAgeDays(caseItem: Case, referenceDate = RUN_DATE): number {
@@ -44,9 +75,16 @@ export function orderOrCustomerLabel(caseItem: Case): string {
 
 export function needsHumanDecision(caseItem: Case): boolean {
   return (
-    isUnresolved(caseItem) &&
+    isOpenForReview(caseItem) &&
     (caseItem.case_status === 'manual_review' ||
       caseItem.case_status === 'ai_recommendation')
+  )
+}
+
+export function canReopenCase(caseItem: Case): boolean {
+  return (
+    Boolean(caseItem.resolution?.resolved) &&
+    caseItem.resolution?.resolution_type !== 'auto_resolved'
   )
 }
 
