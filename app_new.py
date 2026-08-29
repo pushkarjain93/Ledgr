@@ -30,7 +30,7 @@ import razorpay_client as rzp
 import shopify_client as shopify
 import state_store
 from auth import is_authenticated, get_current_merchant, get_merchant_by_email, logout
-from config import to_paise, fmt, RUN_DATE, fee_band
+from config import to_paise, to_rupees, fmt, RUN_DATE, fee_band
 from engine import reconcile
 from login import show_login_page
 from theme import base_css, html, INK, BODY, DIM, LINE, BG, SOFT, ACC, ACC_D, MATCHED, WARN, WARN_BG
@@ -56,7 +56,7 @@ PAGE_META = {
     "Transactions": ("Transactions", "Every order and settlement Ledgr has seen."),
     "AI Review": ("AI Review", "Cases where AI investigated and has a recommendation for you."),
     "Exceptions": ("Exceptions", "Records that need a human decision."),
-    "Reports": ("Reports", "Export and summarize reconciliation activity."),
+    "Reports": ("Reports", "Export reconciliation summaries and case data."),
     "Data Sources": ("Data Sources", "Connected commerce, payment and bank feeds."),
     "Settings": ("Settings", "Workspace and account configuration."),
 }
@@ -274,6 +274,80 @@ def _open_case_ticket(case_id, previous_page=None):
     st.session_state.previous_page = previous_page or st.session_state.current_page
     st.session_state.current_page = "Case Ticket"
     st.rerun()
+
+
+def _csv_bytes(df: pd.DataFrame) -> bytes:
+    return df.to_csv(index=False).encode("utf-8")
+
+
+def _export_filename(prefix: str) -> str:
+    return f"ledgr_{prefix}_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+
+
+def _cases_export_df(cases):
+    """Flat case rows for CSV — amounts in rupees, AI fields when present."""
+    rows = []
+    for c in cases:
+        ai = c.get("ai") or {}
+        res = c.get("resolution") or {}
+        rows.append({
+            "case_id": c.get("case_id", ""),
+            "record_id": c.get("record_id", ""),
+            "order_id": c.get("order_id") or "",
+            "settlement_id": c.get("settlement_id") or "",
+            "customer_name": c.get("customer_name") or "",
+            "batch_id": c.get("batch_id", ""),
+            "case_type": c.get("case_type", ""),
+            "case_status": c.get("case_status", ""),
+            "expected": to_rupees(c.get("expected") or 0),
+            "received": to_rupees(c.get("received") or 0),
+            "delta": to_rupees(c.get("delta") or 0),
+            "amount_at_risk": to_rupees(c.get("amount_at_risk") or 0),
+            "reason": c.get("reason_label") or c.get("reason") or "",
+            "ai_confidence": ai.get("confidence") if ai.get("confidence") is not None else "",
+            "ai_finding": ai.get("reason") or "",
+            "ai_recommendation": ai.get("next_step") or "",
+            "ai_action": ai.get("action") or "",
+            "resolved": res.get("resolved", False),
+            "resolution_type": res.get("resolution_type") or "",
+            "resolved_at": res.get("resolved_at") or "",
+            "comment": c.get("comment") or res.get("comment") or "",
+        })
+    return pd.DataFrame(rows)
+
+
+def _runs_export_df(runs):
+    rows = []
+    for r in runs:
+        rows.append({
+            "run_id": r.get("run_id", ""),
+            "batch_id": r.get("batch_id", ""),
+            "timestamp": r.get("timestamp", ""),
+            "status": r.get("status", ""),
+            "total_records": r.get("total_records", 0),
+            "auto_matched": r.get("auto_matched", 0),
+            "ai_review": r.get("ai_resolved", 0),
+            "exceptions": r.get("exceptions", 0),
+            "expected": to_rupees(r.get("expected_paise") or 0),
+            "received": to_rupees(r.get("received_paise") or 0),
+            "sources": r.get("sources", ""),
+        })
+    return pd.DataFrame(rows)
+
+
+def _transactions_export_df(rows):
+    return pd.DataFrame([{
+        "id": r["id"],
+        "type": r["type"],
+        "source": r["source"],
+        "customer": r["customer"],
+        "amount": to_rupees(r["amount_paise"]),
+        "date": r["date"],
+        "status": r["status"],
+        "case_id": r["case_id"] or "",
+        "batch_id": r.get("batch_id", ""),
+        "reference": r.get("ref", ""),
+    } for r in rows])
 
 
 def _risk_summary(flagged_records):
@@ -1313,6 +1387,15 @@ def _render_transactions(state):
         </div>
     """), unsafe_allow_html=True)
 
+    st.download_button(
+        label="Export CSV",
+        data=_csv_bytes(_transactions_export_df(rows)),
+        file_name=_export_filename("transactions"),
+        mime="text/csv",
+        key="txn_export_csv",
+        help="Download all rows matching your current search and filters.",
+    )
+
     if not rows:
         st.markdown('<div class="recon-empty">No transactions match your search.</div>', unsafe_allow_html=True)
         return
@@ -1388,7 +1471,7 @@ def _render_data_sources():
 
 
 def _render_reports(state):
-    """Simple export-friendly summary — no charts."""
+    """Summary plus CSV exports from real persisted data."""
     runs = state["reconciliation_runs"]
     cases = state_store.list_cases(state)
     if not runs:
@@ -1407,6 +1490,54 @@ def _render_reports(state):
             <div class="ticket-line"><span>Outstanding at risk</span><b>{fmt(sum(c['amount_at_risk'] for c in open_cases))}</b></div>
         </div>
     """), unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+    st.markdown(html("""
+        <div class="recon-card">
+            <div class="recon-title">Export CSV</div>
+            <div class="workspace-sub">Downloads use the same real data shown in Ledgr — nothing fabricated.</div>
+        </div>
+    """), unsafe_allow_html=True)
+
+    e1, e2, e3 = st.columns(3)
+    with e1:
+        st.download_button(
+            label=f"Open cases ({len(open_cases)})",
+            data=_csv_bytes(_cases_export_df(open_cases)),
+            file_name=_export_filename("open_cases"),
+            mime="text/csv",
+            key="export_open_cases",
+            use_container_width=True,
+        )
+    with e2:
+        st.download_button(
+            label=f"All cases ({len(cases)})",
+            data=_csv_bytes(_cases_export_df(cases)),
+            file_name=_export_filename("all_cases"),
+            mime="text/csv",
+            key="export_all_cases",
+            use_container_width=True,
+        )
+    with e3:
+        st.download_button(
+            label=f"Reconciliation runs ({len(runs)})",
+            data=_csv_bytes(_runs_export_df(runs)),
+            file_name=_export_filename("reconciliation_runs"),
+            mime="text/csv",
+            key="export_runs",
+            use_container_width=True,
+        )
+
+    txn_rows = _build_transaction_ledger(state)
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+    st.download_button(
+        label=f"Full transaction ledger ({len(txn_rows)} rows)",
+        data=_csv_bytes(_transactions_export_df(txn_rows)),
+        file_name=_export_filename("transaction_ledger"),
+        mime="text/csv",
+        key="export_ledger",
+        help="Every order and settlement in the demo dataset, with case links where they exist.",
+    )
 
 
 def _render_settings(merchant, merchant_id):
