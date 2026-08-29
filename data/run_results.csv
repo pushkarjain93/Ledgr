@@ -1,266 +1,113 @@
-record_id,tier,tier_name,status,reason,reason_label,fee_type,expected,received,delta,amount_at_risk,priority,explanation,matched_settlement,age_days,ai_assisted
-ORD-00023,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,9999.00,0.00,0.00,9999.00,High,No settlement in the feed carries pay_000023E. The full order value is unaccounted for.,,30.0,False
-ORD-00081,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,9999.00,0.00,0.00,9999.00,Medium,COD order is 26 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,26.0,False
-STL-X0002,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,7898.00,7898.00,7898.00,High,"Credit of Rs 7,898.00 in the feed with no order behind it. Narration: NEFT CR-UNKNOWN REMITTER-UTR000700002",STL-X0002,,False
-STL-X0005,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,7209.00,7209.00,7209.00,High,"Credit of Rs 7,209.00 in the feed with no order behind it. Narration: NEFT CR-STRIPE PAYMENTS-UTR000700005",STL-X0005,,False
-ORD-00138,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,6499.99,0.00,0.00,6499.99,High,"2 settlements claim pay_000138E (STL-00138-D, STL-00138). Refusing to pick one; a wrong match here books the wrong revenue.",,10.0,False
-ORD-00103,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,6499.50,0.00,0.00,6499.50,Medium,COD order is 18 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,18.0,False
-ORD-00217,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,6499.50,12999.00,6499.50,6499.50,High,"Settled amount is exactly double the order value on a matched reference. Consistent with a duplicate capture, not a fee or refund. Do not clear; confirm with the gateway before posting.",STL-00217,11.0,True
-ORD-00129,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,6499.00,0.00,0.00,6499.00,High,No settlement in the feed carries pay_000129F. The full order value is unaccounted for.,,7.0,False
-ORD-00234,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,9999.50,4999.75,-4999.75,4999.75,Medium,"Settled Rs 4,999.75 short, 50.0% of order value. Far outside the Rs 199.99 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00234,3.0,True
-ORD-00187,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,3999.99,0.00,0.00,3999.99,Medium,No settlement in the feed carries pay_000187D. The full order value is unaccounted for.,,13.0,False
-ORD-00050,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,3999.00,0.00,0.00,3999.00,Medium,No settlement in the feed carries pay_000050F. The full order value is unaccounted for.,,28.0,False
-ORD-00231,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,3999.00,0.00,0.00,3999.00,Medium,No settlement in the feed carries pay_000231F. The full order value is unaccounted for.,,13.0,False
-ORD-00248,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,3999.00,0.00,0.00,3999.00,Medium,No settlement in the feed carries pay_000248A. The full order value is unaccounted for.,,23.0,False
-STL-X0001,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,3930.00,3930.00,3930.00,Medium,"Credit of Rs 3,930.00 in the feed with no order behind it. Narration: NEFT CR-UNKNOWN REMITTER-UTR000700001",STL-X0001,,False
-ORD-00157,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,6499.00,3899.40,-2599.60,2599.60,Medium,"Settled Rs 2,599.60 short, 40.0% of order value. Far outside the Rs 129.98 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00157,20.0,True
-ORD-00034,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,2499.50,4999.00,2499.50,2499.50,Medium,"Settled amount is exactly double the order value on a matched reference. Consistent with a duplicate capture, not a fee or refund. Do not clear; confirm with the gateway before posting.",STL-00034,19.0,True
-ORD-00186,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,2499.50,0.00,0.00,2499.50,Medium,"2 settlements claim pay_000186B (STL-00186, STL-00186-D). Refusing to pick one; a wrong match here books the wrong revenue.",,28.0,False
-STL-X0004,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,2213.00,2213.00,2213.00,Medium,"Credit of Rs 2,213.00 in the feed with no order behind it. Narration: NEFT CR-UNKNOWN REMITTER-UTR000700004",STL-X0004,,False
-ORD-00153,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,1899.00,3798.00,1899.00,1899.00,Medium,"Settled amount is exactly double the order value on a matched reference. Consistent with a duplicate capture, not a fee or refund. Do not clear; confirm with the gateway before posting.",STL-00153,13.0,True
-STL-X0003,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,1422.00,1422.00,1422.00,Medium,"Credit of Rs 1,422.00 in the feed with no order behind it. Narration: NEFT CR-UNKNOWN REMITTER-UTR000700003",STL-X0003,,False
-STL-X0006,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,1407.00,1407.00,1407.00,Medium,"Credit of Rs 1,407.00 in the feed with no order behind it. Narration: IMPS/UTR000700006/MISC CREDIT",STL-X0006,,False
-ORD-00127,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,1249.99,0.00,0.00,1249.99,Medium,COD order is 29 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,29.0,False
-ORD-00140,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,1249.50,0.00,0.00,1249.50,Medium,"2 settlements claim pay_000140C (STL-00140-D, STL-00140). Refusing to pick one; a wrong match here books the wrong revenue.",,15.0,False
-ORD-00082,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,9999.99,8789.68,-1210.31,1210.31,Medium,"COD remittance is Rs 1,210.31 short (12.1% of order value), beyond the Rs 249.99 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00082,29.0,True
-ORD-00179,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,9999.50,8903.41,-1096.09,1096.09,Medium,"COD remittance is Rs 1,096.09 short (11.0% of order value), beyond the Rs 249.98 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00179,21.0,True
-ORD-00230,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,9999.00,8944.39,-1054.61,1054.61,Medium,"COD remittance is Rs 1,054.61 short (10.5% of order value), beyond the Rs 249.97 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00230,18.0,True
-ORD-00046,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,3999.00,2999.25,-999.75,999.75,Low,"Settled Rs 999.75 short, 25.0% of order value. Far outside the Rs 79.98 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00046,26.0,True
-ORD-00125,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,899.99,0.00,0.00,899.99,Low,No settlement in the feed carries pay_000125B. The full order value is unaccounted for.,,7.0,False
-ORD-00101,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,899.50,0.00,0.00,899.50,Low,No settlement in the feed carries pay_000101E. The full order value is unaccounted for.,,30.0,False
-ORD-00202,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,899.50,0.00,0.00,899.50,Low,No settlement in the feed carries pay_000202E. The full order value is unaccounted for.,,3.0,False
-ORD-00207,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,899.50,0.00,0.00,899.50,Low,No settlement in the feed carries pay_000207E. The full order value is unaccounted for.,,6.0,False
-ORD-00037,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,899.00,1798.00,899.00,899.00,Low,"Settled amount is exactly double the order value on a matched reference. Consistent with a duplicate capture, not a fee or refund. Do not clear; confirm with the gateway before posting.",STL-00037,15.0,True
-ORD-00155,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,899.00,0.00,0.00,899.00,Low,No settlement in the feed carries pay_000155B. The full order value is unaccounted for.,,24.0,False
-ORD-00111,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,599.99,0.00,0.00,599.99,Low,COD order is 25 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,25.0,False
-ORD-00206,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,599.50,0.00,0.00,599.50,Low,COD order is 22 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,22.0,False
-ORD-00222,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,599.50,0.00,0.00,599.50,Low,No settlement in the feed carries pay_000222D. The full order value is unaccounted for.,,27.0,False
-ORD-00105,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,599.00,0.00,0.00,599.00,Low,"2 settlements claim pay_000105F (STL-00105-D, STL-00105). Refusing to pick one; a wrong match here books the wrong revenue.",,12.0,False
-ORD-00165,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,1899.00,1424.25,-474.75,474.75,Low,"Settled Rs 474.75 short, 25.0% of order value. Far outside the Rs 37.98 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00165,14.0,True
-ORD-00112,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,899.00,449.50,-449.50,449.50,Low,"Settled Rs 449.50 short, 50.0% of order value. Far outside the Rs 17.98 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00112,15.0,True
-ORD-00195,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,9999.99,9617.28,-382.71,382.71,Low,"Deduction of Rs 382.71 (3.83%) exceeds the contracted Rs 199.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00195,27.0,True
-ORD-00094,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,349.99,0.00,0.00,349.99,Low,No settlement in the feed carries pay_000094F. The full order value is unaccounted for.,,3.0,False
-ORD-00256,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,349.50,0.00,0.00,349.50,Low,No settlement in the feed carries pay_000256D. The full order value is unaccounted for.,,14.0,False
-ORD-00005,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,599.50,299.75,-299.75,299.75,Low,"Settled Rs 299.75 short, 50.0% of order value. Far outside the Rs 11.99 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00005,9.0,True
-ORD-00134,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,599.00,359.40,-239.60,239.60,Low,"Settled Rs 239.60 short, 40.0% of order value. Far outside the Rs 11.98 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00134,8.0,True
-ORD-00150,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,6499.50,6288.45,-211.05,211.05,Low,"Deduction of Rs 211.05 (3.25%) exceeds the contracted Rs 129.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00150,14.0,True
-ORD-00214,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,2499.00,2324.04,-174.96,174.96,Low,"COD remittance is Rs 174.96 short (7.0% of order value), beyond the Rs 62.47 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00214,19.0,True
-ORD-00224,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,899.50,726.22,-173.28,173.28,Low,"COD remittance is Rs 173.28 short (19.3% of order value), beyond the Rs 50.00 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00224,27.0,True
-ORD-00243,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,3999.50,3844.55,-154.95,154.95,Low,"Deduction of Rs 154.95 (3.87%) exceeds the contracted Rs 79.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00243,9.0,True
-ORD-00209,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,599.50,449.63,-149.87,149.87,Low,"Settled Rs 149.87 short, 25.0% of order value. Far outside the Rs 11.99 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00209,22.0,True
-ORD-00117,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,1249.50,1131.86,-117.64,117.64,Low,"COD remittance is Rs 117.64 short (9.4% of order value), beyond the Rs 50.00 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00117,16.0,True
-ORD-00115,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,1899.00,1836.70,-62.30,62.30,Low,"Deduction of Rs 62.30 (3.28%) exceeds the contracted Rs 37.98 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00115,3.0,True
-ORD-00232,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,1249.50,1211.22,-38.28,38.28,Low,"Deduction of Rs 38.28 (3.06%) exceeds the contracted Rs 24.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00232,19.0,True
-ORD-00043,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,599.50,580.08,-19.42,19.42,Low,"Deduction of Rs 19.42 (3.24%) exceeds the contracted Rs 11.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00043,19.0,True
-ORD-00148,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,349.99,336.64,-13.35,13.35,Low,"Deduction of Rs 13.35 (3.81%) exceeds the contracted Rs 6.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00148,23.0,True
-ORD-00001,4,UTR fallback match,AUTO_CLEARED,,,,9999.50,9999.50,0.00,0.00,,Matched on UTR000400001; amount identical to the paise.,STL-00001,17.0,False
-ORD-00002,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.50,345.39,-4.11,0.00,,"Short by Rs 4.11, inside the Rs 6.99 gateway fee band for this order.",STL-00002,13.0,False
-ORD-00003,1,Exact match,AUTO_CLEARED,,,,2499.99,2499.99,0.00,0.00,,Matched on pay_000003C; amount identical to the paise.,STL-00003,6.0,False
-ORD-00004,4,UTR fallback match,AUTO_CLEARED,,,,599.99,599.99,0.00,0.00,,Matched on UTR000400004; amount identical to the paise.,STL-00004,20.0,False
-ORD-00006,4,UTR fallback match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on UTR000400006; amount identical to the paise.,STL-00006,4.0,False
-ORD-00007,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,899.99,0.00,0.00,0.00,,"COD order placed 3 days ago, inside the normal 0-14 day collection window. No action needed.",,3.0,False
-ORD-00008,1,Exact match,AUTO_CLEARED,,,,1249.50,1249.50,0.00,0.00,,Matched on pay_000008D; amount identical to the paise.,STL-00008,24.0,False
-ORD-00009,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.00,1247.00,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 24.98 gateway fee band for this order.",STL-00009,6.0,False
-ORD-00010,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.00,3996.00,-3.00,0.00,,"Short by Rs 3.00, inside the Rs 79.98 gateway fee band for this order.",STL-00010,26.0,False
-ORD-00011,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,2499.99,2459.99,-40.00,0.00,,"Short by Rs 40.00, inside the Rs 62.49 COD collection fee band for this order.",STL-00011,26.0,False
-ORD-00012,1,Exact match,AUTO_CLEARED,,,,1249.00,1249.00,0.00,0.00,,Matched on pay_000012E; amount identical to the paise.,STL-00012,24.0,False
-ORD-00013,1,Exact match,AUTO_CLEARED,,,,1899.99,1899.99,0.00,0.00,,Matched on pay_000013C; amount identical to the paise.,STL-00013,17.0,False
-ORD-00014,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1899.50,1865.89,-33.61,0.00,,"Short by Rs 33.61, inside the Rs 37.99 gateway fee band for this order.",STL-00014,6.0,False
-ORD-00015,4,UTR fallback match,AUTO_CLEARED,,,,599.99,599.99,0.00,0.00,,Matched on UTR000400015; amount identical to the paise.,STL-00015,18.0,False
-ORD-00016,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,9999.99,0.00,0.00,0.00,,"COD order placed 7 days ago, inside the normal 0-14 day collection window. No action needed.",,7.0,False
-ORD-00017,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.99,2464.61,-35.38,0.00,,"Short by Rs 35.38, inside the Rs 49.99 gateway fee band for this order.",STL-00017,7.0,False
-ORD-00018,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.50,345.39,-4.11,0.00,,"Short by Rs 4.11, inside the Rs 6.99 gateway fee band for this order.",STL-00018,7.0,False
-ORD-00019,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1249.00,1224.00,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00019,31.0,False
-ORD-00020,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,9999.00,9979.00,-20.00,0.00,,"Short by Rs 20.00, inside the Rs 249.97 COD collection fee band for this order.",STL-00020,23.0,False
-ORD-00021,1,Exact match,AUTO_CLEARED,,,,599.50,599.50,0.00,0.00,,Matched on pay_000021F; amount identical to the paise.,STL-00021,12.0,False
-ORD-00022,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.50,9822.52,-176.98,0.00,,"Short by Rs 176.98, inside the Rs 199.99 gateway fee band for this order.",STL-00022,10.0,False
-ORD-00024,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.00,9881.02,-117.98,0.00,,"Short by Rs 117.98, inside the Rs 199.98 gateway fee band for this order.",STL-00024,13.0,False
-ORD-00025,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,899.00,0.00,0.00,0.00,,"COD order placed 6 days ago, inside the normal 0-14 day collection window. No action needed.",,6.0,False
-ORD-00026,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.00,1226.90,-22.10,0.00,,"Short by Rs 22.10, inside the Rs 24.98 gateway fee band for this order.",STL-00026,4.0,False
-ORD-00027,1,Exact match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on pay_000027E; amount identical to the paise.,STL-00027,28.0,False
-ORD-00028,1,Exact match,AUTO_CLEARED,,,,6499.50,6499.50,0.00,0.00,,Matched on pay_000028E; amount identical to the paise.,STL-00028,4.0,False
-ORD-00029,1,Exact match,AUTO_CLEARED,,,,3999.50,3999.50,0.00,0.00,,Matched on pay_000029B; amount identical to the paise.,STL-00029,30.0,False
-ORD-00030,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000030B; amount identical to the paise.,STL-00030,10.0,False
-ORD-00031,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.99,1232.31,-17.68,0.00,,"Short by Rs 17.68, inside the Rs 24.99 gateway fee band for this order.",STL-00031,4.0,False
-ORD-00032,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,899.00,0.00,0.00,0.00,,"COD order placed 9 days ago, inside the normal 0-14 day collection window. No action needed.",,9.0,False
-ORD-00033,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.50,2470.02,-29.48,0.00,,"Short by Rs 29.48, inside the Rs 49.99 gateway fee band for this order.",STL-00033,28.0,False
-ORD-00035,1,Exact match,AUTO_CLEARED,,,,3999.50,3999.50,0.00,0.00,,Matched on pay_000035E; amount identical to the paise.,STL-00035,23.0,False
-ORD-00036,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.50,592.44,-7.06,0.00,,"Short by Rs 7.06, inside the Rs 11.99 gateway fee band for this order.",STL-00036,9.0,False
-ORD-00038,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.50,6384.47,-115.03,0.00,,"Short by Rs 115.03, inside the Rs 129.99 gateway fee band for this order.",STL-00038,27.0,False
-ORD-00039,1,Exact match,AUTO_CLEARED,,,,9999.99,9999.99,0.00,0.00,,Matched on pay_000039A; amount identical to the paise.,STL-00039,9.0,False
-ORD-00040,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,899.50,849.50,-50.00,0.00,,"Short by Rs 50.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00040,20.0,False
-ORD-00041,1,Exact match,AUTO_CLEARED,,,,3999.50,3999.50,0.00,0.00,,Matched on pay_000041E; amount identical to the paise.,STL-00041,9.0,False
-ORD-00042,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,2499.50,2479.50,-20.00,0.00,,"Short by Rs 20.00, inside the Rs 62.48 COD collection fee band for this order.",STL-00042,19.0,False
-ORD-00044,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,899.00,883.10,-15.90,0.00,,"Short by Rs 15.90, inside the Rs 17.98 gateway fee band for this order.",STL-00044,27.0,False
-ORD-00045,4,UTR fallback match,AUTO_CLEARED,,,,599.99,599.99,0.00,0.00,,Matched on UTR000400045; amount identical to the paise.,STL-00045,20.0,False
-ORD-00047,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000047A; amount identical to the paise.,STL-00047,18.0,False
-ORD-00048,4,UTR fallback match,AUTO_CLEARED,,,,1899.00,1899.00,0.00,0.00,,Matched on UTR000400048; amount identical to the paise.,STL-00048,22.0,False
-ORD-00049,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.00,591.94,-7.06,0.00,,"Short by Rs 7.06, inside the Rs 11.98 gateway fee band for this order.",STL-00049,11.0,False
-ORD-00051,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.00,9822.03,-176.97,0.00,,"Short by Rs 176.97, inside the Rs 199.98 gateway fee band for this order.",STL-00051,18.0,False
-ORD-00052,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000052F; amount identical to the paise.,STL-00052,28.0,False
-ORD-00053,4,UTR fallback match,AUTO_CLEARED,,,,6499.00,6499.00,0.00,0.00,,Matched on UTR000400053; amount identical to the paise.,STL-00053,26.0,False
-ORD-00054,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000054B; amount identical to the paise.,STL-00054,21.0,False
-ORD-00055,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000055E; amount identical to the paise.,STL-00055,26.0,False
-ORD-00056,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,2499.99,0.00,0.00,0.00,,"COD order placed 0 days ago, inside the normal 0-14 day collection window. No action needed.",,0.0,False
-ORD-00057,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000057D; amount identical to the paise.,STL-00057,31.0,False
-ORD-00058,1,Exact match,AUTO_CLEARED,,,,1249.50,1249.50,0.00,0.00,,Matched on pay_000058C; amount identical to the paise.,STL-00058,17.0,False
-ORD-00059,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000059B; amount identical to the paise.,STL-00059,5.0,False
-ORD-00060,1,Exact match,AUTO_CLEARED,,,,6499.50,6499.50,0.00,0.00,,Matched on pay_000060D; amount identical to the paise.,STL-00060,30.0,False
-ORD-00061,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.50,3997.00,-2.50,0.00,,"Short by Rs 2.50, inside the Rs 79.99 gateway fee band for this order.",STL-00061,30.0,False
-ORD-00062,4,UTR fallback match,AUTO_CLEARED,,,,1249.00,1249.00,0.00,0.00,,Matched on UTR000400062; amount identical to the paise.,STL-00062,20.0,False
-ORD-00063,4,UTR fallback match,AUTO_CLEARED,,,,9999.99,9999.99,0.00,0.00,,Matched on UTR000400063; amount identical to the paise.,STL-00063,29.0,False
-ORD-00064,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.99,3943.37,-56.62,0.00,,"Short by Rs 56.62, inside the Rs 79.99 gateway fee band for this order.",STL-00064,30.0,False
-ORD-00065,1,Exact match,AUTO_CLEARED,,,,899.00,899.00,0.00,0.00,,Matched on pay_000065E; amount identical to the paise.,STL-00065,25.0,False
-ORD-00066,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000066B; amount identical to the paise.,STL-00066,26.0,False
-ORD-00067,1,Exact match,AUTO_CLEARED,,,,9999.99,9999.99,0.00,0.00,,Matched on pay_000067E; amount identical to the paise.,STL-00067,7.0,False
-ORD-00068,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000068A; amount identical to the paise.,STL-00068,28.0,False
-ORD-00069,1,Exact match,AUTO_CLEARED,,,,899.99,899.99,0.00,0.00,,Matched on pay_000069A; amount identical to the paise.,STL-00069,22.0,False
-ORD-00070,1,Exact match,AUTO_CLEARED,,,,899.99,899.99,0.00,0.00,,Matched on pay_000070F; amount identical to the paise.,STL-00070,29.0,False
-ORD-00071,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.50,1227.39,-22.11,0.00,,"Short by Rs 22.11, inside the Rs 24.99 gateway fee band for this order.",STL-00071,21.0,False
-ORD-00072,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.00,591.94,-7.06,0.00,,"Short by Rs 7.06, inside the Rs 11.98 gateway fee band for this order.",STL-00072,6.0,False
-ORD-00073,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,899.99,889.39,-10.60,0.00,,"Short by Rs 10.60, inside the Rs 17.99 gateway fee band for this order.",STL-00073,3.0,False
-ORD-00074,1,Exact match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on pay_000074B; amount identical to the paise.,STL-00074,19.0,False
-ORD-00075,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.99,2455.76,-44.23,0.00,,"Short by Rs 44.23, inside the Rs 49.99 gateway fee band for this order.",STL-00075,8.0,False
-ORD-00076,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1249.00,1224.00,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00076,17.0,False
-ORD-00077,4,UTR fallback match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on UTR000400077; amount identical to the paise.,STL-00077,26.0,False
-ORD-00078,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.50,1231.82,-17.68,0.00,,"Short by Rs 17.68, inside the Rs 24.99 gateway fee band for this order.",STL-00078,16.0,False
-ORD-00079,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.99,6384.96,-115.03,0.00,,"Short by Rs 115.03, inside the Rs 129.99 gateway fee band for this order.",STL-00079,3.0,False
-ORD-00080,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.50,1231.82,-17.68,0.00,,"Short by Rs 17.68, inside the Rs 24.99 gateway fee band for this order.",STL-00080,25.0,False
-ORD-00083,1,Exact match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on pay_000083B; amount identical to the paise.,STL-00083,10.0,False
-ORD-00084,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.99,6423.31,-76.68,0.00,,"Short by Rs 76.68, inside the Rs 129.99 gateway fee band for this order.",STL-00084,4.0,False
-ORD-00085,1,Exact match,AUTO_CLEARED,,,,9999.50,9999.50,0.00,0.00,,Matched on pay_000085F; amount identical to the paise.,STL-00085,28.0,False
-ORD-00086,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.99,1235.26,-14.73,0.00,,"Short by Rs 14.73, inside the Rs 24.99 gateway fee band for this order.",STL-00086,27.0,False
-ORD-00087,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.00,3997.00,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 79.98 gateway fee band for this order.",STL-00087,28.0,False
-ORD-00088,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1249.00,1219.00,-30.00,0.00,,"Short by Rs 30.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00088,25.0,False
-ORD-00089,1,Exact match,AUTO_CLEARED,,,,349.99,349.99,0.00,0.00,,Matched on pay_000089F; amount identical to the paise.,STL-00089,3.0,False
-ORD-00090,1,Exact match,AUTO_CLEARED,,,,1249.00,1249.00,0.00,0.00,,Matched on pay_000090E; amount identical to the paise.,STL-00090,28.0,False
-ORD-00091,1,Exact match,AUTO_CLEARED,,,,3999.50,3999.50,0.00,0.00,,Matched on pay_000091B; amount identical to the paise.,STL-00091,18.0,False
-ORD-00092,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,899.99,0.00,0.00,0.00,,"COD order placed 7 days ago, inside the normal 0-14 day collection window. No action needed.",,7.0,False
-ORD-00093,4,UTR fallback match,AUTO_CLEARED,,,,2499.50,2499.50,0.00,0.00,,Matched on UTR000400093; amount identical to the paise.,STL-00093,30.0,False
-ORD-00095,1,Exact match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on pay_000095D; amount identical to the paise.,STL-00095,6.0,False
-ORD-00096,1,Exact match,AUTO_CLEARED,,,,9999.99,9999.99,0.00,0.00,,Matched on pay_000096D; amount identical to the paise.,STL-00096,20.0,False
-ORD-00097,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.99,3952.81,-47.18,0.00,,"Short by Rs 47.18, inside the Rs 79.99 gateway fee band for this order.",STL-00097,22.0,False
-ORD-00098,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.99,6384.96,-115.03,0.00,,"Short by Rs 115.03, inside the Rs 129.99 gateway fee band for this order.",STL-00098,17.0,False
-ORD-00099,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000099B; amount identical to the paise.,STL-00099,27.0,False
-ORD-00100,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.99,597.49,-2.50,0.00,,"Short by Rs 2.50, inside the Rs 11.99 gateway fee band for this order.",STL-00100,20.0,False
-ORD-00102,1,Exact match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on pay_000102F; amount identical to the paise.,STL-00102,15.0,False
-ORD-00104,4,UTR fallback match,AUTO_CLEARED,,,,2499.99,2499.99,0.00,0.00,,Matched on UTR000400104; amount identical to the paise.,STL-00104,10.0,False
-ORD-00106,1,Exact match,AUTO_CLEARED,,,,349.00,349.00,0.00,0.00,,Matched on pay_000106F; amount identical to the paise.,STL-00106,18.0,False
-ORD-00107,1,Exact match,AUTO_CLEARED,,,,599.00,599.00,0.00,0.00,,Matched on pay_000107D; amount identical to the paise.,STL-00107,31.0,False
-ORD-00108,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.50,3952.32,-47.18,0.00,,"Short by Rs 47.18, inside the Rs 79.99 gateway fee band for this order.",STL-00108,14.0,False
-ORD-00109,1,Exact match,AUTO_CLEARED,,,,2499.99,2499.99,0.00,0.00,,Matched on pay_000109B; amount identical to the paise.,STL-00109,25.0,False
-ORD-00110,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,1249.99,0.00,0.00,0.00,,"COD order placed 12 days ago, inside the normal 0-14 day collection window. No action needed.",,12.0,False
-ORD-00113,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,6499.50,6449.50,-50.00,0.00,,"Short by Rs 50.00, inside the Rs 162.48 COD collection fee band for this order.",STL-00113,22.0,False
-ORD-00114,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.50,345.39,-4.11,0.00,,"Short by Rs 4.11, inside the Rs 6.99 gateway fee band for this order.",STL-00114,19.0,False
-ORD-00116,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.00,6406.99,-92.01,0.00,,"Short by Rs 92.01, inside the Rs 129.98 gateway fee band for this order.",STL-00116,17.0,False
-ORD-00118,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,2499.00,2474.00,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 62.47 COD collection fee band for this order.",STL-00118,17.0,False
-ORD-00119,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.50,347.50,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 6.99 gateway fee band for this order.",STL-00119,28.0,False
-ORD-00120,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,1249.00,0.00,0.00,0.00,,"COD order placed 6 days ago, inside the normal 0-14 day collection window. No action needed.",,6.0,False
-ORD-00121,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.99,3952.81,-47.18,0.00,,"Short by Rs 47.18, inside the Rs 79.99 gateway fee band for this order.",STL-00121,22.0,False
-ORD-00122,1,Exact match,AUTO_CLEARED,,,,349.00,349.00,0.00,0.00,,Matched on pay_000122C; amount identical to the paise.,STL-00122,11.0,False
-ORD-00123,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.50,1231.82,-17.68,0.00,,"Short by Rs 17.68, inside the Rs 24.99 gateway fee band for this order.",STL-00123,24.0,False
-ORD-00124,1,Exact match,AUTO_CLEARED,,,,349.99,349.99,0.00,0.00,,Matched on pay_000124A; amount identical to the paise.,STL-00124,26.0,False
-ORD-00126,4,UTR fallback match,AUTO_CLEARED,,,,3999.99,3999.99,0.00,0.00,,Matched on UTR000400126; amount identical to the paise.,STL-00126,31.0,False
-ORD-00128,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,599.00,559.00,-40.00,0.00,,"Short by Rs 40.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00128,22.0,False
-ORD-00130,1,Exact match,AUTO_CLEARED,,,,9999.00,9999.00,0.00,0.00,,Matched on pay_000130F; amount identical to the paise.,STL-00130,19.0,False
-ORD-00131,4,UTR fallback match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on UTR000400131; amount identical to the paise.,STL-00131,14.0,False
-ORD-00132,1,Exact match,AUTO_CLEARED,,,,349.99,349.99,0.00,0.00,,Matched on pay_000132E; amount identical to the paise.,STL-00132,27.0,False
-ORD-00133,1,Exact match,AUTO_CLEARED,,,,349.99,349.99,0.00,0.00,,Matched on pay_000133F; amount identical to the paise.,STL-00133,25.0,False
-ORD-00135,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,2499.99,0.00,0.00,0.00,,"COD order placed 3 days ago, inside the normal 0-14 day collection window. No action needed.",,3.0,False
-ORD-00136,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1899.99,1859.99,-40.00,0.00,,"Short by Rs 40.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00136,19.0,False
-ORD-00137,1,Exact match,AUTO_CLEARED,,,,6499.00,6499.00,0.00,0.00,,Matched on pay_000137A; amount identical to the paise.,STL-00137,6.0,False
-ORD-00139,4,UTR fallback match,AUTO_CLEARED,,,,1899.99,1899.99,0.00,0.00,,Matched on UTR000400139; amount identical to the paise.,STL-00139,23.0,False
-ORD-00141,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000141D; amount identical to the paise.,STL-00141,16.0,False
-ORD-00142,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.00,9997.00,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 199.98 gateway fee band for this order.",STL-00142,20.0,False
-ORD-00143,1,Exact match,AUTO_CLEARED,,,,6499.50,6499.50,0.00,0.00,,Matched on pay_000143E; amount identical to the paise.,STL-00143,26.0,False
-ORD-00144,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.99,591.51,-8.48,0.00,,"Short by Rs 8.48, inside the Rs 11.99 gateway fee band for this order.",STL-00144,7.0,False
-ORD-00145,1,Exact match,AUTO_CLEARED,,,,6499.50,6499.50,0.00,0.00,,Matched on pay_000145D; amount identical to the paise.,STL-00145,23.0,False
-ORD-00146,1,Exact match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on pay_000146B; amount identical to the paise.,STL-00146,10.0,False
-ORD-00147,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.00,588.41,-10.59,0.00,,"Short by Rs 10.59, inside the Rs 11.98 gateway fee band for this order.",STL-00147,15.0,False
-ORD-00149,4,UTR fallback match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on UTR000400149; amount identical to the paise.,STL-00149,11.0,False
-ORD-00151,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.50,588.90,-10.60,0.00,,"Short by Rs 10.60, inside the Rs 11.99 gateway fee band for this order.",STL-00151,21.0,False
-ORD-00152,4,UTR fallback match,AUTO_CLEARED,,,,349.00,349.00,0.00,0.00,,Matched on UTR000400152; amount identical to the paise.,STL-00152,20.0,False
-ORD-00154,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,599.50,0.00,0.00,0.00,,"COD order placed 5 days ago, inside the normal 0-14 day collection window. No action needed.",,5.0,False
-ORD-00156,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.50,3952.32,-47.18,0.00,,"Short by Rs 47.18, inside the Rs 79.99 gateway fee band for this order.",STL-00156,21.0,False
-ORD-00158,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1249.99,1209.99,-40.00,0.00,,"Short by Rs 40.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00158,15.0,False
-ORD-00159,1,Exact match,AUTO_CLEARED,,,,6499.50,6499.50,0.00,0.00,,Matched on pay_000159E; amount identical to the paise.,STL-00159,11.0,False
-ORD-00160,1,Exact match,AUTO_CLEARED,,,,349.99,349.99,0.00,0.00,,Matched on pay_000160A; amount identical to the paise.,STL-00160,31.0,False
-ORD-00161,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000161A; amount identical to the paise.,STL-00161,23.0,False
-ORD-00162,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.50,6384.47,-115.03,0.00,,"Short by Rs 115.03, inside the Rs 129.99 gateway fee band for this order.",STL-00162,23.0,False
-ORD-00163,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,9999.50,9979.50,-20.00,0.00,,"Short by Rs 20.00, inside the Rs 249.98 COD collection fee band for this order.",STL-00163,25.0,False
-ORD-00164,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.50,6407.48,-92.02,0.00,,"Short by Rs 92.02, inside the Rs 129.99 gateway fee band for this order.",STL-00164,8.0,False
-ORD-00166,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.99,591.51,-8.48,0.00,,"Short by Rs 8.48, inside the Rs 11.99 gateway fee band for this order.",STL-00166,28.0,False
-ORD-00167,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.99,9882.01,-117.98,0.00,,"Short by Rs 117.98, inside the Rs 199.99 gateway fee band for this order.",STL-00167,22.0,False
-ORD-00168,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000168B; amount identical to the paise.,STL-00168,17.0,False
-ORD-00169,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.99,591.51,-8.48,0.00,,"Short by Rs 8.48, inside the Rs 11.99 gateway fee band for this order.",STL-00169,12.0,False
-ORD-00170,1,Exact match,AUTO_CLEARED,,,,1249.50,1249.50,0.00,0.00,,Matched on pay_000170E; amount identical to the paise.,STL-00170,19.0,False
-ORD-00171,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1899.99,1897.49,-2.50,0.00,,"Short by Rs 2.50, inside the Rs 37.99 gateway fee band for this order.",STL-00171,14.0,False
-ORD-00172,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.99,597.99,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 11.99 gateway fee band for this order.",STL-00172,24.0,False
-ORD-00173,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,349.00,319.00,-30.00,0.00,,"Short by Rs 30.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00173,26.0,False
-ORD-00174,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.00,346.00,-3.00,0.00,,"Short by Rs 3.00, inside the Rs 6.98 gateway fee band for this order.",STL-00174,23.0,False
-ORD-00175,4,UTR fallback match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on UTR000400175; amount identical to the paise.,STL-00175,23.0,False
-ORD-00176,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000176D; amount identical to the paise.,STL-00176,10.0,False
-ORD-00177,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,349.00,0.00,0.00,0.00,,"COD order placed 6 days ago, inside the normal 0-14 day collection window. No action needed.",,6.0,False
-ORD-00178,1,Exact match,AUTO_CLEARED,,,,899.00,899.00,0.00,0.00,,Matched on pay_000178F; amount identical to the paise.,STL-00178,24.0,False
-ORD-00180,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,599.00,0.00,0.00,0.00,,"COD order placed 7 days ago, inside the normal 0-14 day collection window. No action needed.",,7.0,False
-ORD-00181,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1899.00,1874.00,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00181,23.0,False
-ORD-00182,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.50,1231.82,-17.68,0.00,,"Short by Rs 17.68, inside the Rs 24.99 gateway fee band for this order.",STL-00182,4.0,False
-ORD-00183,1,Exact match,AUTO_CLEARED,,,,899.00,899.00,0.00,0.00,,Matched on pay_000183B; amount identical to the paise.,STL-00183,13.0,False
-ORD-00184,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,899.50,874.50,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00184,27.0,False
-ORD-00185,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.99,1232.31,-17.68,0.00,,"Short by Rs 17.68, inside the Rs 24.99 gateway fee band for this order.",STL-00185,20.0,False
-ORD-00188,1,Exact match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on pay_000188F; amount identical to the paise.,STL-00188,23.0,False
-ORD-00189,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,9999.99,9949.99,-50.00,0.00,,"Short by Rs 50.00, inside the Rs 249.99 COD collection fee band for this order.",STL-00189,28.0,False
-ORD-00190,1,Exact match,AUTO_CLEARED,,,,599.50,599.50,0.00,0.00,,Matched on pay_000190C; amount identical to the paise.,STL-00190,6.0,False
-ORD-00191,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,3999.99,3997.49,-2.50,0.00,,"Short by Rs 2.50, inside the Rs 79.99 gateway fee band for this order.",STL-00191,3.0,False
-ORD-00192,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,349.50,0.00,0.00,0.00,,"COD order placed 2 days ago, inside the normal 0-14 day collection window. No action needed.",,2.0,False
-ORD-00193,1,Exact match,AUTO_CLEARED,,,,6499.99,6499.99,0.00,0.00,,Matched on pay_000193A; amount identical to the paise.,STL-00193,4.0,False
-ORD-00194,1,Exact match,AUTO_CLEARED,,,,2499.50,2499.50,0.00,0.00,,Matched on pay_000194C; amount identical to the paise.,STL-00194,9.0,False
-ORD-00196,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,599.99,0.00,0.00,0.00,,"COD order placed 13 days ago, inside the normal 0-14 day collection window. No action needed.",,13.0,False
-ORD-00197,1,Exact match,AUTO_CLEARED,,,,899.00,899.00,0.00,0.00,,Matched on pay_000197F; amount identical to the paise.,STL-00197,20.0,False
-ORD-00198,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.99,596.99,-3.00,0.00,,"Short by Rs 3.00, inside the Rs 11.99 gateway fee band for this order.",STL-00198,18.0,False
-ORD-00199,1,Exact match,AUTO_CLEARED,,,,1899.99,1899.99,0.00,0.00,,Matched on pay_000199C; amount identical to the paise.,STL-00199,25.0,False
-ORD-00200,1,Exact match,AUTO_CLEARED,,,,2499.99,2499.99,0.00,0.00,,Matched on pay_000200D; amount identical to the paise.,STL-00200,14.0,False
-ORD-00201,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,9999.99,9974.99,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 249.99 COD collection fee band for this order.",STL-00201,19.0,False
-ORD-00203,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.50,591.02,-8.48,0.00,,"Short by Rs 8.48, inside the Rs 11.99 gateway fee band for this order.",STL-00203,21.0,False
-ORD-00204,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.50,346.50,-3.00,0.00,,"Short by Rs 3.00, inside the Rs 6.99 gateway fee band for this order.",STL-00204,20.0,False
-ORD-00205,4,UTR fallback match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on UTR000400205; amount identical to the paise.,STL-00205,16.0,False
-ORD-00208,1,Exact match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on pay_000208C; amount identical to the paise.,STL-00208,26.0,False
-ORD-00210,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.99,345.88,-4.11,0.00,,"Short by Rs 4.11, inside the Rs 6.99 gateway fee band for this order.",STL-00210,6.0,False
-ORD-00211,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000211A; amount identical to the paise.,STL-00211,14.0,False
-ORD-00212,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000212C; amount identical to the paise.,STL-00212,25.0,False
-ORD-00213,4,UTR fallback match,AUTO_CLEARED,,,,2499.99,2499.99,0.00,0.00,,Matched on UTR000400213; amount identical to the paise.,STL-00213,17.0,False
-ORD-00215,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,599.50,579.50,-20.00,0.00,,"Short by Rs 20.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00215,21.0,False
-ORD-00216,1,Exact match,AUTO_CLEARED,,,,1249.00,1249.00,0.00,0.00,,Matched on pay_000216D; amount identical to the paise.,STL-00216,6.0,False
-ORD-00218,4,UTR fallback match,AUTO_CLEARED,,,,9999.00,9999.00,0.00,0.00,,Matched on UTR000400218; amount identical to the paise.,STL-00218,17.0,False
-ORD-00219,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.99,2470.51,-29.48,0.00,,"Short by Rs 29.48, inside the Rs 49.99 gateway fee band for this order.",STL-00219,16.0,False
-ORD-00220,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,349.00,309.00,-40.00,0.00,,"Short by Rs 40.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00220,19.0,False
-ORD-00221,1,Exact match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on pay_000221B; amount identical to the paise.,STL-00221,24.0,False
-ORD-00223,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,9999.00,0.00,0.00,0.00,,"COD order placed 13 days ago, inside the normal 0-14 day collection window. No action needed.",,13.0,False
-ORD-00225,4,UTR fallback match,AUTO_CLEARED,,,,1249.00,1249.00,0.00,0.00,,Matched on UTR000400225; amount identical to the paise.,STL-00225,18.0,False
-ORD-00226,4,UTR fallback match,AUTO_CLEARED,,,,599.00,599.00,0.00,0.00,,Matched on UTR000400226; amount identical to the paise.,STL-00226,15.0,False
-ORD-00227,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.99,2470.51,-29.48,0.00,,"Short by Rs 29.48, inside the Rs 49.99 gateway fee band for this order.",STL-00227,8.0,False
-ORD-00228,4,UTR fallback match,AUTO_CLEARED,,,,1899.99,1899.99,0.00,0.00,,Matched on UTR000400228; amount identical to the paise.,STL-00228,27.0,False
-ORD-00229,1,Exact match,AUTO_CLEARED,,,,9999.99,9999.99,0.00,0.00,,Matched on pay_000229A; amount identical to the paise.,STL-00229,3.0,False
-ORD-00233,4,UTR fallback match,AUTO_CLEARED,,,,3999.50,3999.50,0.00,0.00,,Matched on UTR000400233; amount identical to the paise.,STL-00233,26.0,False
-ORD-00235,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000235A; amount identical to the paise.,STL-00235,20.0,False
-ORD-00236,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,1899.00,0.00,0.00,0.00,,"COD order placed 6 days ago, inside the normal 0-14 day collection window. No action needed.",,6.0,False
-ORD-00237,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,1899.50,0.00,0.00,0.00,,"COD order placed 12 days ago, inside the normal 0-14 day collection window. No action needed.",,12.0,False
-ORD-00238,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,349.00,0.00,0.00,0.00,,"COD order placed 10 days ago, inside the normal 0-14 day collection window. No action needed.",,10.0,False
-ORD-00239,1,Exact match,AUTO_CLEARED,,,,3999.99,3999.99,0.00,0.00,,Matched on pay_000239B; amount identical to the paise.,STL-00239,8.0,False
-ORD-00240,4,UTR fallback match,AUTO_CLEARED,,,,6499.00,6499.00,0.00,0.00,,Matched on UTR000400240; amount identical to the paise.,STL-00240,15.0,False
-ORD-00241,1,Exact match,AUTO_CLEARED,,,,349.00,349.00,0.00,0.00,,Matched on pay_000241C; amount identical to the paise.,STL-00241,5.0,False
-ORD-00242,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000242E; amount identical to the paise.,STL-00242,5.0,False
-ORD-00244,1,Exact match,AUTO_CLEARED,,,,2499.99,2499.99,0.00,0.00,,Matched on pay_000244C; amount identical to the paise.,STL-00244,25.0,False
-ORD-00245,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000245F; amount identical to the paise.,STL-00245,29.0,False
-ORD-00246,1,Exact match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on pay_000246D; amount identical to the paise.,STL-00246,29.0,False
-ORD-00247,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,3999.00,0.00,0.00,0.00,,"COD order placed 10 days ago, inside the normal 0-14 day collection window. No action needed.",,10.0,False
-ORD-00249,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000249C; amount identical to the paise.,STL-00249,25.0,False
-ORD-00250,1,Exact match,AUTO_CLEARED,,,,899.99,899.99,0.00,0.00,,Matched on pay_000250C; amount identical to the paise.,STL-00250,18.0,False
-ORD-00251,1,Exact match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on pay_000251A; amount identical to the paise.,STL-00251,14.0,False
-ORD-00252,4,UTR fallback match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on UTR000400252; amount identical to the paise.,STL-00252,15.0,False
-ORD-00253,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,899.99,874.99,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00253,20.0,False
-ORD-00254,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,2499.50,2449.50,-50.00,0.00,,"Short by Rs 50.00, inside the Rs 62.48 COD collection fee band for this order.",STL-00254,16.0,False
-ORD-00255,1,Exact match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on pay_000255F; amount identical to the paise.,STL-00255,8.0,False
-ORD-00257,4,UTR fallback match,AUTO_CLEARED,,,,3999.00,3999.00,0.00,0.00,,Matched on UTR000400257; amount identical to the paise.,STL-00257,22.0,False
-ORD-00258,1,Exact match,AUTO_CLEARED,,,,1899.00,1899.00,0.00,0.00,,Matched on pay_000258D; amount identical to the paise.,STL-00258,15.0,False
-ORD-00259,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.00,6496.50,-2.50,0.00,,"Short by Rs 2.50, inside the Rs 129.98 gateway fee band for this order.",STL-00259,13.0,False
+record_id,tier,tier_name,status,reason,reason_label,fee_type,expected,received,delta,amount_at_risk,priority,explanation,matched_settlement,age_days,ai_assisted,confidence,ai_evidence,ai_recommendation,candidates
+STL-SHADOW02,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,9999.99,9999.99,9999.99,High,"Credit of Rs 9,999.99 in the feed with no order behind it. Narration: RAZORPAY SETTLEMENT UTR000800002",STL-SHADOW02,,False,,[],,[]
+ORD-00004,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,9999.50,0.00,0.00,9999.50,High,No settlement in the feed carries pay_000004B. The full order value is unaccounted for.,,22.0,False,,[],,[]
+STL-X1001,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,8420.00,8420.00,8420.00,High,"Credit of Rs 8,420.00 in the feed with no order behind it. Narration: NEFT CR-STRIPE PAYMENTS-UTR000700101",STL-X1001,,False,,[],,[]
+ORD-00078,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,6499.50,0.00,0.00,6499.50,High,No settlement in the feed carries pay_000078D. The full order value is unaccounted for.,,30.0,False,,[],,[]
+ORD-00014,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,6499.00,0.00,0.00,6499.00,High,"2 settlements claim pay_000014C (STL-00014, STL-00014-D). Refusing to pick one; a wrong match here books the wrong revenue.",,29.0,False,,[],,"[{'settlement_id': 'STL-00014', 'amount_paise': 649900, 'settled_on': '2026-08-04', 'narration': 'RAZORPAY SETTLEMENT UTR000400014'}, {'settlement_id': 'STL-00014-D', 'amount_paise': 649900, 'settled_on': '2026-08-05', 'narration': 'RAZORPAY SETTLEMENT REPOST UTR000400014'}]"
+ORD-00049,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,6499.00,0.00,0.00,6499.00,High,No settlement in the feed carries pay_000049C. The full order value is unaccounted for.,,14.0,False,,[],,[]
+STL-X2002,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,6160.00,6160.00,6160.00,High,"Credit of Rs 6,160.00 in the feed with no order behind it. Narration: IMPS/UTR000700202/MISC CREDIT",STL-X2002,,False,,[],,[]
+STL-X1002,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,5764.00,5764.00,5764.00,High,"Credit of Rs 5,764.00 in the feed with no order behind it. Narration: NEFT CR-UNKNOWN REMITTER-UTR000700102",STL-X1002,,False,,[],,[]
+ORD-00079,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,3999.50,0.00,0.00,3999.50,Medium,No settlement in the feed carries pay_000079F. The full order value is unaccounted for.,,30.0,False,,[],,[]
+STL-BULK02,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,3410.56,3410.56,3410.56,Medium,"Credit of Rs 3,410.56 in the feed with no order behind it. Narration: IMPS/BLUEDART/COD-SETL/BATCH02",STL-BULK02,,False,,[],,[]
+STL-X2001,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,2991.00,2991.00,2991.00,Medium,"Credit of Rs 2,991.00 in the feed with no order behind it. Narration: IMPS/UTR000700201/MISC CREDIT",STL-X2001,,False,,[],,[]
+ORD-00024,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,3999.99,2000.00,-1999.99,1999.99,Medium,"Settled Rs 1,999.99 short, 50.0% of order value. Far outside the Rs 79.99 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00024,24.0,True,,[],,[]
+STL-BULK01,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,1655.56,1655.56,1655.56,Medium,"Credit of Rs 1,655.56 in the feed with no order behind it. Narration: NEFT CR-DELHIVERY COD REMIT-UTR000850001",STL-BULK01,,False,,[],,[]
+ORD-00008,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,1249.99,0.00,0.00,1249.99,Medium,COD order is 28 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,28.0,False,,[],,[]
+STL-SHADOW01,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,0.00,1249.99,1249.99,1249.99,Medium,"Credit of Rs 1,249.99 in the feed with no order behind it. Narration: RAZORPAY SETTLEMENT UTR000800001",STL-SHADOW01,,False,,[],,[]
+ORD-00039,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,9999.50,10999.45,999.95,999.95,Low,Received Rs 999.95 more than the order value (10.0% over) on a matched reference. Overpayment of this shape is usually a duplicate capture or a misapplied credit. Route to gateway ops.,STL-00039,10.0,True,,[],,[]
+ORD-BULK101,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,999.00,0.00,0.00,999.00,Low,COD order is 15 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,15.0,False,,[],,[]
+ORD-BULK102,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,699.00,0.00,0.00,699.00,Low,COD order is 15 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,15.0,False,,[],,[]
+ORD-00051,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,599.50,0.00,0.00,599.50,Low,"2 settlements claim pay_000051A (STL-00051-D, STL-00051). Refusing to pick one; a wrong match here books the wrong revenue.",,20.0,False,,[],,"[{'settlement_id': 'STL-00051-D', 'amount_paise': 59950, 'settled_on': '2026-08-14', 'narration': 'RAZORPAY SETTLEMENT REPOST UTR000400051'}, {'settlement_id': 'STL-00051', 'amount_paise': 59950, 'settled_on': '2026-08-13', 'narration': 'RAZORPAY SETTLEMENT UTR000400051'}]"
+ORD-00002,5,Unmatched - exception,EXCEPTION,R3_UNMATCHED_AMBIGUOUS,Unmatched / ambiguous,,349.50,0.00,0.00,349.50,Low,No settlement in the feed carries pay_000002F. The full order value is unaccounted for.,,28.0,False,,[],,[]
+ORD-00097,0,COD timing pre-check,EXCEPTION,R2_REMITTANCE_OVERDUE,Remittance overdue,,349.50,0.00,0.00,349.50,Low,COD order is 21 days old with no courier remittance. Past the 14-day threshold; chase the courier.,,21.0,False,,[],,[]
+ORD-00016,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,2499.50,2231.63,-267.87,267.87,Low,"COD remittance is Rs 267.87 short (10.7% of order value), beyond the Rs 62.48 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00016,31.0,True,,[],,[]
+ORD-00013,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,599.99,360.00,-239.99,239.99,Low,"Settled Rs 239.99 short, 40.0% of order value. Far outside the Rs 11.99 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00013,19.0,True,,[],,[]
+ORD-00093,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,1899.00,2088.90,189.90,189.90,Low,Received Rs 189.90 more than the order value (10.0% over) on a matched reference. Overpayment of this shape is usually a duplicate capture or a misapplied credit. Route to gateway ops.,STL-00093,12.0,True,,[],,[]
+ORD-00050,3,Variance - AI diagnostic,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,599.50,449.63,-149.87,149.87,Low,"Settled Rs 149.87 short, 25.0% of order value. Far outside the Rs 11.99 fee band. Shape is consistent with a refund or chargeback netted off the same reference. Verify before clearing.",STL-00050,17.0,True,,[],,[]
+ORD-00053,4,UTR fallback match,MANUAL_REVIEW,R4_PARTIAL_PAYMENT,Partial payment,,599.00,461.25,-137.75,137.75,Low,"COD remittance is Rs 137.75 short (23.0% of order value), beyond the Rs 50.00 collection-fee band for this order. Not explainable as a standard courier fee; raise with the courier.",STL-00053,15.0,True,,[],,[]
+ORD-00032,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,1249.99,1203.33,-46.66,46.66,Low,"Deduction of Rs 46.66 (3.73%) exceeds the contracted Rs 24.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00032,23.0,True,,[],,[]
+ORD-00068,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,899.50,862.98,-36.52,36.52,Low,"Deduction of Rs 36.52 (4.06%) exceeds the contracted Rs 17.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00068,30.0,True,,[],,[]
+ORD-00052,3,Variance - AI diagnostic,MANUAL_REVIEW,R5_AI_VARIANCE,Large variance flagged by AI,,599.50,580.29,-19.21,19.21,Low,"Deduction of Rs 19.21 (3.20%) exceeds the contracted Rs 11.99 band for this payment mode. Small enough to look like a fee, large enough that it is not the agreed one. Check the MDR schedule for this transaction type.",STL-00052,9.0,True,,[],,[]
+ORD-00001,1,Exact match,AUTO_CLEARED,,,,1249.00,1249.00,0.00,0.00,,Matched on pay_000001F; amount identical to the paise.,STL-00001,28.0,False,,[],,[]
+ORD-00003,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.00,9997.00,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 199.98 gateway fee band for this order.",STL-00003,15.0,False,,[],,[]
+ORD-00005,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,899.99,0.00,0.00,0.00,,"COD order placed 0 days ago, inside the normal 0-14 day collection window. No action needed.",,0.0,False,,[],,[]
+ORD-00006,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,599.00,0.00,0.00,0.00,,"COD order placed 10 days ago, inside the normal 0-14 day collection window. No action needed.",,10.0,False,,[],,[]
+ORD-00007,1,Exact match,AUTO_CLEARED,,,,9999.99,9999.99,0.00,0.00,,Matched on pay_000007A; amount identical to the paise.,STL-00007,16.0,False,,[],,[]
+ORD-00009,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.50,591.02,-8.48,0.00,,"Short by Rs 8.48, inside the Rs 11.99 gateway fee band for this order.",STL-00009,21.0,False,,[],,[]
+ORD-00010,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,899.99,897.99,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 17.99 gateway fee band for this order.",STL-00010,27.0,False,,[],,[]
+ORD-00011,1,Exact match,AUTO_CLEARED,,,,9999.50,9999.50,0.00,0.00,,Matched on pay_000011A; amount identical to the paise.,STL-00011,15.0,False,,[],,[]
+ORD-00012,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,3999.00,0.00,0.00,0.00,,"COD order placed 2 days ago, inside the normal 0-14 day collection window. No action needed.",,2.0,False,,[],,[]
+ORD-00015,1,Exact match,AUTO_CLEARED,,,,6499.99,6499.99,0.00,0.00,,Matched on pay_000015E; amount identical to the paise.,STL-00015,26.0,False,,[],,[]
+ORD-00017,1,Exact match,AUTO_CLEARED,,,,3999.99,3999.99,0.00,0.00,,Matched on pay_000017F; amount identical to the paise.,STL-00017,20.0,False,,[],,[]
+ORD-00018,1,Exact match,AUTO_CLEARED,,,,899.50,899.50,0.00,0.00,,Matched on pay_000018C; amount identical to the paise.,STL-00018,27.0,False,,[],,[]
+ORD-00019,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.50,2464.12,-35.38,0.00,,"Short by Rs 35.38, inside the Rs 49.99 gateway fee band for this order.",STL-00019,19.0,False,,[],,[]
+ORD-00020,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,599.99,549.99,-50.00,0.00,,"Short by Rs 50.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00020,22.0,False,,[],,[]
+ORD-00021,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.99,6407.97,-92.02,0.00,,"Short by Rs 92.02, inside the Rs 129.99 gateway fee band for this order.",STL-00021,23.0,False,,[],,[]
+ORD-00022,4,UTR fallback match,AUTO_CLEARED,,,,899.99,899.99,0.00,0.00,,Matched on UTR000400022; amount identical to the paise.,STL-00022,25.0,False,,[],,[]
+ORD-00023,1,Exact match,AUTO_CLEARED,,,,6499.00,6499.00,0.00,0.00,,Matched on pay_000023D; amount identical to the paise.,STL-00023,3.0,False,,[],,[]
+ORD-00025,4,UTR fallback match,AUTO_CLEARED,,,,899.00,899.00,0.00,0.00,,Matched on UTR000400025; amount identical to the paise.,STL-00025,26.0,False,,[],,[]
+ORD-00026,1,Exact match,AUTO_CLEARED,,,,599.00,599.00,0.00,0.00,,Matched on pay_000026A; amount identical to the paise.,STL-00026,7.0,False,,[],,[]
+ORD-00027,4,UTR fallback match,AUTO_CLEARED,,,,2499.99,2499.99,0.00,0.00,,Matched on UTR000400027; amount identical to the paise.,STL-00027,26.0,False,,[],,[]
+ORD-00028,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,6499.99,0.00,0.00,0.00,,"COD order placed 3 days ago, inside the normal 0-14 day collection window. No action needed.",,3.0,False,,[],,[]
+ORD-00029,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.99,9823.01,-176.98,0.00,,"Short by Rs 176.98, inside the Rs 199.99 gateway fee band for this order.",STL-00029,15.0,False,,[],,[]
+ORD-00030,4,UTR fallback match,AUTO_CLEARED,,,,2499.50,2499.50,0.00,0.00,,Matched on UTR000400030; amount identical to the paise.,STL-00030,15.0,False,,[],,[]
+ORD-00031,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,2499.50,2459.50,-40.00,0.00,,"Short by Rs 40.00, inside the Rs 62.48 COD collection fee band for this order.",STL-00031,22.0,False,,[],,[]
+ORD-00033,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.00,1226.90,-22.10,0.00,,"Short by Rs 22.10, inside the Rs 24.98 gateway fee band for this order.",STL-00033,3.0,False,,[],,[]
+ORD-00034,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,899.00,883.10,-15.90,0.00,,"Short by Rs 15.90, inside the Rs 17.98 gateway fee band for this order.",STL-00034,24.0,False,,[],,[]
+ORD-00035,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,899.50,874.50,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00035,17.0,False,,[],,[]
+ORD-00036,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,899.00,886.28,-12.72,0.00,,"Short by Rs 12.72, inside the Rs 17.98 gateway fee band for this order.",STL-00036,5.0,False,,[],,[]
+ORD-00037,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,1899.00,0.00,0.00,0.00,,"COD order placed 5 days ago, inside the normal 0-14 day collection window. No action needed.",,5.0,False,,[],,[]
+ORD-00038,4,UTR fallback match,AUTO_CLEARED,,,,6499.50,6499.50,0.00,0.00,,Matched on UTR000400038; amount identical to the paise.,STL-00038,30.0,False,,[],,[]
+ORD-00040,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,599.00,588.41,-10.59,0.00,,"Short by Rs 10.59, inside the Rs 11.98 gateway fee band for this order.",STL-00040,26.0,False,,[],,[]
+ORD-00041,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.50,2455.27,-44.23,0.00,,"Short by Rs 44.23, inside the Rs 49.99 gateway fee band for this order.",STL-00041,30.0,False,,[],,[]
+ORD-00042,4,UTR fallback match,AUTO_CLEARED,,,,3999.99,3999.99,0.00,0.00,,Matched on UTR000400042; amount identical to the paise.,STL-00042,23.0,False,,[],,[]
+ORD-00043,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.99,6384.96,-115.03,0.00,,"Short by Rs 115.03, inside the Rs 129.99 gateway fee band for this order.",STL-00043,28.0,False,,[],,[]
+ORD-00044,1,Exact match,AUTO_CLEARED,,,,6499.50,6499.50,0.00,0.00,,Matched on pay_000044D; amount identical to the paise.,STL-00044,10.0,False,,[],,[]
+ORD-00045,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.50,347.00,-2.50,0.00,,"Short by Rs 2.50, inside the Rs 6.99 gateway fee band for this order.",STL-00045,6.0,False,,[],,[]
+ORD-00046,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000046B; amount identical to the paise.,STL-00046,10.0,False,,[],,[]
+ORD-00047,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000047A; amount identical to the paise.,STL-00047,4.0,False,,[],,[]
+ORD-00048,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000048B; amount identical to the paise.,STL-00048,30.0,False,,[],,[]
+ORD-00054,1,Exact match,AUTO_CLEARED,,,,2499.50,2499.50,0.00,0.00,,Matched on pay_000054D; amount identical to the paise.,STL-00054,6.0,False,,[],,[]
+ORD-00055,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,9999.00,9979.00,-20.00,0.00,,"Short by Rs 20.00, inside the Rs 249.97 COD collection fee band for this order.",STL-00055,15.0,False,,[],,[]
+ORD-00056,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1899.99,1873.10,-26.89,0.00,,"Short by Rs 26.89, inside the Rs 37.99 gateway fee band for this order.",STL-00056,3.0,False,,[],,[]
+ORD-00057,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,9999.50,9949.50,-50.00,0.00,,"Short by Rs 50.00, inside the Rs 249.98 COD collection fee band for this order.",STL-00057,18.0,False,,[],,[]
+ORD-00058,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,6499.99,0.00,0.00,0.00,,"COD order placed 9 days ago, inside the normal 0-14 day collection window. No action needed.",,9.0,False,,[],,[]
+ORD-00059,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1899.50,1877.10,-22.40,0.00,,"Short by Rs 22.40, inside the Rs 37.99 gateway fee band for this order.",STL-00059,5.0,False,,[],,[]
+ORD-00060,1,Exact match,AUTO_CLEARED,,,,3999.50,3999.50,0.00,0.00,,Matched on pay_000060A; amount identical to the paise.,STL-00060,28.0,False,,[],,[]
+ORD-00061,4,UTR fallback match,AUTO_CLEARED,,,,899.00,899.00,0.00,0.00,,Matched on UTR000400061; amount identical to the paise.,STL-00061,27.0,False,,[],,[]
+ORD-00062,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,2499.99,2455.76,-44.23,0.00,,"Short by Rs 44.23, inside the Rs 49.99 gateway fee band for this order.",STL-00062,3.0,False,,[],,[]
+ORD-00063,4,UTR fallback match,AUTO_CLEARED,,,,349.50,349.50,0.00,0.00,,Matched on UTR000400063; amount identical to the paise.,STL-00063,26.0,False,,[],,[]
+ORD-00064,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1899.00,1896.50,-2.50,0.00,,"Short by Rs 2.50, inside the Rs 37.98 gateway fee band for this order.",STL-00064,10.0,False,,[],,[]
+ORD-00065,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,349.00,329.00,-20.00,0.00,,"Short by Rs 20.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00065,15.0,False,,[],,[]
+ORD-00066,4,UTR fallback match,AUTO_CLEARED,,,,1899.00,1899.00,0.00,0.00,,Matched on UTR000400066; amount identical to the paise.,STL-00066,15.0,False,,[],,[]
+ORD-00067,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000067C; amount identical to the paise.,STL-00067,18.0,False,,[],,[]
+ORD-00069,1,Exact match,AUTO_CLEARED,,,,2499.00,2499.00,0.00,0.00,,Matched on pay_000069F; amount identical to the paise.,STL-00069,13.0,False,,[],,[]
+ORD-00070,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,6499.99,6384.96,-115.03,0.00,,"Short by Rs 115.03, inside the Rs 129.99 gateway fee band for this order.",STL-00070,20.0,False,,[],,[]
+ORD-00071,1,Exact match,AUTO_CLEARED,,,,3999.99,3999.99,0.00,0.00,,Matched on pay_000071B; amount identical to the paise.,STL-00071,6.0,False,,[],,[]
+ORD-00072,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,9999.00,9997.00,-2.00,0.00,,"Short by Rs 2.00, inside the Rs 199.98 gateway fee band for this order.",STL-00072,25.0,False,,[],,[]
+ORD-00073,1,Exact match,AUTO_CLEARED,,,,9999.99,9999.99,0.00,0.00,,Matched on pay_000073C; amount identical to the paise.,STL-00073,30.0,False,,[],,[]
+ORD-00074,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,1249.99,0.00,0.00,0.00,,"COD order placed 13 days ago, inside the normal 0-14 day collection window. No action needed.",,13.0,False,,[],,[]
+ORD-00075,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.00,344.07,-4.93,0.00,,"Short by Rs 4.93, inside the Rs 6.98 gateway fee band for this order.",STL-00075,26.0,False,,[],,[]
+ORD-00076,4,UTR fallback match,AUTO_CLEARED,,,,2499.50,2499.50,0.00,0.00,,Matched on UTR000400076; amount identical to the paise.,STL-00076,4.0,False,,[],,[]
+ORD-00077,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000077B; amount identical to the paise.,STL-00077,5.0,False,,[],,[]
+ORD-00080,1,Exact match,AUTO_CLEARED,,,,6499.00,6499.00,0.00,0.00,,Matched on pay_000080C; amount identical to the paise.,STL-00080,12.0,False,,[],,[]
+ORD-00081,1,Exact match,AUTO_CLEARED,,,,9999.00,9999.00,0.00,0.00,,Matched on pay_000081A; amount identical to the paise.,STL-00081,18.0,False,,[],,[]
+ORD-00082,1,Exact match,AUTO_CLEARED,,,,2499.50,2499.50,0.00,0.00,,Matched on pay_000082B; amount identical to the paise.,STL-00082,27.0,False,,[],,[]
+ORD-00083,1,Exact match,AUTO_CLEARED,,,,9999.00,9999.00,0.00,0.00,,Matched on pay_000083D; amount identical to the paise.,STL-00083,20.0,False,,[],,[]
+ORD-00084,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,899.50,869.50,-30.00,0.00,,"Short by Rs 30.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00084,30.0,False,,[],,[]
+ORD-00085,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000085A; amount identical to the paise.,STL-00085,28.0,False,,[],,[]
+ORD-00086,1,Exact match,AUTO_CLEARED,,,,899.99,899.99,0.00,0.00,,Matched on pay_000086A; amount identical to the paise.,STL-00086,22.0,False,,[],,[]
+ORD-00087,1,Exact match,AUTO_CLEARED,,,,899.99,899.99,0.00,0.00,,Matched on pay_000087F; amount identical to the paise.,STL-00087,29.0,False,,[],,[]
+ORD-00088,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.50,1227.39,-22.11,0.00,,"Short by Rs 22.11, inside the Rs 24.99 gateway fee band for this order.",STL-00088,21.0,False,,[],,[]
+ORD-00089,1,Exact match,AUTO_CLEARED,,,,599.00,599.00,0.00,0.00,,Matched on pay_000089B; amount identical to the paise.,STL-00089,6.0,False,,[],,[]
+ORD-00090,1,Exact match,AUTO_CLEARED,,,,899.00,899.00,0.00,0.00,,Matched on pay_000090E; amount identical to the paise.,STL-00090,11.0,False,,[],,[]
+ORD-00091,0,COD timing pre-check,AWAITING_REMITTANCE,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,899.00,0.00,0.00,0.00,,"COD order placed 0 days ago, inside the normal 0-14 day collection window. No action needed.",,0.0,False,,[],,[]
+ORD-00092,1,Exact match,AUTO_CLEARED,,,,1249.99,1249.99,0.00,0.00,,Matched on pay_000092E; amount identical to the paise.,STL-00092,15.0,False,,[],,[]
+ORD-00094,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,1249.50,1227.39,-22.11,0.00,,"Short by Rs 22.11, inside the Rs 24.99 gateway fee band for this order.",STL-00094,25.0,False,,[],,[]
+ORD-00095,4,UTR fallback match,AUTO_CLEARED,,,,3999.00,3999.00,0.00,0.00,,Matched on UTR000400095; amount identical to the paise.,STL-00095,16.0,False,,[],,[]
+ORD-00096,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1249.00,1224.00,-25.00,0.00,,"Short by Rs 25.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00096,17.0,False,,[],,[]
+ORD-00098,1,Exact match,AUTO_CLEARED,,,,1899.50,1899.50,0.00,0.00,,Matched on pay_000098D; amount identical to the paise.,STL-00098,31.0,False,,[],,[]
+ORD-00099,2,Known deduction,CLEARED_WITH_FEE,,,GATEWAY_FEE,349.00,344.07,-4.93,0.00,,"Short by Rs 4.93, inside the Rs 6.98 gateway fee band for this order.",STL-00099,8.0,False,,[],,[]
+ORD-00100,4,UTR fallback match,CLEARED_WITH_FEE,,,COD_COLLECTION_FEE,1249.00,1209.00,-40.00,0.00,,"Short by Rs 40.00, inside the Rs 50.00 COD collection fee band for this order.",STL-00100,19.0,False,,[],,[]
+ORD-BULK201,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,999.00,0.00,0.00,0.00,,"COD order placed 14 days ago, inside the normal 0-14 day collection window. No action needed.",,14.0,False,,[],,[]
+ORD-BULK202,0,COD timing pre-check,APPROACHING_THRESHOLD,R1_AWAITING_REMITTANCE,Awaiting courier remittance,,2499.00,0.00,0.00,0.00,,"COD order placed 14 days ago, inside the normal 0-14 day collection window. No action needed.",,14.0,False,,[],,[]

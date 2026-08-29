@@ -52,6 +52,18 @@ def _default_state():
     }
 
 
+def normalize_state(state):
+    """Repair persisted state after schema/count changes (e.g. TOTAL_BATCHES
+    dropped from 3 to 2). Mutates and returns the same dict."""
+    cb = state.get("current_batch", 1)
+    if cb > TOTAL_BATCHES + 1:
+        state["current_batch"] = TOTAL_BATCHES + 1
+    if state["current_batch"] > TOTAL_BATCHES:
+        state["next_batch_available_at"] = None
+        state["notification_overlay_open"] = False
+    return state
+
+
 def load_state(merchant_id):
     """Always returns a complete state dict -- missing file or missing
     keys (e.g. after this module gains a new field) both backfill to
@@ -67,7 +79,23 @@ def load_state(merchant_id):
     defaults = _default_state()
     for k, v in defaults.items():
         data.setdefault(k, v)
-    return data
+    return normalize_state(data)
+
+
+def case_for_record(state, record_id):
+    """Return the persisted case for an order/settlement id, if any."""
+    if not record_id:
+        return None
+    rid = record_id.upper()
+    for case in state.get("cases", {}).values():
+        if rid in (
+            (case.get("record_id") or "").upper(),
+            (case.get("order_id") or "").upper(),
+            (case.get("settlement_id") or "").upper(),
+            case["case_id"].upper(),
+        ):
+            return case
+    return None
 
 
 def save_state(merchant_id, state):

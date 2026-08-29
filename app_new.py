@@ -14,14 +14,8 @@ whichever page is active in st.session_state.current_page. There is no
 separate full-screen "processing" route any more -- syncing happens inline
 inside the Reconciliations page itself, sidebar and header always visible.
 
-Incremental demo-data flow (see state_store.py): the ~180-record synthetic
-dataset is split into 3 deterministic batches of 60 by gen_data.py. Batch 1
-is available immediately; batches 2/3 unlock after a persisted timestamp
-passes (checked on whatever rerun happens to occur next -- never a sleep,
-never a background poll). Every real reconciliation run always goes through
-the SAME unmodified engine.reconcile() -- this file only decides which
-batch's rows to hand it, and remembers what came back (including, now, the
-individual flagged records -- see _flagged_records()).
+Incremental demo-data flow (see state_store.py): the ~100-record synthetic
+dataset is split into 2 deterministic batches of ~50 by gen_data.py.
 """
 
 import os
@@ -184,6 +178,102 @@ def _flagged_records(result_df, batch_id):
             "recommendation": r.get("ai_recommendation"),
         })
     return out
+
+
+def _risk_summary_from_cases(cases):
+    """
+    Risk buckets from the persistent case store for the current run's
+    reviewable cases (excludes pending_settlement and resolved).
+    """
+    open_cases = [c for c in cases if c["case_status"] not in ("pending_settlement", "resolved")]
+    overpaid = [c for c in open_cases if c["delta"] > 0 and c["case_type"] == "overpayment"]
+    at_risk = [c for c in open_cases if c["delta"] < 0 and c["case_type"] in ("partial_payment", "overpayment")]
+    unmatched = [c for c in open_cases if c["case_type"] in ("unmatched_order", "unmatched_settlement", "ambiguous_match")]
+    return {
+        "Overpaid": {"amount": sum(c["delta"] for c in overpaid), "count": len(overpaid)},
+        "At Risk": {"amount": sum(c["amount_at_risk"] for c in at_risk), "count": len(at_risk)},
+        "Unmatched": {"amount": sum(c["amount_at_risk"] for c in unmatched), "count": len(unmatched)},
+    }
+
+
+def _case_dashboard_metrics(state):
+    """Cumulative case-store metrics for the Dashboard KPI row."""
+    cases = state_store.list_cases(state)
+    return {
+        "needs_review": sum(1 for c in cases if c["case_status"] in (
+            "needs_ai", "ai_pending", "ai_recommendation", "manual_review", "exception")),
+        "ai_accepted": sum(1 for c in cases if c.get("resolution", {}).get("resolution_type") == "accepted"),
+        "awaiting_settlement": sum(1 for c in cases if c["case_status"] == "pending_settlement"),
+        "open_exceptions": sum(1 for c in cases if c["case_status"] == "exception"),
+    }
+
+
+def _build_transaction_ledger(state, search="", type_filter="All", source_filter="All"):
+    """Unified ledger: every order + settlement Ledgr has seen."""
+    case_by_record = {}
+    for c in state.get("cases", {}).values():
+        for key in ("record_id", "order_id", "settlement_id"):
+            if c.get(key):
+                case_by_record[c[key].upper()] = c
+    processed = set(state.get("processed_record_ids") or [])
+
+    def _status_for(record_id, case):
+        if case:
+            return case["case_status"].replace("_", " ").title()
+        if record_id in processed:
+            return "Reconciled"
+        return "Not synced"
+
+    rows = []
+    for o in shopify.fetch_orders():
+        cid = case_by_record.get(o["order_id"].upper())
+        rows.append({
+            "id": o["order_id"],
+            "type": "Order",
+            "source": "Shopify (demo)",
+            "customer": o.get("customer_name") or "—",
+            "amount_paise": to_paise(o["order_amount"]),
+            "date": o.get("order_date") or "",
+            "status": _status_for(o["order_id"], cid),
+            "case_id": cid["case_id"] if cid else None,
+            "batch_id": o.get("batch_id", ""),
+            "ref": o.get("gateway_ref_id") or o.get("bank_utr") or "",
+        })
+
+    for s in _load_local_settlements().to_dict("records"):
+        cid = case_by_record.get(s["settlement_id"].upper())
+        src = "Razorpay (demo)" if s.get("source") == "RAZORPAY" else "Bank / COD"
+        rows.append({
+            "id": s["settlement_id"],
+            "type": "Settlement",
+            "source": src,
+            "customer": "—",
+            "amount_paise": to_paise(s["amount_received"]),
+            "date": s.get("settled_on") or "",
+            "status": _status_for(s["settlement_id"], cid),
+            "case_id": cid["case_id"] if cid else None,
+            "batch_id": s.get("batch_id", ""),
+            "ref": s.get("gateway_ref_id") or s.get("bank_utr") or "",
+        })
+
+    rows.sort(key=lambda r: (r["date"], r["id"]), reverse=True)
+    q = search.strip().lower()
+    if q:
+        rows = [r for r in rows if q in " ".join(
+            [r["id"], r["customer"], r["ref"], r["type"], r["source"], r["status"]]
+        ).lower()]
+    if type_filter != "All":
+        rows = [r for r in rows if r["type"] == type_filter]
+    if source_filter != "All":
+        rows = [r for r in rows if source_filter.lower() in r["source"].lower()]
+    return rows
+
+
+def _open_case_ticket(case_id, previous_page=None):
+    st.session_state.selected_case_id = case_id
+    st.session_state.previous_page = previous_page or st.session_state.current_page
+    st.session_state.current_page = "Case Ticket"
+    st.rerun()
 
 
 def _risk_summary(flagged_records):
@@ -516,7 +606,8 @@ def _render_header_and_notifications(merchant, merchant_id, state, page):
                 with st.container(key="accountmenu"):
                     if st.button("Profile", use_container_width=True, key="menu_profile"):
                         st.session_state.show_account_menu = False
-                        st.info("Profile page coming soon.")
+                        st.session_state.current_page = "Settings"
+                        st.rerun()
                     if st.button("Settings", use_container_width=True, key="menu_settings"):
                         st.session_state.show_account_menu = False
                         st.session_state.current_page = "Settings"
@@ -646,18 +737,16 @@ def _confidence_sort_key(case):
     return (1, 0)  # unscored (ai_pending / never investigated) sinks below every real score, even 0%
 
 
-def _render_review_queue(cases, key_prefix="cases", limit=None):
+def _render_review_queue(cases, key_prefix="cases", limit=None, compact=False):
     """
     Real persisted cases only -- never a fake confidence percentage.
-    Sorted by AI confidence descending (real score, including honest 0%,
-    always ranks above an unscored/ai_pending case). Live filter pills
-    let the viewer narrow to one status; counts are real, computed from
-    the same list being rendered.
+    Sorted by AI confidence descending. `compact` drops the row index column
+    for narrower layouts.
     """
     st.markdown(html("""
         <div class="recon-card">
-            <div class="recon-title">Review Queue <span class="recon-dim" style="font-weight:500;">(Sorted by AI Confidence ↓)</span></div>
-            <div class="workspace-sub" style="margin:-8px 0 14px;">Top items that need your attention.</div>
+            <div class="recon-title">Review Queue</div>
+            <div class="workspace-sub" style="margin:-4px 0 12px;">Sorted by AI confidence — highest first.</div>
     """), unsafe_allow_html=True)
 
     filter_key = f"{key_prefix}_filter"
@@ -668,7 +757,7 @@ def _render_review_queue(cases, key_prefix="cases", limit=None):
         active = st.session_state[filter_key] == label
         with col:
             with st.container(key=f"{key_prefix}_pill_{label.replace(' ', '')}"):
-                if st.button(f"{label} {count}", key=f"{key_prefix}_pillbtn_{label}",
+                if st.button(f"{label} ({count})", key=f"{key_prefix}_pillbtn_{label}",
                              use_container_width=True, type=("primary" if active else "secondary")):
                     st.session_state[filter_key] = label
                     st.rerun()
@@ -682,13 +771,16 @@ def _render_review_queue(cases, key_prefix="cases", limit=None):
         st.markdown('<div class="recon-empty">Nothing needs attention here — every record cleared.</div>',
                     unsafe_allow_html=True)
     else:
-        st.markdown(html("""
-            <div class="queue-row queue-row-head">
-                <div>#</div><div>Order / Ref ID</div><div>Issue Type</div><div>AI Confidence</div>
-                <div>AI Finding (Summary)</div><div>Recommended Action</div><div>Amount at Risk</div>
-                <div>Status</div><div>View</div>
+        head_cols = "0.4fr 1.2fr 1fr 0.9fr 2fr 0.9fr 1fr 0.55fr" if not compact else \
+                    "1.2fr 1fr 0.9fr 2fr 0.9fr 1fr 0.55fr"
+        head_html = """
+            <div class="queue-row queue-row-head queue-row-compact">
+        """ + ("" if compact else "<div>#</div>") + """
+                <div>Record</div><div>Issue</div><div>Confidence</div>
+                <div>AI Summary</div><div>At Risk</div><div>Status</div><div></div>
             </div>
-        """), unsafe_allow_html=True)
+        """
+        st.markdown(html(head_html), unsafe_allow_html=True)
 
         for i, case in enumerate(shown, start=1):
             ai = case.get("ai")
@@ -703,46 +795,44 @@ def _render_review_queue(cases, key_prefix="cases", limit=None):
             else:
                 confidence_html = '<span class="recon-dim">—</span>'
             finding = (ai.get("reason") if ai else None) or case["explanation"]
-            next_step = (ai.get("next_step") if ai else None) or "—"
+            next_step = (ai.get("next_step") if ai else None) or ""
+            summary = finding
+            if next_step and next_step != "—":
+                summary += f'<br><span class="recon-dim">{next_step}</span>'
             status_label, pill_class = _case_status_display(case)
 
-            c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
-                [0.35, 1.3, 1.15, 1.2, 1.7, 1.7, 1, 1.05, 0.6])
-            with c1:
-                st.markdown(f'<div class="case-cell">{i}</div>', unsafe_allow_html=True)
-            with c2:
-                st.markdown(f'<div class="case-cell case-cell-name">{case["record_id"]}'
-                            f'<br><span class="recon-dim">{case.get("customer_name") or "—"}</span></div>',
+            cols = st.columns([0.35, 1.25, 1.05, 0.95, 2.1, 0.85, 1.05, 0.55] if not compact
+                                else [1.25, 1.05, 0.95, 2.1, 0.85, 1.05, 0.55])
+            idx = 0
+            if not compact:
+                with cols[idx]:
+                    st.markdown(f'<div class="case-cell">{i}</div>', unsafe_allow_html=True)
+                idx += 1
+            with cols[idx]:
+                st.markdown(f'<div class="case-cell case-cell-name">{case["record_id"]}</div>',
                             unsafe_allow_html=True)
-            with c3:
+            with cols[idx + 1]:
                 st.markdown(f'<span class="status-pill pill-issue">{case["case_type"].replace("_", " ").title()}</span>',
                             unsafe_allow_html=True)
-            with c4:
+            with cols[idx + 2]:
                 st.markdown(confidence_html, unsafe_allow_html=True)
-            with c5:
-                st.markdown(f'<div class="case-cell">{finding}</div>', unsafe_allow_html=True)
-            with c6:
-                st.markdown(f'<div class="case-cell">{next_step}</div>', unsafe_allow_html=True)
-            with c7:
+            with cols[idx + 3]:
+                st.markdown(f'<div class="case-cell case-cell-summary">{summary}</div>', unsafe_allow_html=True)
+            with cols[idx + 4]:
                 st.markdown(f'<div class="case-cell">{fmt(case["amount_at_risk"])}</div>', unsafe_allow_html=True)
-            with c8:
+            with cols[idx + 5]:
                 st.markdown(f'<span class="status-pill {pill_class}">{status_label}</span>', unsafe_allow_html=True)
-            with c9:
-                if st.button("View →", key=f"{key_prefix}_view_{case['case_id']}"):
-                    st.session_state.selected_case_id = case["case_id"]
-                    st.session_state.previous_page = st.session_state.current_page
-                    st.session_state.current_page = "Case Ticket"
-                    st.rerun()
+            with cols[idx + 6]:
+                if st.button("View", key=f"{key_prefix}_view_{case['case_id']}"):
+                    _open_case_ticket(case["case_id"])
 
-        st.markdown(f'<div class="recon-dim" style="margin-top:8px;">'
-                    f'Showing {len(shown)} of {total_shown} item{"s" if total_shown != 1 else ""}</div>',
+        st.markdown(f'<div class="recon-dim" style="margin-top:8px;">Showing {len(shown)} of {total_shown}</div>',
                     unsafe_allow_html=True)
 
     st.markdown(html("""
         <div class="confidence-guide">
-            ℹ️ <b>Confidence Score Guide:</b> Higher score = more confident finding. 0% means no
-            match evidence was found (a genuine, honest outcome, not an error). "AI Pending" means
-            investigation is queued due to a rate limit -- use Retry on that case's ticket.
+            Higher confidence = stronger AI finding. <b>AI Pending</b> means investigation
+            is queued (often rate limits) — open the case and use Retry.
         </div>
     """), unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -789,34 +879,33 @@ def _render_dashboard(state, merchant_id):
     runs = state["reconciliation_runs"]  # most-recent-first
     total_recon = len(runs)
     auto_matched = sum(r["auto_matched"] for r in runs)
-    ai_resolved = sum(r["ai_resolved"] for r in runs)
-    exceptions_total = sum(r["exceptions"] for r in runs)
+    case_metrics = _case_dashboard_metrics(state)
 
     st.markdown(html(f"""
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-icon" style="background:#E1EAFB; color:{ACC};">📄</div>
-                <div class="kpi-label">Total Reconciliations</div>
+                <div class="kpi-label">Reconciliation Runs</div>
                 <div class="kpi-value" style="color:{INK};">{total_recon}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-sub">Completed batches</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icon" style="background:#DDF3EA; color:{MATCHED};">✓</div>
                 <div class="kpi-label">Auto Matched</div>
                 <div class="kpi-value" style="color:{MATCHED};">{auto_matched}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-sub">Deterministic clears</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icon" style="background:#EDE7FB; color:{PURPLE};">✨</div>
-                <div class="kpi-label">AI Resolved</div>
-                <div class="kpi-value" style="color:{PURPLE};">{ai_resolved}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-label">Needs Review</div>
+                <div class="kpi-value" style="color:{PURPLE};">{case_metrics['needs_review']}</div>
+                <div class="kpi-sub">Open cases in queue</div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-icon" style="background:{WARN_BG}; color:{WARN};">⚠️</div>
-                <div class="kpi-label">Exceptions</div>
-                <div class="kpi-value" style="color:{WARN};">{exceptions_total}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-icon" style="background:{WARN_BG}; color:{WARN};">⏳</div>
+                <div class="kpi-label">Awaiting Settlement</div>
+                <div class="kpi-value" style="color:#B45309;">{case_metrics['awaiting_settlement']}</div>
+                <div class="kpi-sub">Normal window — no action yet</div>
             </div>
         </div>
 
@@ -839,12 +928,11 @@ def _render_dashboard(state, merchant_id):
     else:
         rows = "".join(f"""
             <tr>
-                <td class="recon-name">Daily Reconciliation — {datetime.fromisoformat(r['timestamp']).strftime('%b %d')}</td>
+                <td class="recon-name">Batch {r['batch_id']} — {datetime.fromisoformat(r['timestamp']).strftime('%b %d')}</td>
                 <td class="recon-dim">{datetime.fromisoformat(r['timestamp']).strftime('%b %d, %Y %I:%M %p')}</td>
                 <td class="recon-dim">{r['sources']}</td>
                 <td><span class="status-pill">{r['status']}</span></td>
                 <td class="recon-dim">{r['total_records']} records</td>
-                <td class="recon-dim">View →</td>
             </tr>
         """ for r in runs[:5])
 
@@ -853,8 +941,8 @@ def _render_dashboard(state, merchant_id):
                 <div class="recon-title">Recent Reconciliations</div>
                 <table class="recon-table">
                     <thead>
-                        <tr><th>Name</th><th>Date &amp; Time</th><th>Sources</th>
-                            <th>Status</th><th>Summary</th><th>Action</th></tr>
+                        <tr><th>Run</th><th>Date &amp; Time</th><th>Sources</th>
+                            <th>Status</th><th>Records</th></tr>
                     </thead>
                     <tbody>{rows}</tbody>
                 </table>
@@ -862,10 +950,9 @@ def _render_dashboard(state, merchant_id):
         """), unsafe_allow_html=True)
 
         with st.container(key="viewallbtn"):
-            _, vcol, _ = st.columns([2, 1, 2])
-            with vcol:
-                if st.button("View all reconciliations →", use_container_width=True):
-                    st.info("Full reconciliation history is coming soon.")
+            if st.button("View all reconciliations →", use_container_width=False):
+                st.session_state.current_page = "Reconciliations"
+                st.rerun()
 
 
 # ===========================================================================
@@ -875,20 +962,13 @@ def _render_reconciliations(state, merchant_id):
     runs = state["reconciliation_runs"]
 
     # ---- header control row ----
-    _, ccol = st.columns([2.6, 2.4])
+    _, ccol = st.columns([2.8, 2.2])
     with ccol:
-        c1, c2, c3 = st.columns([1, 1, 1.5])
-        with c1:
-            st.markdown('<div class="control-badge">This month</div>', unsafe_allow_html=True)
-        with c2:
-            if st.button("Filters", key="filters_btn", use_container_width=True):
-                st.info("Filters are coming soon.")
-        with c3:
-            with st.container(key="newreconbtn"):
-                st.button("+ New Reconciliation", use_container_width=True,
-                           on_click=_start_sync, key="recon_new_btn")
+        with st.container(key="newreconbtn"):
+            st.button("Sync & Reconcile", use_container_width=True,
+                       on_click=_start_sync, key="recon_new_btn")
 
-    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
 
     # ---- mid-sync: compact inline processing card, or an honest
     # "nothing to do" notice -- sidebar and header stay fully visible. ----
@@ -1013,31 +1093,30 @@ def _render_reconciliations(state, merchant_id):
             <div class="kpi-card">
                 <div class="kpi-label">Total Reconciliations</div>
                 <div class="kpi-value">{total_recon}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-sub">Runs completed</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Expected Amount</div>
                 <div class="kpi-value">{fmt(expected_total)}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-sub">All runs combined</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Received Amount</div>
                 <div class="kpi-value" style="color:{MATCHED};">{fmt(received_total)}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-sub">All runs combined</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Difference</div>
                 <div class="kpi-value" style="color:{diff_color};">{fmt(diff_total)}</div>
-                <div class="kpi-sub">This month</div>
+                <div class="kpi-sub">Expected − received</div>
             </div>
         </div>
         <div style="height:20px;"></div>
     """), unsafe_allow_html=True)
 
-    # ---- Ask AI: lives on the main screen, not just inside a ticket.
-    # Grounded in real cumulative totals + open cases, never the raw CSVs. ----
-    _render_ask_ai(state, key_prefix="mainask")
-    st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+    with st.expander("✨ Ask AI about your reconciliation data", expanded=False):
+        _render_ask_ai(state, key_prefix="mainask")
+    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
 
     # ---- three-column workspace: Resolution Funnel | Awaiting Settlement |
     # Risk Summary, all from the LATEST run's real cases (case store, not
@@ -1054,8 +1133,8 @@ def _render_reconciliations(state, merchant_id):
     exception_cases = [c for c in reviewable_cases if c["case_status"] == "exception"]
     deterministically_matched = latest["total_records"] - len(reviewable_cases) - len(pending_cases)
 
-    flagged = latest.get("flagged_records", [])
-    risk = _risk_summary(flagged)
+    risk = _risk_summary_from_cases(reviewable_cases)
+    pending_total = sum(c["expected"] for c in pending_cases)
 
     col_funnel, col_pending, col_risk = st.columns([1.1, 1.2, 1.1])
     with col_funnel:
@@ -1090,28 +1169,30 @@ def _render_reconciliations(state, merchant_id):
         """), unsafe_allow_html=True)
 
     with col_pending:
+        pending_summary = (f"{len(pending_cases)} order{'s' if len(pending_cases) != 1 else ''} · "
+                         f"{fmt(pending_total)}") if pending_cases else "None right now"
         pending_rows = "".join(f"""
             <div class="pending-row">
-                <div><b>{c['record_id']}</b><br><span class="recon-dim">{c.get('customer_name') or '—'}</span></div>
+                <div><b>{c['record_id']}</b></div>
                 <div>{fmt(c['expected'])}</div>
                 <div>{_days_since(c.get('order_date'))}</div>
-                <div class="recon-dim">Within 0-14 days</div>
             </div>
-        """ for c in pending_cases[:5])
+        """ for c in pending_cases[:4])
         st.markdown(html(f"""
             <div class="workspace-card">
                 <div class="workspace-title">Awaiting Settlement</div>
-                <div class="workspace-sub">These orders are within the normal settlement window. No action required yet.</div>
+                <div class="pending-summary">{pending_summary}</div>
+                <div class="workspace-sub">Normal settlement window — no action needed.</div>
                 <div style="height:8px;"></div>
                 <div class="pending-row pending-row-head">
-                    <div>Order / Customer</div><div>Amount</div><div>Days</div><div>Window</div>
+                    <div>Order</div><div>Amount</div><div>Age</div>
                 </div>
                 {pending_rows or '<div class="evidence-line">Nothing currently awaiting settlement.</div>'}
             </div>
         """), unsafe_allow_html=True)
-        if len(pending_cases) > 5:
-            st.markdown(f'<div class="workspace-sub" style="text-align:right; margin-top:6px;">'
-                        f'+{len(pending_cases) - 5} more awaiting settlement</div>', unsafe_allow_html=True)
+        if len(pending_cases) > 4:
+            st.markdown(f'<div class="workspace-sub" style="margin-top:6px;">'
+                        f'+{len(pending_cases) - 4} more</div>', unsafe_allow_html=True)
 
     with col_risk:
         st.markdown(html("""
@@ -1139,7 +1220,7 @@ def _render_reconciliations(state, merchant_id):
     # ---- Review Queue: real persisted cases for the CURRENT run (pending
     # settlements excluded -- they have their own widget above), sorted by
     # AI confidence, with live filter pills. ----
-    _render_review_queue(reviewable_cases, key_prefix="reviewqueue", limit=10)
+    _render_review_queue(reviewable_cases, key_prefix="reviewqueue", limit=8, compact=True)
     if len(reviewable_cases) > 10:
         with st.container(key="viewallreviewbtn"):
             _, vcol, _ = st.columns([2, 1, 2])
@@ -1153,15 +1234,12 @@ def _render_reconciliations(state, merchant_id):
     # ---- Recent Reconciliations: detailed, per-run breakdown ----
     rows = "".join(f"""
         <tr>
-            <td class="recon-name">Daily Reconciliation — {datetime.fromisoformat(r['timestamp']).strftime('%b %d, %Y')}</td>
+            <td class="recon-name">Batch {r['batch_id']}</td>
             <td class="recon-dim">{datetime.fromisoformat(r['timestamp']).strftime('%b %d, %Y %I:%M %p')}</td>
-            <td class="recon-dim">{r['sources']}</td>
-            <td><span class="status-pill">{r['status']}</span></td>
             <td class="recon-dim">{r['total_records']}</td>
             <td class="recon-dim" style="color:{MATCHED};">{r['auto_matched']}</td>
             <td class="recon-dim" style="color:{PURPLE};">{r['ai_resolved']}</td>
             <td class="recon-dim" style="color:{WARN};">{r['exceptions']}</td>
-            <td class="recon-dim">View →</td>
         </tr>
     """ for r in runs)
 
@@ -1170,8 +1248,8 @@ def _render_reconciliations(state, merchant_id):
             <div class="recon-title">Recent Reconciliations</div>
             <table class="recon-table">
                 <thead>
-                    <tr><th>Name</th><th>Date &amp; Time</th><th>Sources</th><th>Status</th>
-                        <th>Records</th><th>Auto Matched</th><th>AI Review</th><th>Exceptions</th><th>Action</th></tr>
+                    <tr><th>Batch</th><th>Date &amp; Time</th><th>Records</th>
+                        <th>Auto Matched</th><th>AI Review</th><th>Exceptions</th></tr>
                 </thead>
                 <tbody>{rows}</tbody>
             </table>
@@ -1184,18 +1262,15 @@ def _render_reconciliations(state, merchant_id):
 # not a mock of the future full AI Review UI.
 # ===========================================================================
 def _render_ai_review(state):
-    """Every case AI actually investigated -- recommendation, resolved-
-    via-AI, manual review, or exception after investigation. Not a
-    separate list from the persistent case store; this IS the case
-    store, filtered to anything AI has touched."""
+    """Cases where AI has completed an investigation (not merely queued)."""
     st.markdown(html("""
         <div class="welcome-sub" style="margin-bottom:14px;">
-            AI investigated these and has a recommendation. A human still decides --
-            an AI recommendation is not an automatic approval.
+            Cases AI investigated with a finding or recommendation. You still make the final decision.
         </div>
     """), unsafe_allow_html=True)
-    cases = [c for c in state_store.list_cases(state) if c.get("ai") is not None]
-    _render_review_queue(cases, key_prefix="airev")
+    cases = [c for c in state_store.list_cases(state)
+             if c.get("ai") and not c["ai"].get("error") and c["case_status"] != "ai_pending"]
+    _render_review_queue(cases, key_prefix="airev", compact=True)
 
 
 def _render_exceptions(state):
@@ -1206,7 +1281,164 @@ def _render_exceptions(state):
         <div class="welcome-sub" style="margin-bottom:14px;">Records that need a human decision.</div>
     """), unsafe_allow_html=True)
     cases = [c for c in state_store.list_cases(state) if c["case_status"] in ("manual_review", "exception")]
-    _render_review_queue(cases, key_prefix="exc")
+    _render_review_queue(cases, key_prefix="exc", compact=True)
+
+
+def _render_transactions(state):
+    """Underlying ledger of every order and settlement."""
+    st.markdown(html("""
+        <div class="welcome-sub" style="margin-bottom:16px;">
+            Every order, payment and settlement Ledgr has seen. Open a linked case to investigate.
+        </div>
+    """), unsafe_allow_html=True)
+
+    f1, f2, f3 = st.columns([2.2, 1, 1])
+    with f1:
+        search = st.text_input("Search", placeholder="Order ID, settlement ID, customer, UTR…",
+                               key="txn_search", label_visibility="collapsed")
+    with f2:
+        type_filter = st.selectbox("Type", ["All", "Order", "Settlement"], key="txn_type", label_visibility="collapsed")
+    with f3:
+        source_filter = st.selectbox("Source", ["All", "Shopify", "Razorpay", "Bank"], key="txn_source", label_visibility="collapsed")
+
+    rows = _build_transaction_ledger(state, search, type_filter, source_filter)
+    n_orders = sum(1 for r in rows if r["type"] == "Order")
+    n_settlements = sum(1 for r in rows if r["type"] == "Settlement")
+    n_linked = sum(1 for r in rows if r["case_id"])
+
+    st.markdown(html(f"""
+        <div class="txn-summary">
+            <span><b>{len(rows)}</b> shown</span>
+            <span>{n_orders} orders · {n_settlements} settlements · {n_linked} with cases</span>
+        </div>
+    """), unsafe_allow_html=True)
+
+    if not rows:
+        st.markdown('<div class="recon-empty">No transactions match your search.</div>', unsafe_allow_html=True)
+        return
+
+    st.markdown(html("""
+        <div class="txn-row txn-row-head">
+            <div>ID</div><div>Type</div><div>Source</div><div>Customer</div>
+            <div>Amount</div><div>Date</div><div>Status</div><div>Case</div>
+        </div>
+    """), unsafe_allow_html=True)
+
+    for r in rows[:80]:
+        c1, c2, c3, c4, c5, c6, c7, c8 = st.columns([1.1, 0.7, 1, 1.1, 0.9, 0.85, 1, 0.55])
+        with c1:
+            st.markdown(f'<div class="case-cell case-cell-name">{r["id"]}</div>', unsafe_allow_html=True)
+        with c2:
+            st.markdown(f'<div class="case-cell">{r["type"]}</div>', unsafe_allow_html=True)
+        with c3:
+            st.markdown(f'<div class="case-cell recon-dim">{r["source"]}</div>', unsafe_allow_html=True)
+        with c4:
+            st.markdown(f'<div class="case-cell">{r["customer"]}</div>', unsafe_allow_html=True)
+        with c5:
+            st.markdown(f'<div class="case-cell">{fmt(r["amount_paise"])}</div>', unsafe_allow_html=True)
+        with c6:
+            st.markdown(f'<div class="case-cell recon-dim">{r["date"] or "—"}</div>', unsafe_allow_html=True)
+        with c7:
+            st.markdown(f'<div class="case-cell">{r["status"]}</div>', unsafe_allow_html=True)
+        with c8:
+            if r["case_id"]:
+                if st.button("Open", key=f"txn_case_{r['id']}"):
+                    _open_case_ticket(r["case_id"], "Transactions")
+            else:
+                st.markdown('<div class="case-cell recon-dim">—</div>', unsafe_allow_html=True)
+
+    if len(rows) > 80:
+        st.markdown(f'<div class="recon-dim" style="margin-top:8px;">Showing first 80 of {len(rows)}</div>',
+                    unsafe_allow_html=True)
+
+
+def _render_data_sources():
+    """Honest integration status — no fake live badges."""
+    shop_status, _, shop_msg = _cached_shopify_status()
+    rzp_status, _, rzp_msg = _cached_razorpay_status()
+    setls = _load_local_settlements()
+    n_cod = int((setls["source"] == "BANK").sum())
+    n_rzp = int((setls["source"] == "RAZORPAY").sum())
+
+    st.markdown(html("""
+        <div class="welcome-sub" style="margin-bottom:16px;">
+            Connected feeds used during sync. Demo orders and settlements come from local CSVs;
+            Razorpay is checked live for connection status.
+        </div>
+    """), unsafe_allow_html=True)
+
+    cards = [
+        ("🛍️", "Orders", "Shopify", "Demo data", shop_msg, MATCHED if shop_status == shopify.STATUS_MOCK else WARN),
+        ("💳", "Online settlements", "Razorpay", "Demo + live check", rzp_msg,
+         MATCHED if rzp_status in (rzp.STATUS_OK, rzp.STATUS_EMPTY) else WARN),
+        ("🏦", "COD / Bank", "Bank remittance", "Demo data",
+         f"{n_cod} bank credits · {n_rzp} Razorpay rows in demo file", MATCHED),
+    ]
+    for icon, title, provider, badge, msg, color in cards:
+        st.markdown(html(f"""
+            <div class="source-card">
+                <div class="source-card-head">
+                    <span>{icon} <b>{title}</b></span>
+                    <span class="source-badge" style="color:{color};">{badge}</span>
+                </div>
+                <div class="source-provider">{provider}</div>
+                <div class="source-msg">{msg}</div>
+            </div>
+        """), unsafe_allow_html=True)
+
+
+def _render_reports(state):
+    """Simple export-friendly summary — no charts."""
+    runs = state["reconciliation_runs"]
+    cases = state_store.list_cases(state)
+    if not runs:
+        st.markdown('<div class="recon-empty">Run a reconciliation first to generate reports.</div>',
+                    unsafe_allow_html=True)
+        return
+
+    open_cases = [c for c in cases if c["case_status"] != "resolved"]
+    st.markdown(html(f"""
+        <div class="recon-card">
+            <div class="recon-title">Reconciliation Summary</div>
+            <div class="ticket-line"><span>Total runs</span><b>{len(runs)}</b></div>
+            <div class="ticket-line"><span>Auto matched (cumulative)</span><b>{sum(r['auto_matched'] for r in runs)}</b></div>
+            <div class="ticket-line"><span>Open cases</span><b>{len(open_cases)}</b></div>
+            <div class="ticket-line"><span>Resolved cases</span><b>{sum(1 for c in cases if c['case_status'] == 'resolved')}</b></div>
+            <div class="ticket-line"><span>Outstanding at risk</span><b>{fmt(sum(c['amount_at_risk'] for c in open_cases))}</b></div>
+        </div>
+    """), unsafe_allow_html=True)
+
+
+def _render_settings(merchant, merchant_id):
+    """Workspace info and demo controls."""
+    st.markdown(html(f"""
+        <div class="recon-card">
+            <div class="recon-title">Workspace</div>
+            <div class="ticket-line"><span>Company</span><b>{merchant['company_name']}</b></div>
+            <div class="ticket-line"><span>Email</span><b>{merchant.get('email', '')}</b></div>
+            <div class="ticket-line"><span>Industry</span><b>{merchant.get('industry', '—')}</b></div>
+            <div class="ticket-line"><span>Shopify store</span><b>{merchant.get('shopify_url', '—')}</b></div>
+        </div>
+    """), unsafe_allow_html=True)
+
+    st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+    st.markdown(html("""
+        <div class="recon-card">
+            <div class="recon-title">API configuration</div>
+            <div class="workspace-sub">Keys are read from your local .env file (never committed).</div>
+            <div class="ticket-line"><span>Razorpay</span><b>RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET</b></div>
+            <div class="ticket-line"><span>Gemini AI</span><b>GEMINI_API_KEY</b></div>
+        </div>
+    """), unsafe_allow_html=True)
+
+    st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+    if st.button("Reset demo reconciliation progress", key="settings_reset_demo", type="secondary"):
+        state_store.reset_state(merchant_id)
+        st.session_state.pop("last_reconcile_result", None)
+        st.session_state.sync_in_progress = False
+        st.session_state.current_page = "Dashboard"
+        st.success("Demo progress cleared. Your next login starts fresh.")
+        st.rerun()
 
 
 # ===========================================================================
@@ -1593,23 +1825,33 @@ def _render_case_ticket(state, merchant_id):
         """), unsafe_allow_html=True)
 
     st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-    ask_col, comment_col = st.columns([1.3, 1])
-    with ask_col:
+    with st.expander("✨ Ask AI about this case", expanded=False):
         _render_ask_ai(state, case_id=case["case_id"], key_prefix=f"ticketask_{case['case_id']}")
-    with comment_col:
-        with st.container(key="ticketcommentbox"):
-            # Collapsed by default -- comments only matter when manually
-            # resolving; auto-opens the moment that path is blocked for
-            # missing one, so the user lands right where they need to be.
-            with st.expander("💬 Comments", expanded=manual_review_error):
-                st.text_area("Comment", key=comment_key, placeholder="Add a comment...",
-                             label_visibility="collapsed", height=80)
-                if st.button("Save Comment", key="ticket_save_comment", use_container_width=True):
-                    state_store.set_comment(state, case["case_id"], st.session_state[comment_key])
-                    state_store.save_state(merchant_id, state)
-                    st.rerun()
-                st.markdown('<div class="ask-ai-hint">Required before Keep for Manual Review; '
-                            'auto-fills with the AI recommendation on Accept.</div>', unsafe_allow_html=True)
+
+    with st.container(key="ticketcommentbox"):
+        with st.expander("💬 Comments", expanded=manual_review_error):
+            st.text_area("Comment", key=comment_key, placeholder="Add a comment...",
+                         label_visibility="collapsed", height=80)
+            if st.button("Save Comment", key="ticket_save_comment", use_container_width=False):
+                state_store.set_comment(state, case["case_id"], st.session_state[comment_key])
+                state_store.save_state(merchant_id, state)
+                st.rerun()
+            st.markdown('<div class="ask-ai-hint">Required before Keep for Manual Review; '
+                        'auto-fills with the AI recommendation on Accept.</div>', unsafe_allow_html=True)
+
+    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+    history = case.get("history") or []
+    hist_rows = "".join(
+        f'<div class="timeline-row"><span>{datetime.fromisoformat(h["at"]).strftime("%b %d, %Y %I:%M %p")}</span>'
+        f'<span>{h["event"]}</span></div>' for h in reversed(history))
+    st.markdown(html(f"""
+        <div class="recon-card">
+            <div class="recon-title">Case Timeline</div>
+            <div class="workspace-sub">Audit trail for this case — newest first.</div>
+            <div style="height:8px;"></div>
+            {hist_rows or '<div class="evidence-line">No events yet.</div>'}
+        </div>
+    """), unsafe_allow_html=True)
 
 
 # ===========================================================================
@@ -1862,10 +2104,14 @@ def _shell_css():
            a real button per row. ---- */
         .case-cell {{font-size: 12.5px; color: {INK}; padding: 8px 0; line-height: 1.5;}}
         .case-cell-name {{font-weight: 500;}}
+        .case-cell-summary {{font-size: 12px; line-height: 1.45; max-height: 2.9em; overflow: hidden;}}
         .queue-row-head {{
             display: grid; grid-template-columns: 0.35fr 1.3fr 1.15fr 1.2fr 1.7fr 1.7fr 1fr 1.05fr 0.6fr;
             gap: 8px; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
             color: {DIM}; padding: 0 0 8px; border-bottom: 1px solid {LINE}; margin-bottom: 4px;
+        }}
+        .queue-row-head.queue-row-compact {{
+            grid-template-columns: 1.2fr 1fr 0.9fr 2fr 0.9fr 1fr 0.55fr;
         }}
         [class^="st-key-cases_"] [data-testid="stElementContainer"],
         [class^="st-key-airev_"] [data-testid="stElementContainer"],
@@ -1903,8 +2149,11 @@ def _shell_css():
         .funnel-pct {{font-size: 11px; color: {DIM}; width: 34px; text-align: right; flex: none;}}
 
         /* ---- awaiting-settlement widget ---- */
+        .pending-summary {{
+            font-size: 13px; font-weight: 600; color: {INK}; margin: 6px 0 2px;
+        }}
         .pending-row {{
-            display: grid; grid-template-columns: 1.4fr 1fr 0.8fr 1.1fr; gap: 8px;
+            display: grid; grid-template-columns: 1.5fr 1fr 0.8fr; gap: 8px;
             font-size: 12px; color: {INK}; padding: 7px 0; border-bottom: 1px solid {LINE};
         }}
         .pending-row:last-child {{border-bottom: none;}}
@@ -2023,6 +2272,37 @@ def _shell_css():
             background: #FEF3E2 !important; color: #B45309 !important; border: 1px solid #FDE3B0 !important;
             font-weight: 600 !important; font-size: 12.5px !important;
         }}
+
+        /* ---- transactions ledger ---- */
+        .txn-summary {{
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12.5px; color: {BODY}; margin-bottom: 10px; padding: 8px 12px;
+            background: {BG}; border: 1px solid {LINE}; border-radius: 8px;
+        }}
+        .txn-row {{
+            display: grid; grid-template-columns: 1.1fr 0.7fr 1fr 1.1fr 0.9fr 0.85fr 1fr 0.55fr;
+            gap: 6px; font-size: 10px; font-weight: 600; letter-spacing: .04em;
+            text-transform: uppercase; color: {DIM}; padding: 0 0 6px;
+            border-bottom: 1px solid {LINE}; margin-bottom: 2px;
+        }}
+
+        /* ---- data sources ---- */
+        .source-card {{
+            background: {BG}; border: 1px solid {LINE}; border-radius: 10px;
+            padding: 14px 16px; margin-bottom: 10px;
+        }}
+        .source-card-head {{
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px; color: {INK}; margin-bottom: 4px;
+        }}
+        .source-badge {{font-size: 11px; font-weight: 600;}}
+        .source-provider {{font-size: 12px; color: {DIM}; margin-bottom: 4px;}}
+        .source-msg {{font-size: 12px; color: {BODY}; line-height: 1.5;}}
+
+        @media (max-width: 1200px) {{
+            .kpi-grid {{grid-template-columns: repeat(2, 1fr);}}
+            .block-container {{padding: 20px 18px !important;}}
+        }}
         </style>
     """)
 
@@ -2036,6 +2316,7 @@ def show_main_dashboard():
     merchant = get_current_merchant(st.session_state)
     merchant_id = merchant["merchant_id"]
     state = state_store.load_state(merchant_id)
+    state_store.save_state(merchant_id, state)  # persist any normalize_state repairs
 
     # Auto-fire the "new data" notification the moment a scheduled batch's
     # timer passes -- checked here, on whatever natural rerun happens to
@@ -2066,6 +2347,14 @@ def show_main_dashboard():
         _render_ai_review(state)
     elif page == "Exceptions":
         _render_exceptions(state)
+    elif page == "Transactions":
+        _render_transactions(state)
+    elif page == "Reports":
+        _render_reports(state)
+    elif page == "Data Sources":
+        _render_data_sources()
+    elif page == "Settings":
+        _render_settings(merchant, merchant_id)
     elif page == "Case Ticket":
         _render_case_ticket(state, merchant_id)
     else:
