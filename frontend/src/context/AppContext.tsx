@@ -56,6 +56,9 @@ type AppContextValue = {
 
 const AppContext = createContext<AppContextValue | null>(null)
 
+/** Module-level constant so an empty run list keeps a stable identity. */
+const EMPTY_RUNS: ReconciliationRun[] = []
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [merchant, setMerchant] = useState<MerchantSession | null>(null)
   const [merchantState, setMerchantState] = useState<MerchantState | null>(null)
@@ -170,7 +173,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Red dot + batch notification stay until the batch is actually reconciled.
   const hasNewBatch = merchantState ? hasPendingBatch(merchantState) : false
 
-  const allRuns = merchantState?.reconciliation_runs ?? []
+  // Stable identity when there are no runs: `?? []` would allocate a fresh
+  // array on every render, which defeats the useMemo below and makes the whole
+  // context value change identity each render (re-rendering every consumer).
+  const allRuns = merchantState?.reconciliation_runs ?? EMPTY_RUNS
   const batchAvailable = merchantState?.notification_created ?? false
   const currentBatch = merchantState?.current_batch ?? 1
   const nextBatchAvailableAt = merchantState?.next_batch_available_at ?? null

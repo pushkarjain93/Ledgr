@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
+import { AskAiPanel } from '../AskAiPanel'
 import { shiftISODate, todayISO } from '../../lib/merchantState'
 import { BellBatchPopover, BellEmptyPopover } from './NewBatchOverlay'
 
@@ -289,8 +290,8 @@ export function PageHeader({ title, variant = 'default', children }: PageHeaderP
 
       {aiOpen && (
         <div className="px-6 pb-3 lg:px-8">
-          <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-[13px] text-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-400">
-            AI assistant opens from case tickets and the review queue. Full chat coming soon.
+          <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-600 dark:bg-zinc-900">
+            <AskAiPanel compact />
           </div>
         </div>
       )}

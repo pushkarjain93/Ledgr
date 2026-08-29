@@ -151,11 +151,68 @@ export type TransactionRecord = {
   case_id: string | null
 }
 
+export type CaseEvidence = {
+  order: {
+    order_id: string
+    order_date: string
+    customer_name: string
+    customer_phone: string
+    customer_email: string
+    courier: string
+    payment_mode: string
+    gateway_ref_id: string
+    bank_utr: string
+    amount: number
+    source: string
+  } | null
+  settlement: {
+    settlement_id: string
+    settled_on: string
+    amount_received: number
+    gateway_ref_id: string
+    bank_utr: string
+    source: string
+    narration: string
+  } | null
+  /** The real Tier-2 tolerance band the engine applied to THIS order. */
+  fee_structure: {
+    payment_mode: string
+    tolerance_pct: number
+    tolerance_flat: number
+    order_amount: number
+    max_explainable_shortfall: number
+    /** False when nothing was received yet — a fee comparison is meaningless
+     *  until money actually arrives, so shortfall/within_band are null. */
+    comparable: boolean
+    actual_shortfall: number | null
+    within_band: boolean | null
+  } | null
+  history: { at: string; event: string }[]
+}
+
+export type MessageOption = {
+  recipient_type: 'gateway' | 'courier' | 'customer'
+  label: string
+  /** Empty when we genuinely hold no address — show the note, never invent one. */
+  address: string
+  note: string
+  why: string
+}
+
+export type MessageDraft = {
+  subject: string
+  body: string
+  /** The concrete case facts the draft cites — lets a human audit it fast. */
+  facts_used: string[]
+  recipient_type: string
+  provider: string | null
+}
+
 export type AskResult = {
   answer: string
   /** 'python' = answered from persisted data at zero API cost;
    *  'gemini' = a real model call was made. Surface this honestly. */
-  source: 'python' | 'gemini'
+  source: string
 }
 
 // ---------------------------------------------------------------------------
@@ -201,6 +258,22 @@ export const api = {
 
   getCase: (caseId: string) => request<Case>(`/api/cases/${caseId}`),
 
+  /** Real order / settlement / fee-band records behind a case. Any section
+   *  with no underlying record comes back null — hide it, don't fake it. */
+  getCaseEvidence: (caseId: string) =>
+    request<CaseEvidence>(`/api/cases/${caseId}/evidence`),
+
+  /** Who it makes sense to contact about this case, from its own facts. */
+  getMessageOptions: (caseId: string) =>
+    request<{ options: MessageOption[] }>(`/api/cases/${caseId}/message-options`),
+
+  /** Drafts only — Ledgr never sends. The human edits and sends it themselves. */
+  draftMessage: (caseId: string, recipientType: string) =>
+    request<MessageDraft>(`/api/cases/${caseId}/draft-message`, {
+      method: 'POST',
+      body: JSON.stringify({ recipient_type: recipientType }),
+    }),
+
   /** `comment` is REQUIRED by the server for manual_review and a 400 comes
    *  back without one — that rule is enforced backend-side on purpose, since
    *  the reviewer's justification is the audit trail. */
@@ -236,9 +309,12 @@ export const api = {
   investigateFurther: (caseId: string) =>
     request<Case>(`/api/cases/${caseId}/investigate-further`, { method: 'POST' }),
 
-  askAi: (question: string, caseId?: string) =>
+  /** `history` lets follow-up questions resolve references ("his name?",
+   *  "that order"). Facts still come only from the reconciliation data. */
+  askAi: (question: string, caseId?: string,
+          history: { question: string; answer: string }[] = []) =>
     request<AskResult>('/api/ask-ai', {
       method: 'POST',
-      body: JSON.stringify({ question, case_id: caseId ?? null }),
+      body: JSON.stringify({ question, case_id: caseId ?? null, history }),
     }),
 }

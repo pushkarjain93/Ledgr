@@ -46,6 +46,7 @@ from config import (
     FEE_TOLERANCE_ABS,
     FEE_TOLERANCE_PCT,
     RUN_DATE,
+    fee_band,
     to_paise,
 )
 from engine import reconcile
@@ -113,9 +114,21 @@ class ReopenBody(BaseModel):
     reason: str
 
 
+class DraftBody(BaseModel):
+    recipient_type: str  # "gateway" | "courier" | "customer"
+
+
+class AskTurn(BaseModel):
+    question: str
+    answer: str
+
+
 class AskBody(BaseModel):
     question: str
     case_id: str | None = None
+    # Recent turns, so follow-ups ("his name?", "what about that one?") have
+    # an antecedent. Capped server-side -- see ask_ai.
+    history: list[AskTurn] = []
 
 
 # ---------------------------------------------------------------------------
@@ -265,6 +278,10 @@ def settings(merchant: dict = Depends(current_merchant)):
         "run_date": RUN_DATE.isoformat(),
         "ai_model": ai_client.MODEL,
         "ai_batch_size": ai_client.DEFAULT_BATCH_SIZE,
+        # Providers with a key configured, in failover order. Shown so the
+        # UI can be honest about how much AI capacity actually exists rather
+        # than implying a single hardcoded vendor.
+        "ai_providers": ai_client.available_providers(),
         "auto_resolve_confidence_floor": case_engine.AUTO_RESOLVE_CONFIDENCE_FLOOR,
         "total_batches": state_store.TOTAL_BATCHES,
     }
@@ -442,6 +459,191 @@ def get_case(case_id: str, merchant: dict = Depends(current_merchant)):
     return case
 
 
+@app.get("/api/cases/{case_id}/evidence")
+def case_evidence(case_id: str, merchant: dict = Depends(current_merchant)):
+    """
+    The real underlying records behind a case -- what the "Supporting
+    Documents" panel shows.
+
+    Read straight from the same orders.csv / settlements.csv the engine
+    itself reconciled, so this can never drift from what was actually
+    matched. Any section with no real record behind it comes back as null
+    rather than an empty shell, so the UI can hide it instead of showing a
+    document that doesn't exist (an orphan settlement genuinely has no
+    order; a still-unmatched order genuinely has no settlement).
+
+    `fee_structure` is the actual Tier-2 tolerance band config.fee_band()
+    applies to THIS order -- the same rule the engine used to decide whether
+    the shortfall was an explainable fee. Not a static reference table.
+    """
+    state = _load(merchant)
+    case = state_store.get_case(state, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    order = None
+    if case.get("order_id"):
+        order = next((o for o in shopify.fetch_orders()
+                      if o["order_id"] == case["order_id"]), None)
+
+    settlement = None
+    if case.get("settlement_id"):
+        setls = _local_settlements()
+        match = setls[setls["settlement_id"] == case["settlement_id"]]
+        if not match.empty:
+            settlement = match.iloc[0].to_dict()
+
+    order_block = None
+    fee_block = None
+    if order:
+        amount_paise = to_paise(order.get("order_amount") or 0)
+        mode = order.get("payment_mode") or ""
+        order_block = {
+            "order_id": order["order_id"],
+            "order_date": order.get("order_date", ""),
+            "customer_name": order.get("customer_name", ""),
+            "customer_phone": order.get("customer_phone", ""),
+            "customer_email": order.get("customer_email", ""),
+            "courier": order.get("courier", ""),
+            "payment_mode": mode,
+            "gateway_ref_id": order.get("gateway_ref_id", ""),
+            "bank_utr": order.get("bank_utr", ""),
+            "amount": amount_paise,
+            "source": "Shopify (demo data)",
+        }
+        band = fee_band(amount_paise, mode)
+        is_cod = mode == "COD"
+        # A fee-band comparison only means something once money has actually
+        # arrived. For an order with NO settlement at all, delta is 0 simply
+        # because there was nothing to compare -- reporting that as a 0.00
+        # shortfall "within band" would imply the payment is fine when the
+        # entire amount is missing. Mark it not-comparable instead.
+        received = int(case.get("received") or 0)
+        comparable = received > 0
+        shortfall = max(0, int(case.get("expected") or 0) - received) if comparable else None
+        fee_block = {
+            "payment_mode": mode,
+            "tolerance_pct": COD_TOLERANCE_PCT if is_cod else FEE_TOLERANCE_PCT,
+            "tolerance_flat": COD_TOLERANCE_ABS if is_cod else FEE_TOLERANCE_ABS,
+            "order_amount": amount_paise,
+            "max_explainable_shortfall": band,
+            "comparable": comparable,
+            "actual_shortfall": shortfall,
+            "within_band": (shortfall <= band) if comparable else None,
+        }
+
+    settlement_block = None
+    if settlement:
+        settlement_block = {
+            "settlement_id": settlement["settlement_id"],
+            "settled_on": settlement.get("settled_on", ""),
+            "amount_received": to_paise(settlement.get("amount_received") or 0),
+            "gateway_ref_id": settlement.get("gateway_ref_id", ""),
+            "bank_utr": settlement.get("bank_utr", ""),
+            "source": settlement.get("source", ""),
+            "narration": settlement.get("narration", ""),
+        }
+
+    return {
+        "order": order_block,
+        "settlement": settlement_block,
+        "fee_structure": fee_block,
+        "history": case.get("history", []),
+    }
+
+
+@app.get("/api/cases/{case_id}/message-options")
+def message_options(case_id: str, merchant: dict = Depends(current_merchant)):
+    """
+    Who it makes sense to contact about this case, and whether we actually
+    hold an address for them.
+
+    Recipients are derived from the case's own facts, not offered blindly:
+    there is no point drafting a courier chase for an online card payment,
+    or a customer email for an orphan settlement with no customer attached.
+
+    `address` is empty when we genuinely don't have one -- courier and
+    gateway support addresses are not in this dataset. The UI must show
+    that plainly; inventing "support@razorpay.com" would be fabricating
+    contact details.
+    """
+    state = _load(merchant)
+    case = state_store.get_case(state, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    order = None
+    if case.get("order_id"):
+        order = next((o for o in shopify.fetch_orders()
+                      if o["order_id"] == case["order_id"]), None)
+    mode = (order or {}).get("payment_mode", "")
+    courier = (order or {}).get("courier", "")
+    options = []
+
+    if mode == "COD" and courier:
+        options.append({
+            "recipient_type": "courier", "label": f"Courier ({courier})",
+            "address": "",
+            "note": f"No email on file for {courier} — copy the draft into your own thread.",
+            "why": "COD cash is collected by the courier and remitted separately.",
+        })
+    if mode and mode != "COD":
+        options.append({
+            "recipient_type": "gateway", "label": "Payment gateway (Razorpay)",
+            "address": "",
+            "note": "No support address on file — copy the draft into your gateway ticket.",
+            "why": "The payment was taken online, so the gateway holds the transaction record.",
+        })
+    if order and order.get("customer_email"):
+        options.append({
+            "recipient_type": "customer",
+            "label": f"Customer ({order.get('customer_name') or 'unknown'})",
+            "address": order["customer_email"],
+            "note": "",
+            "why": "The customer can confirm what they were charged or paid.",
+        })
+
+    return {"options": options}
+
+
+@app.post("/api/cases/{case_id}/draft-message")
+def draft_message(case_id: str, body: DraftBody,
+                  merchant: dict = Depends(current_merchant)):
+    """
+    Draft an outbound message about this case.
+
+    DRAFTS ONLY. This endpoint never sends anything, and there is no send
+    endpoint -- the drafted text goes back to the UI for a human to read,
+    edit, and send from their own mail client. That boundary is deliberate:
+    a reconciliation tool must never message a customer or a gateway
+    autonomously about money.
+    """
+    if body.recipient_type not in ("gateway", "courier", "customer"):
+        raise HTTPException(status_code=400, detail="Unknown recipient type")
+
+    state = _load(merchant)
+    case = state_store.get_case(state, case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    context = case_engine.build_ask_context(state, case_id=case_id)
+    try:
+        draft = ai_client.draft_message(
+            context, body.recipient_type, merchant.get("company_name", ""))
+    except ai_client.AIRateLimitError as exc:
+        raise HTTPException(status_code=429, detail=str(exc))
+    except (ai_client.AIAuthError, ai_client.AIAPIError) as exc:
+        raise HTTPException(status_code=503, detail=f"AI is temporarily unavailable: {exc}")
+
+    return {
+        "subject": draft.get("subject", ""),
+        "body": draft.get("body", ""),
+        "facts_used": draft.get("facts_used", []),
+        "recipient_type": body.recipient_type,
+        "provider": ai_client.last_provider(),
+    }
+
+
 @app.post("/api/cases/{case_id}/resolve")
 def resolve_case(case_id: str, body: ResolveBody,
                  merchant: dict = Depends(current_merchant)):
@@ -584,16 +786,26 @@ def ask_ai(body: AskBody, merchant: dict = Depends(current_merchant)):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     state = _load(merchant)
-    direct = case_engine.try_direct_answer(question, state)
-    if direct is not None:
-        return {"answer": direct, "source": "python"}
-
     context = case_engine.build_ask_context(state, case_id=body.case_id)
     try:
-        return {"answer": ai_client.ask(question, context), "source": "gemini"}
-    except ai_client.AIRateLimitError as exc:
-        raise HTTPException(status_code=429, detail=str(exc))
-    except (ai_client.AIAuthError, ai_client.AIAPIError) as exc:
+        # Only the last few turns: enough for pronouns to resolve, without
+        # growing the prompt unboundedly as a session goes on.
+        history = [h.model_dump() for h in body.history][-6:]
+        answer = ai_client.ask(question, context, history=history)
+        return {"answer": answer, "source": ai_client.last_provider() or "ai"}
+    except (ai_client.AIRateLimitError, ai_client.AIAuthError, ai_client.AIAPIError) as exc:
+        # Every provider is down or exhausted. The deterministic answerer can
+        # still handle a few common questions from persisted data -- better a
+        # correct partial answer than nothing. It is ONLY a fallback: it does
+        # keyword matching, so on the primary path it can confidently answer
+        # the wrong question (e.g. reading "how much manual work did we
+        # eliminate" as an outstanding-total query), which is worse than
+        # spending an API call.
+        fallback = case_engine.try_direct_answer(question, state)
+        if fallback is not None:
+            return {"answer": fallback, "source": "python"}
+        if isinstance(exc, ai_client.AIRateLimitError):
+            raise HTTPException(status_code=429, detail=str(exc))
         raise HTTPException(status_code=503, detail=f"AI is temporarily unavailable: {exc}")
 
 

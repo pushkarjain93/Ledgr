@@ -32,6 +32,7 @@ import re
 from datetime import date, datetime
 
 import ai_client
+import shopify_client
 import state_store
 from config import fmt, to_paise
 
@@ -281,7 +282,10 @@ def _mark_ai_pending(case, error_message):
     case["ai"] = {
         "classification": case["case_type"], "recommendation": None, "confidence": None,
         "reason": None, "next_step": None, "evidence": [], "missing_evidence": [],
-        "candidate_rankings": [], "action": None, "investigated_at": None, "error": error_message,
+        "candidate_rankings": [], "action": None, "investigated_at": None,
+        # No provider produced a verdict -- every configured one was
+        # exhausted or failed. Explicitly None, never a stale earlier value.
+        "provider": None, "error": error_message,
     }
     case["_event"] = "ai investigation pending (unavailable)"
 
@@ -307,6 +311,11 @@ def apply_ai_result(case, result):
                                  "reason": result.get("reasoning", "")}] if candidate_id else []),
         "action": action,
         "investigated_at": datetime.now().isoformat(),
+        # Which provider actually produced this verdict. Models calibrate
+        # confidence differently, so an 80 from one is not necessarily an 80
+        # from another -- recording it keeps the score auditable rather than
+        # leaving "who judged this?" ambiguous.
+        "provider": ai_client.last_provider(),
         "error": None,
     }
     case["case_status"] = _status_from_ai_action(action)
@@ -539,6 +548,16 @@ def try_direct_answer(question: str, state) -> str | None:
     return None
 
 
+def _customer_contact(order: dict | None) -> dict:
+    """Contact fields for Ask AI context. Empty dict when the order isn't
+    found (e.g. an orphan settlement has no order side) -- never placeholder
+    values that could read as real contact details."""
+    if not order:
+        return {}
+    return {k: order.get(k, "") for k in
+            ("customer_name", "customer_phone", "customer_email", "courier")}
+
+
 def build_ask_context(state, case_id=None):
     """
     Compact structured context for the rare question that DOES need
@@ -548,10 +567,39 @@ def build_ask_context(state, case_id=None):
     """
     if case_id:
         case = state_store.get_case(state, case_id)
-        return {"case": case} if case else {"case": None}
+        if not case:
+            return {"case": None}
+        # Scoped to ONE case, so the customer's real contact details are in
+        # scope -- chasing a missing payment is exactly what an operator needs
+        # them for. Read fresh from the order feed rather than duplicated onto
+        # the case, so there is one source of truth.
+        contact = {}
+        if case.get("order_id"):
+            order = next((o for o in shopify_client.fetch_orders()
+                          if o["order_id"] == case["order_id"]), None)
+            if order:
+                contact = {
+                    "customer_name": order.get("customer_name", ""),
+                    "customer_phone": order.get("customer_phone", ""),
+                    "customer_email": order.get("customer_email", ""),
+                    "courier": order.get("courier", ""),
+                    "payment_mode": order.get("payment_mode", ""),
+                }
+        # Money must reach the model already formatted. The stored case keeps
+        # amounts as integer paise (correct for arithmetic), but a model shown
+        # `expected: 999950` will quote "999950" verbatim -- and a message sent
+        # to a payment gateway saying that instead of "Rs 9,999.50" is a real,
+        # embarrassing error. Formatting here keeps paise out of anything the
+        # model can echo.
+        safe_case = dict(case)
+        for field in ("expected", "received", "delta", "amount_at_risk"):
+            if isinstance(safe_case.get(field), int):
+                safe_case[field] = fmt(safe_case[field])
+        return {"case": safe_case, "customer": contact or None}
 
     runs = state["reconciliation_runs"]
     cases = state_store.list_cases(state)
+    contacts_by_order = {o["order_id"]: o for o in shopify_client.fetch_orders()}
     return {
         "cumulative_totals": {
             "total_reconciliations": len(runs),
@@ -567,10 +615,32 @@ def build_ask_context(state, case_id=None):
              "ai_resolved": runs[0]["ai_resolved"], "exceptions": runs[0]["exceptions"]}
             if runs else None
         ),
+        # Sorted by amount_at_risk so the genuinely most exposed cases are
+        # first. `delta` alone is a misleading ranking signal: an order that
+        # was never settled has delta 0 (there was nothing to compare against)
+        # while its FULL value is at risk, so ranking on delta buries the worst
+        # cases beneath small overpayments. amount_at_risk is the engine's own
+        # exposure figure and is what everything else in Ledgr ranks by
+        # (see engine.py's final sort).
         "open_cases": [
             {"case_id": c["case_id"], "record_id": c["record_id"], "case_type": c["case_type"],
-             "case_status": c["case_status"], "expected": fmt(c["expected"]), "received": fmt(c["received"]),
-             "delta": fmt(c["delta"]), "reason": c["reason_label"]}
-            for c in cases if c["case_status"] != "resolved"
+             "case_status": c["case_status"], "expected": fmt(c["expected"]),
+             "received": fmt(c["received"]), "delta": fmt(c["delta"]),
+             "amount_at_risk": fmt(c["amount_at_risk"]), "priority": c.get("priority") or "",
+             "order_date": c.get("order_date", ""), "reason": c["reason_label"],
+             # Customer contact for OPEN cases only. An operator chasing an
+             # unpaid order legitimately needs it, and open cases are the only
+             # ones being chased -- resolved cases are already excluded above,
+             # so closed customers' details are never sent.
+             #
+             # PRODUCTION NOTE: this ships customer PII to a third-party model
+             # on every question. Fine for this demo's synthetic customers; a
+             # real deployment should either use a provider with a
+             # zero-retention agreement, or fetch contact only for the specific
+             # case being discussed (the case_id branch above already does
+             # exactly that).
+             **_customer_contact(contacts_by_order.get(c.get("order_id") or ""))}
+            for c in sorted((c for c in cases if c["case_status"] != "resolved"),
+                            key=lambda c: -c["amount_at_risk"])
         ],
     }

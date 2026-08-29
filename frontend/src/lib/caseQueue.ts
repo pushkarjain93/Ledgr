@@ -29,7 +29,21 @@ export function filterCases(cases: Case[], filter: string | null): Case[] {
     }
   }
 
-  return list.sort((a, b) => b.amount_at_risk - a.amount_at_risk)
+  // Highest AI confidence first: this is the AI REVIEW queue, so the cases
+  // the model is most certain about come first and can be cleared quickly.
+  // Cases with no score yet (ai_pending, or never investigated) sink to the
+  // bottom rather than sorting as 0 — "not scored" is not the same claim as
+  // "scored zero". Ties fall back to amount_at_risk, so among equally
+  // confident cases the most financially exposed is still surfaced first.
+  return list.sort((a, b) => {
+    const ac = a.ai?.confidence
+    const bc = b.ai?.confidence
+    const aScored = ac !== null && ac !== undefined
+    const bScored = bc !== null && bc !== undefined
+    if (aScored !== bScored) return aScored ? -1 : 1
+    if (aScored && bScored && ac !== bc) return bc - ac
+    return b.amount_at_risk - a.amount_at_risk
+  })
 }
 
 export function caseQueuePath(filter: string | null): string {

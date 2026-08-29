@@ -18,6 +18,12 @@ The project should demonstrate:
 
 ## 2. Existing Project
 
+> **⚠ SUPERSEDED — see Section 23.** This file list describes the Streamlit era.
+> `app.py`, `app_new.py`, `login.py` and `theme.py` no longer exist (deleted in
+> commit `e587a0b`). The UI is now React in `frontend/`, served by `api.py`
+> (FastAPI). Everything below about `engine.py`, `case_engine.py`,
+> `state_store.py`, `config.py` and the data files is still accurate.
+
 Current important files include:
 
 - `app_new.py` — **the live application** (sidebar + header shell, page-routed: Dashboard, Reconciliations, AI Review, Exceptions, etc.). `app.py` is an earlier prototype, kept for reference only — not the active entrypoint.
@@ -822,3 +828,71 @@ The first rebuild (matching an initial mockup) packed 8 separate cards, tabs, an
 - Proposing the batching/caching architecture in plain language *before* any code was written (the user's own explicit "discuss first, don't build yet" instruction) avoided building the wrong thing under real quota pressure — the eventual implementation matched the discussed plan almost exactly.
 - Every UI redesign in this phase was driven by the user's own screenshots and mockups, confirmed piece-by-piece, rather than unilateral design choices — this kept iteration cost low (no large rebuilds from a wrong guess) and caught real usability problems (the first ticket redesign being "too congested") early via direct feedback rather than after the fact.
 - Treating a real rate-limit hit as a feature to verify, not just an error to suppress, produced actual confidence that the honest-degradation path works — this is a stronger demo claim ("we tested this failing for real and it never lied") than "we handle errors gracefully" asserted without evidence.
+---
+
+## 23. Session Log: Streamlit Retired, React + FastAPI, Multi-Provider AI (Aug 29-30, 2026)
+
+### The architecture changed shape
+
+The Streamlit UI is gone. `app.py` (1848 lines) and `app_new.py` (2504 lines) were deleted in commit `e587a0b` and replaced by a React 19 + TypeScript + Vite SPA in `frontend/`, backed by a new FastAPI layer, `api.py`.
+
+**Nothing was lost from the Python core.** `engine.py`, `case_engine.py`, `state_store.py`, `razorpay_client.py`, `shopify_client.py`, `gen_data.py` and `config.py` are untouched and still own every decision. Sections 1-22 above remain accurate about the reconciliation engine, the AI case layer and the data model — treat only their UI descriptions as historical.
+
+The rewrite was the user's call, made with a clear-eyed view of the tradeoff: Streamlit had repeatedly fought us on layout, modals, disabled-button styling and full-page reruns, and ~6 days remained. The Python core surviving intact is what made it affordable.
+
+### `api.py` — 22 endpoints, and a deliberate boundary
+
+The API orchestrates and serialises; it never decides. No matching rules, no confidence scoring, no financial arithmetic live in it. Money crosses as integer paise exactly as the engine produced it, because formatting in two places is how a reconciliation tool quietly loses money.
+
+Auth is an in-memory bearer-token map — an honest match for `auth.py`'s hardcoded demo accounts. Every API restart logs everyone out; that is expected, not a bug.
+
+Three endpoints worth knowing about:
+
+- `GET /api/transactions` returns EVERY record including clean auto-matches, by re-running the engine over already-processed batches rather than keeping a second stored copy that could drift from what the engine actually decided.
+- `GET /api/cases/{id}/evidence` returns the real order, settlement and fee-tolerance records behind a case, each `null` when no such record genuinely exists (an orphan settlement has no order; an unmatched order has no settlement).
+- `POST /api/cases/{id}/draft-message` writes an outbound message. There is deliberately **no send endpoint**.
+
+### Multi-provider AI, and why it is not quota farming
+
+The user raised collecting several API keys to escape Gemini's 20/day free tier. The first answer was a caution: rotating keys from accounts created to dodge a per-account limit is quota circumvention. That objection was withdrawn once it emerged the keys were for **different providers** — OpenRouter, Groq — each a separate account with its own independent limits. Failing over between distinct vendors is ordinary production resilience, and it is a genuinely stronger answer for a judge than "we rotate free keys".
+
+Chain: **Gemini → OpenRouter → Groq**, configured in `PROVIDER_ORDER`. Missing keys are skipped silently. Crucially, **if every provider fails the case still lands on `ai_pending`** — failover adds capacity, it never removes the honesty path that says "AI genuinely could not look at this".
+
+Each verdict records which `provider` produced it, because different models calibrate confidence differently and an unattributed 80% is not auditable.
+
+Three real integration lessons, none of which were guessable:
+
+- **OpenRouter reserves your full `max_tokens` against your credit balance before running anything.** Unset, it reserves the model maximum (65k+) and a free account is refused with a 402 having spent nothing.
+- **Groq's free tier limits tokens-per-minute (8000), not requests**, counting prompt + `max_tokens` together, and reports the breach as a 413.
+- **Model availability must be queried, not assumed.** The first Groq model chosen did not exist on the account.
+
+### Ask AI: the direct-answer path was removed from the primary route
+
+Ask AI previously tried a Python keyword matcher first and only called a model when that returned nothing. A screenshot from the user showed why that was wrong: asked *"how much manual work did we eliminate in this session"*, the matcher recognised a keyword and confidently returned the **outstanding total** — a fluent, wrong answer. With three providers there is capacity to route everything to a model, so the order was reversed. `try_direct_answer()` survives only as a last-resort fallback when every provider is exhausted, where a correct partial answer still beats an error.
+
+Two further fixes came from the user's own domain knowledge:
+
+- Asked which case to prioritise, the model picked a **Rs 999 overpayment** over a **Rs 9,999 unrecovered order**. It was reasoning correctly over the wrong field: the context passed `delta`, and an order that never settled has a delta of zero because nothing arrived to compare against. The context now carries `amount_at_risk`, and the prompt states the economics — money not received outranks money over-received, because an overpayment is already in the account while unrecovered money can become permanently unrecoverable.
+- Asked a customer's name, the model said the data contained no personal information. It was being honest: `build_ask_context` never sent `customer_name`. Contact details for open cases are now included, and `ask()` takes the last six conversation turns so follow-ups ("his name?") have an antecedent — explicitly labelled in the prompt as reference-resolution only, never a source of facts.
+
+### Draft a message — Case 7, finally built
+
+The 7-case taxonomy from Section 18 listed "human-facing text generation" as the one AI task with zero financial-decision risk. It now exists: AI drafts a message about a case, the user edits it, and their own mail client sends it.
+
+Recipients are derived from the case's real facts — a COD case offers the courier, an online payment offers the gateway, an orphan settlement with no customer offers nothing and the panel hides itself. Where no address is held (courier and gateway support addresses are not in this dataset) it says so rather than inventing one. The prompt forbids promising refunds, accepting fault, or setting deadlines, and the draft lists the exact case facts it cited so a human can audit it in seconds.
+
+### Current status — roughly 70% complete (Aug 30)
+
+**Done:** the deterministic engine (100% validated), the case layer, batched AI with evidence-hash caching, three-provider failover, 22 API endpoints, and all seven React screens — login, dashboard, reconciliations, cases, case detail, transactions, settings — plus Ask AI, message drafting, supporting documents, and resolve / reopen / bookmark.
+
+**Left, in rough priority:**
+
+1. Four API methods have no UI calling them: `investigateFurther` (the controlled agentic step — arguably the most impressive AI feature in the project and currently unreachable from the interface), `retryAi`, `setComment`, `getSettings`. Roughly 2-3 hours.
+2. `run_date` is hardcoded in `caseUtils.ts` rather than read from `/api/state`. It matches today, so nothing is visibly wrong, but aging would silently diverge from the engine if the backend date ever changed.
+3. Page `<title>` never updates per route; bell dismissal is local-only and returns on refresh.
+4. **No clean end-to-end rehearsal has ever been performed.** Every verification so far has been piecemeal, frequently while a provider was rate-limited or — twice on Aug 30 — while an orphaned server process was serving stale code. That pattern hid three real bugs. Assume the first uninterrupted run finds more.
+5. Visual QA across dark mode, responsive layouts and empty states. Not verifiable from a terminal; the user has caught several visual bugs by screenshot that automated checks could not.
+6. Documentation drift — this file, `CLAUDE.md` and `frontend.md` all need re-reading before the deadline.
+7. The five-minute demo video, which is a required deliverable and not started.
+
+The honest read: the remaining engineering is small (~5 hours). The remaining *risk* is that nobody has yet watched this system work start to finish in one sitting.

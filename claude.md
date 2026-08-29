@@ -632,3 +632,134 @@ Disabled action buttons (e.g. Accept & Reconcile when AI recommended `escalate`,
 3. **The live "Investigate Further" Gemini call has never been observed succeeding end-to-end** — every real attempt during development hit the rate limit first. The orchestration was verified correct with the network call mocked; the actual live path is untested by direct observation.
 4. **`RECONAI_LLM=1` is still a dead line in `.env` and `.env.example`** — nothing reads it any more since `engine.py` stopped taking an AI env toggle. Harmless, but should be deleted.
 5. Sidebar stub pages (Transactions, Reports, Data Sources, Settings) remain "coming soon" — never scoped as buildathon deliverables.
+
+> **Superseded by the Aug 29-30 session below.** Items 2-5 no longer apply: the
+> Streamlit UI they refer to has been deleted. Item 1 (COD bulk remittance)
+> still stands.
+
+---
+
+## Session Update (Aug 29-30, 2026): Streamlit retired, React + FastAPI, multi-provider AI
+
+**This supersedes every earlier section that describes a Streamlit UI.** `app.py`
+and `app_new.py` were deleted in commit `e587a0b`. The UI is now a React SPA in
+`frontend/`, talking to a new FastAPI layer (`api.py`). The Python core --
+`engine.py`, `case_engine.py`, `state_store.py`, `razorpay_client.py`,
+`shopify_client.py`, `gen_data.py`, `config.py` -- is unchanged and remains the
+source of truth. Earlier sections are accurate about the ENGINE; ignore their UI
+details.
+
+### `api.py` -- the new boundary
+22 endpoints. Deliberately a transport layer only: it orchestrates and
+serialises, it never decides. No matching rules, no confidence scoring, no
+financial arithmetic live here -- if a number is needed, the module that owns it
+computes it and the value passes through untouched. Money crosses the wire as
+INTEGER PAISE exactly as `engine.py` produced it; formatting is the frontend's
+job, because converting in two places is how a reconciliation tool quietly loses
+money.
+
+Auth is an in-memory bearer-token dict. Honest match for `auth.py`'s hardcoded
+demo accounts -- **every restart logs all users out**, which is expected, not a
+bug.
+
+Notable endpoints beyond CRUD:
+- `POST /api/sync-and-reconcile` -- the full pipeline; returns real per-step results
+- `GET  /api/transactions` -- EVERY record incl. clean auto-matches, by re-running
+  the engine over processed batches (never a second stored copy that could drift)
+- `GET  /api/cases/{id}/evidence` -- real order/settlement/fee-band records behind
+  a case; returns `null` per section when no record genuinely exists
+- `GET  /api/cases/{id}/message-options` + `POST .../draft-message` -- see below
+- `POST /api/cases/{id}/reopen` -- undo a mistaken resolution (auto-resolved cases
+  cannot be reopened)
+
+### Multi-provider AI failover (`ai_client.py`)
+`PROVIDER_ORDER = ("gemini", "openrouter", "groq")`. Each is a separate account
+with independent limits, so this is genuine resilience, NOT quota farming -- worth
+stating plainly if asked. A provider with no key is skipped silently; the module
+works with one key or all three.
+
+**The `ai_pending` fallback is preserved.** If every provider fails, the
+`AIRateLimitError` still propagates and the case is marked "AI hasn't looked at
+this yet". Failover adds capacity; it must never remove the honesty path.
+
+`_to_json_schema()` converts Gemini's uppercase schema dialect to standard JSON
+Schema for OpenAI-compatible providers, so all three are asked for an identical
+structure and results stay comparable. `apply_ai_result()` records which
+`provider` produced each verdict -- models calibrate confidence differently, so an
+80 from one is not an 80 from another.
+
+**Provider gotchas found the hard way -- do not re-derive these:**
+- **OpenRouter reserves the full `max_tokens` against your credit balance up
+  front.** Unset, it reserves the model maximum (65k+) and a free account is
+  refused with a **402 before any tokens are spent**. Capped at 8000.
+- **Groq's free tier caps TOKENS PER MINUTE (8000), not requests**, and the
+  reservation counts prompt + `max_tokens` together. Capped at 4000. Groq returns
+  **413 with code `rate_limit_exceeded`** for this -- treated as retryable so it
+  fails over.
+- **Model names must be verified, never assumed.** `llama-3.3-70b-versatile` did
+  not exist on the account; query `GET /openai/v1/models` and pick from what is
+  actually returned. Current default: `openai/gpt-oss-20b`.
+- `groq/compound` does not support `json_schema` response format.
+
+### Ask AI -- rebuilt
+Previously Python-first with an AI fallback. **That order is now reversed.** The
+keyword matcher was confidently answering the WRONG question (asked "how much
+manual work did we eliminate", it returned the outstanding total). With three
+providers there is enough capacity to route everything to a model.
+`try_direct_answer()` survives only as a last-resort fallback when every provider
+is down -- a correct partial answer beats an error.
+
+`ask()` now takes `history` (last 6 turns), explicitly labelled in the prompt as
+"use ONLY to resolve references like 'it', 'his' -- not a source of facts", so
+follow-ups work without becoming a backdoor for invented data.
+
+### Draft a message (`ai_client.draft_message`)
+Case 7 of this file's own 7-case taxonomy, finally built. AI drafts an outbound
+message about a case; a human edits and sends it from their own mail client.
+
+**LEDGR NEVER SENDS. There is no send endpoint, deliberately.** Recipients are
+derived from the case's real facts -- a COD case offers the courier, an online
+payment offers the gateway, and an orphan settlement with no customer offers
+nothing at all (the panel hides itself). Where no address exists (courier/gateway
+support), it says so rather than inventing `support@razorpay.com`. The prompt
+forbids promising refunds, accepting fault, or setting deadlines.
+
+### Bugs found and fixed -- each cost real debugging time
+1. **`ProtectedRoute` destroyed deep links.** On a hard load, `merchant` is null
+   while the session restores; the route redirected to `/login` with `replace`,
+   destroying the URL, and the user landed on `/dashboard`. **Any auth guard must
+   wait for `loading` before redirecting.**
+2. **Ask AI ranked by the wrong field.** Context passed `delta` but not
+   `amount_at_risk`. An unsettled order has `delta = 0` (nothing arrived to
+   compare) while its FULL value is at risk -- so a Rs 999 overpayment outranked a
+   Rs 9,999 unrecovered order. Context now carries `amount_at_risk` and the prompt
+   states the economics: money NOT received outranks money over-received.
+3. **Raw paise leaked into a drafted message** ("expected amount of 999950").
+   The case-scoped Ask AI context passed the raw case dict. Money is now formatted
+   before the model can echo it.
+4. **`uvicorn --reload` orphans its worker.** Killing the reloader leaves the
+   child bound to the port serving STALE CODE; three accumulated and made two
+   correct fixes look like failures. **Run without `--reload` and tree-kill
+   (`taskkill //F //T`) on restart.** Backend changes now need an explicit restart.
+5. **Context value re-created every render** -- `?? []` allocated a fresh array,
+   defeating `useMemo` and re-rendering every consumer. Use a module-level constant.
+
+### Honest status (Aug 30) -- roughly 70% complete
+**Done:** engine (100% validated), case layer, batched AI + caching, 3-provider
+failover, 22 API endpoints, React shell + all 7 screens, Ask AI, draft messages,
+supporting documents, resolve/reopen/bookmark.
+
+**Left:**
+- 4 API methods exist but no UI calls them: `investigateFurther` (the agentic
+  step -- arguably the most impressive AI feature and currently unreachable),
+  `retryAi`, `setComment`, `getSettings` (~2-3 hrs)
+- `run_date` hardcoded in `caseUtils.ts` instead of read from `/api/state`;
+  matches today, silently diverges if the backend date changes
+- Page `<title>` never updates per route
+- Bell dismissal is local-only, returns on refresh
+- **No clean end-to-end rehearsal has ever been done.** Everything is verified
+  piecemeal, often while a provider was rate-limited or a stale server was
+  serving old code. Assume the first clean run surfaces something.
+- Visual QA (dark mode, responsive, empty states) -- not verifiable from the
+  terminal; the user has caught several visual bugs this way
+- Demo video not started

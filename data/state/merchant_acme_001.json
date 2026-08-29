@@ -205,7 +205,7 @@
     {
       "run_id": "RUN-merchant_acme_001-B2",
       "batch_id": 2,
-      "timestamp": "2026-08-30T00:20:06.780776",
+      "timestamp": "2026-08-30T02:43:30.378705",
       "sources": "Shopify + Razorpay + Bank",
       "status": "Completed",
       "auto_matched": 51,
@@ -218,7 +218,7 @@
     {
       "run_id": "RUN-merchant_acme_001-B1",
       "batch_id": 1,
-      "timestamp": "2026-08-30T00:18:52.983797",
+      "timestamp": "2026-08-30T02:36:22.133761",
       "sources": "Shopify + Razorpay + Bank",
       "status": "Completed",
       "auto_matched": 37,
@@ -246,7 +246,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 999950,
       "received": 0,
       "delta": 0,
@@ -258,27 +258,34 @@
       "candidates": [],
       "evidence_hash": "d4a9d8338a878541",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this order, indicating no corresponding payment has been received or identified.",
+        "next_step": "Verify with the payment gateway for any transactions related to ORD-00004.",
+        "evidence": [
+          "Order ORD-00004 expected Rs 9,999.50 but received Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction records",
+          "Customer payment confirmation"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:35:59.773071",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -290,7 +297,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-STL-X1001": {
       "case_id": "CASE-STL-X1001",
@@ -303,7 +310,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 842000,
       "delta": 842000,
@@ -315,23 +322,30 @@
       "candidates": [],
       "evidence_hash": "35d2b8589265ed0d",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this settlement, indicating it cannot be linked to an existing order.",
+        "next_step": "Investigate the source of settlement STL-X1001 with the payment provider to identify the corresponding order.",
+        "evidence": [
+          "Settlement STL-X1001 received Rs 8,420.00 but expected Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Order records matching the settlement amount",
+          "Customer details associated with the settlement"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:35:59.773071",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -343,7 +357,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00014": {
       "case_id": "CASE-ORD-00014",
@@ -356,7 +370,7 @@
       "case_type": "ambiguous_match",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 649900,
       "received": 0,
       "delta": 0,
@@ -382,22 +396,30 @@
       "evidence_hash": "a5574a4cfa88b4be",
       "ai": {
         "classification": "ambiguous_match",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "manual_review",
+        "confidence": 60,
+        "reason": "Two settlement candidates exist with identical amounts and similar narrations, but different settlement dates, making it unclear which, if either, is the correct match for the order.",
+        "next_step": "Manually review the payment gateway records for STL-00014 and STL-00014-D to determine if one is a duplicate or correction of the other.",
+        "evidence": [
+          "Order ORD-00014 expected Rs 6,499.00",
+          "Candidate STL-00014 for Rs 6,499.00 settled on 2026-08-04 with narration 'RAZORPAY SETTLEMENT UTR000400014'",
+          "Candidate STL-00014-D for Rs 6,499.00 settled on 2026-08-05 with narration 'RAZORPAY SETTLEMENT REPOST UTR000400014'"
+        ],
+        "missing_evidence": [
+          "Further details on the 'REPOST' narration for STL-00014-D",
+          "Transaction IDs or timestamps for both settlements to determine if one is a reversal/re-initiation"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "manual_review",
+        "investigated_at": "2026-08-30T02:35:59.773071",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -409,7 +431,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00049": {
       "case_id": "CASE-ORD-00049",
@@ -422,7 +444,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 649900,
       "received": 0,
       "delta": 0,
@@ -434,27 +456,34 @@
       "candidates": [],
       "evidence_hash": "a0909189c56cede6",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this order, indicating no corresponding payment has been received or identified.",
+        "next_step": "Contact the customer for ORD-00049 to confirm payment status and details.",
+        "evidence": [
+          "Order ORD-00049 expected Rs 6,499.00 but received Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction records",
+          "Customer payment confirmation"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:35:59.773071",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -466,7 +495,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-STL-X1002": {
       "case_id": "CASE-STL-X1002",
@@ -479,7 +508,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 576400,
       "delta": 576400,
@@ -491,23 +520,30 @@
       "candidates": [],
       "evidence_hash": "58451ecfeedb764b",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this settlement, indicating it cannot be linked to an existing order.",
+        "next_step": "Trace settlement STL-X1002 with the bank or payment processor to identify its origin and purpose.",
+        "evidence": [
+          "Settlement STL-X1002 received Rs 5,764.00 but expected Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Order records matching the settlement amount",
+          "Customer details associated with the settlement"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:35:59.773071",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -519,7 +555,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00027": {
       "case_id": "CASE-ORD-00027",
@@ -545,23 +581,23 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-08-30T00:20:06.780776",
+        "resolved_at": "2026-08-30T02:43:06.728564",
         "resolved_by": "system"
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "settlement arrived, resolved automatically"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00030": {
       "case_id": "CASE-ORD-00030",
@@ -587,23 +623,23 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-08-30T00:20:06.780776",
+        "resolved_at": "2026-08-30T02:43:06.728564",
         "resolved_by": "system"
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "settlement arrived, resolved automatically"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00024": {
       "case_id": "CASE-ORD-00024",
@@ -616,7 +652,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 399999,
       "received": 200000,
       "delta": -199999,
@@ -629,22 +665,29 @@
       "evidence_hash": "83a1e15ce24d6dc6",
       "ai": {
         "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this partial payment, indicating no further payments have been identified for ORD-00024.",
+        "next_step": "Contact the customer to inquire about the remaining payment for ORD-00024.",
+        "evidence": [
+          "Order ORD-00024 expected Rs 3,999.99 but received Rs 2,000.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Payment gateway records for ORD-00024",
+          "Customer payment confirmation for the remaining amount"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:07.352461",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -656,7 +699,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-STL-BULK01": {
       "case_id": "CASE-STL-BULK01",
@@ -669,7 +712,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 165556,
       "delta": 165556,
@@ -682,22 +725,29 @@
       "evidence_hash": "efcf776e76b83781",
       "ai": {
         "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this unmatched settlement, indicating no corresponding order has been identified for STL-BULK01.",
+        "next_step": "Investigate the source of settlement STL-BULK01 to identify the corresponding order or transaction.",
+        "evidence": [
+          "Settlement STL-BULK01 received Rs 1,655.56 but expected Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Order records corresponding to STL-BULK01",
+          "Payment gateway details for STL-BULK01"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:07.352461",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -709,7 +759,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00008": {
       "case_id": "CASE-ORD-00008",
@@ -722,7 +772,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 124999,
       "received": 0,
       "delta": 0,
@@ -735,26 +785,33 @@
       "evidence_hash": "900e3759c5805528",
       "ai": {
         "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this overdue remittance, indicating no payment has been identified for ORD-00008.",
+        "next_step": "Chase the courier for remittance confirmation for ORD-00008.",
+        "evidence": [
+          "Order ORD-00008 expected Rs 1,249.99 but received Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Courier remittance records for ORD-00008",
+          "Customer payment confirmation"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:07.352461",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -766,7 +823,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-STL-SHADOW01": {
       "case_id": "CASE-STL-SHADOW01",
@@ -779,7 +836,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 0,
       "received": 124999,
       "delta": 124999,
@@ -832,23 +889,33 @@
       ],
       "evidence_hash": "07a71d75e17fcddb",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "ambiguous_match",
+        "recommendation": "manual_review",
+        "confidence": 60,
+        "reason": "Multiple candidate orders match the received amount of Rs 1,249.99 exactly. While ORD-00047 is the most recent, ORD-00032 and ORD-00008 also match the amount. The payment modes vary, and without further information like a transaction ID or customer confirmation, it's difficult to definitively link the settlement to a single order.",
+        "next_step": "Review settlement details for a transaction ID and cross-reference with candidate orders, or contact customers for confirmation.",
+        "evidence": [
+          "Received amount: Rs 1,249.99",
+          "Candidate ORD-00047 matches amount, date is 1 day from settlement, payment mode UPI",
+          "Candidate ORD-00032 matches amount, date is 20 days from settlement, payment mode UPI",
+          "Candidate ORD-00008 matches amount, date is 25 days from settlement, payment mode COD"
+        ],
+        "missing_evidence": [
+          "Transaction ID from settlement record",
+          "Customer confirmation for each order",
+          "Payment gateway reconciliation report"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "manual_review",
+        "investigated_at": "2026-08-30T02:36:15.925791",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -860,7 +927,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00039": {
       "case_id": "CASE-ORD-00039",
@@ -873,7 +940,7 @@
       "case_type": "overpayment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 999950,
       "received": 1099945,
       "delta": 99995,
@@ -885,23 +952,32 @@
       "candidates": [],
       "evidence_hash": "3e7123b24a6fbd31",
       "ai": {
-        "classification": "overpayment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this case, making it impossible to reconcile the overpayment of Rs 10,999.45 against the expected Rs 9,999.50.",
+        "next_step": "Investigate the source of the Rs 10,999.45 payment to identify the corresponding order or customer.",
+        "evidence": [
+          "Expected amount: Rs 9,999.50",
+          "Received amount: Rs 10,999.45",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Settlement records for the received amount",
+          "Customer payment confirmation",
+          "Payment gateway transaction details"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:15.925791",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -913,7 +989,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-BULK101": {
       "case_id": "CASE-ORD-BULK101",
@@ -926,7 +1002,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 99900,
       "received": 0,
       "delta": 0,
@@ -938,27 +1014,35 @@
       "candidates": [],
       "evidence_hash": "4e2b0b7cd6346b91",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this case, indicating no settlement has been found for the expected Rs 999.00.",
+        "next_step": "Contact the courier service to inquire about the remittance status for order ORD-BULK101.",
+        "evidence": [
+          "Expected amount: Rs 999.00",
+          "Received amount: Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Settlement records",
+          "Courier remittance report"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:15.925791",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -970,7 +1054,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-BULK102": {
       "case_id": "CASE-ORD-BULK102",
@@ -983,7 +1067,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 69900,
       "received": 0,
       "delta": 0,
@@ -995,27 +1079,35 @@
       "candidates": [],
       "evidence_hash": "3904461e2829f8b8",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this case, indicating no settlement has been found for the expected Rs 699.00.",
+        "next_step": "Contact the courier service to inquire about the remittance status for order ORD-BULK102.",
+        "evidence": [
+          "Expected amount: Rs 699.00",
+          "Received amount: Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Settlement records",
+          "Courier remittance report"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:15.925791",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -1027,7 +1119,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00002": {
       "case_id": "CASE-ORD-00002",
@@ -1040,7 +1132,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 34950,
       "received": 0,
       "delta": 0,
@@ -1052,27 +1144,35 @@
       "candidates": [],
       "evidence_hash": "927d65c79741dd56",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this case, indicating no settlement has been found for the expected Rs 349.50.",
+        "next_step": "Verify with the payment gateway or customer if payment for ORD-00002 was initiated or completed.",
+        "evidence": [
+          "Expected amount: Rs 349.50",
+          "Received amount: Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Settlement records",
+          "Payment gateway transaction details"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:15.925791",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -1084,7 +1184,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00016": {
       "case_id": "CASE-ORD-00016",
@@ -1097,7 +1197,7 @@
       "case_type": "partial_payment",
       "tier": 4,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 249950,
       "received": 223163,
       "delta": -26787,
@@ -1110,22 +1210,29 @@
       "evidence_hash": "8b8426bff55be214",
       "ai": {
         "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this partial payment case, indicating that the received amount does not correspond to any known settlement or transaction.",
+        "next_step": "Verify the received amount with the payment gateway and investigate potential reasons for the discrepancy.",
+        "evidence": [
+          "Record shows an expected amount of Rs 2,499.50 and a received amount of Rs 2,231.63.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction logs",
+          "Customer communication regarding payment"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:22.133761",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1137,7 +1244,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00013": {
       "case_id": "CASE-ORD-00013",
@@ -1150,7 +1257,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59999,
       "received": 36000,
       "delta": -23999,
@@ -1163,22 +1270,29 @@
       "evidence_hash": "cb7f128ce01bf30f",
       "ai": {
         "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this partial payment case, indicating that the received amount does not correspond to any known settlement or transaction.",
+        "next_step": "Verify the received amount with the payment gateway and investigate potential reasons for the discrepancy.",
+        "evidence": [
+          "Record shows an expected amount of Rs 599.99 and a received amount of Rs 360.00.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction logs",
+          "Customer communication regarding payment"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:22.133761",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1190,7 +1304,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00050": {
       "case_id": "CASE-ORD-00050",
@@ -1203,7 +1317,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59950,
       "received": 44963,
       "delta": -14987,
@@ -1216,22 +1330,29 @@
       "evidence_hash": "2353167861c6617f",
       "ai": {
         "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this partial payment case, indicating that the received amount does not correspond to any known settlement or transaction.",
+        "next_step": "Verify the received amount with the payment gateway and investigate potential reasons for the discrepancy.",
+        "evidence": [
+          "Record shows an expected amount of Rs 599.50 and a received amount of Rs 449.63.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction logs",
+          "Customer communication regarding payment"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:22.133761",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1243,7 +1364,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00032": {
       "case_id": "CASE-ORD-00032",
@@ -1256,7 +1377,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 124999,
       "received": 120333,
       "delta": -4666,
@@ -1269,22 +1390,29 @@
       "evidence_hash": "dc77799fe7fb55cc",
       "ai": {
         "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for this partial payment case, indicating that the received amount does not correspond to any known settlement or transaction.",
+        "next_step": "Verify the received amount with the payment gateway and investigate potential reasons for the discrepancy.",
+        "evidence": [
+          "Record shows an expected amount of Rs 1,249.99 and a received amount of Rs 1,203.33.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction logs",
+          "Customer communication regarding payment"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:36:22.133761",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:36:22.133761",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1296,7 +1424,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:18:52.983797"
+      "updated_at": "2026-08-30T02:36:22.133761"
     },
     "CASE-ORD-00005": {
       "case_id": "CASE-ORD-00005",
@@ -1321,14 +1449,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
+          "at": "2026-08-30T02:36:22.133761",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -1341,7 +1469,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00006": {
       "case_id": "CASE-ORD-00006",
@@ -1366,14 +1494,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
+          "at": "2026-08-30T02:36:22.133761",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -1386,7 +1514,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00012": {
       "case_id": "CASE-ORD-00012",
@@ -1411,14 +1539,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
+          "at": "2026-08-30T02:36:22.133761",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -1431,7 +1559,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00028": {
       "case_id": "CASE-ORD-00028",
@@ -1456,14 +1584,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
+          "at": "2026-08-30T02:36:22.133761",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -1476,7 +1604,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00037": {
       "case_id": "CASE-ORD-00037",
@@ -1501,14 +1629,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:18:52.983797",
+      "created_at": "2026-08-30T02:36:22.133761",
       "history": [
         {
-          "at": "2026-08-30T00:18:52.983797",
+          "at": "2026-08-30T02:36:22.133761",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -1521,7 +1649,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-STL-SHADOW02": {
       "case_id": "CASE-STL-SHADOW02",
@@ -1534,7 +1662,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 0,
       "received": 999999,
       "delta": 999999,
@@ -1587,23 +1715,35 @@
       ],
       "evidence_hash": "02be1b410c19dfd0",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "ambiguous_match",
+        "recommendation": "manual_review",
+        "confidence": 60,
+        "reason": "The settlement amount of Rs 9,999.99 is very close to several candidate orders, but no single order matches exactly. ORD-00073 is the closest at Rs 9,999.99, but its payment mode is UPI, while ORD-00057 is also close at Rs 9,999.50 and is COD, which might have different settlement patterns. The other candidates are also very close in amount.",
+        "next_step": "Manually review the settlement details against all close candidate orders, especially ORD-00073 and ORD-00057, to determine the correct match.",
+        "evidence": [
+          "Settlement received: Rs 9,999.99",
+          "Candidate ORD-00073 amount: Rs 9,999.99, payment mode: UPI",
+          "Candidate ORD-00004 amount: Rs 9,999.50, payment mode: NETBANKING",
+          "Candidate ORD-00057 amount: Rs 9,999.50, payment mode: COD",
+          "Candidate ORD-00072 amount: Rs 9,999.00, payment mode: CARD",
+          "Candidate ORD-00083 amount: Rs 9,999.00, payment mode: UPI"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction IDs for settlement and orders",
+          "More detailed settlement reports",
+          "Customer confirmation of payment for specific orders"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "manual_review",
+        "investigated_at": "2026-08-30T02:43:17.179685",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1615,7 +1755,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00078": {
       "case_id": "CASE-ORD-00078",
@@ -1628,7 +1768,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 649950,
       "received": 0,
       "delta": 0,
@@ -1640,23 +1780,32 @@
       "candidates": [],
       "evidence_hash": "125b70783cfacd0b",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for order ORD-00078, which has an expected amount of Rs 6,499.50 but shows Rs 0.00 received.",
+        "next_step": "Verify with the payment gateway if a transaction for ORD-00078 was initiated and its current status.",
+        "evidence": [
+          "Order expected amount: Rs 6,499.50",
+          "Order received amount: Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Payment gateway records for ORD-00078",
+          "Customer payment confirmation",
+          "Settlement reports for the relevant period"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:17.179685",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1668,7 +1817,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-STL-X2002": {
       "case_id": "CASE-STL-X2002",
@@ -1681,7 +1830,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 616000,
       "delta": 616000,
@@ -1693,23 +1842,32 @@
       "candidates": [],
       "evidence_hash": "6110070af024703c",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for settlement STL-X2002, which shows Rs 6,160.00 received but no expected amount.",
+        "next_step": "Investigate the source of the Rs 6,160.00 settlement by checking payment gateway reports or bank statements.",
+        "evidence": [
+          "Settlement received amount: Rs 6,160.00",
+          "Settlement expected amount: Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Order records matching Rs 6,160.00",
+          "Payment gateway transaction IDs",
+          "Settlement report details"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:17.179685",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1721,7 +1879,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00079": {
       "case_id": "CASE-ORD-00079",
@@ -1734,7 +1892,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 399950,
       "received": 0,
       "delta": 0,
@@ -1746,23 +1904,32 @@
       "candidates": [],
       "evidence_hash": "027e4e54b21c1029",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for order ORD-00079, which has an expected amount of Rs 3,999.50 but shows Rs 0.00 received.",
+        "next_step": "Contact the customer for ORD-00079 to confirm payment status or re-initiate payment.",
+        "evidence": [
+          "Order expected amount: Rs 3,999.50",
+          "Order received amount: Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Payment gateway records for ORD-00079",
+          "Customer payment confirmation",
+          "Settlement reports for the relevant period"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:17.179685",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1774,7 +1941,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-STL-BULK02": {
       "case_id": "CASE-STL-BULK02",
@@ -1787,7 +1954,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 341056,
       "delta": 341056,
@@ -1799,23 +1966,32 @@
       "candidates": [],
       "evidence_hash": "fa8d368daeffa35b",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were found for settlement STL-BULK02, which shows Rs 3,410.56 received but no expected amount.",
+        "next_step": "Trace the Rs 3,410.56 settlement amount in bank statements or payment gateway reports to identify its origin.",
+        "evidence": [
+          "Settlement received amount: Rs 3,410.56",
+          "Settlement expected amount: Rs 0.00",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Order records matching Rs 3,410.56",
+          "Payment gateway transaction IDs",
+          "Settlement report details"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:17.179685",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1827,7 +2003,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-STL-X2001": {
       "case_id": "CASE-STL-X2001",
@@ -1840,7 +2016,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 299100,
       "delta": 299100,
@@ -1852,23 +2028,30 @@
       "candidates": [],
       "evidence_hash": "2a14847bfbf332e3",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this settlement, making it impossible to reconcile the received amount with any expected transaction.",
+        "next_step": "Verify the source of the Rs 2,991.00 settlement with the payment gateway and identify the corresponding transaction.",
+        "evidence": [
+          "Record STL-X2001 shows an expected amount of Rs 0.00 and a received amount of Rs 2,991.00.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Associated order or transaction details for the received amount.",
+          "Information from the payment gateway regarding this settlement."
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:25.628011",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1880,7 +2063,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00051": {
       "case_id": "CASE-ORD-00051",
@@ -1893,7 +2076,7 @@
       "case_type": "ambiguous_match",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 59950,
       "received": 0,
       "delta": 0,
@@ -1919,22 +2102,30 @@
       "evidence_hash": "8bd22d5b22f6f922",
       "ai": {
         "classification": "ambiguous_match",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "manual_review",
+        "confidence": 70,
+        "reason": "Two candidate settlements match the expected amount exactly, but they have different settlement dates, creating ambiguity.",
+        "next_step": "Manually review the details of STL-00051-D and STL-00051 to determine which is the correct settlement for ORD-00051.",
+        "evidence": [
+          "Record ORD-00051 shows an expected amount of Rs 599.50 and a received amount of Rs 0.00.",
+          "Candidate STL-00051-D has an amount of 59950 paise and settled on 2026-08-14.",
+          "Candidate STL-00051 has an amount of 59950 paise and settled on 2026-08-13."
+        ],
+        "missing_evidence": [
+          "Further details to distinguish between the two candidate settlements, such as unique transaction IDs or timestamps.",
+          "Confirmation from the payment gateway on which settlement is the primary one."
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "manual_review",
+        "investigated_at": "2026-08-30T02:43:25.628011",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1946,7 +2137,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00097": {
       "case_id": "CASE-ORD-00097",
@@ -1959,7 +2150,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 34950,
       "received": 0,
       "delta": 0,
@@ -1971,23 +2162,30 @@
       "candidates": [],
       "evidence_hash": "6ca188c587fd940c",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this order, indicating that the expected remittance has not been found.",
+        "next_step": "Contact the courier or payment gateway to inquire about the overdue remittance for order ORD-00097.",
+        "evidence": [
+          "Record ORD-00097 shows an expected amount of Rs 349.50 and a received amount of Rs 0.00.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Remittance information from the courier or payment gateway.",
+          "Proof of delivery or payment confirmation from the customer."
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:25.628011",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1999,7 +2197,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00093": {
       "case_id": "CASE-ORD-00093",
@@ -2012,7 +2210,7 @@
       "case_type": "overpayment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 189900,
       "received": 208890,
       "delta": 18990,
@@ -2025,22 +2223,30 @@
       "evidence_hash": "9759e1517af7b8a8",
       "ai": {
         "classification": "overpayment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 20,
+        "reason": "The received amount is higher than the expected amount, and no candidate matches were provided to explain this variance.",
+        "next_step": "Investigate the reason for the overpayment by checking customer communication or payment gateway records for ORD-00093.",
+        "evidence": [
+          "Record ORD-00093 shows an expected amount of Rs 1,899.00 and a received amount of Rs 2,088.90.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Details of any additional items or services that might account for the overpayment.",
+          "Customer communication regarding the payment.",
+          "Payment gateway transaction details."
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:25.628011",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2052,7 +2258,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00053": {
       "case_id": "CASE-ORD-00053",
@@ -2065,7 +2271,7 @@
       "case_type": "partial_payment",
       "tier": 4,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59900,
       "received": 46125,
       "delta": -13775,
@@ -2078,22 +2284,30 @@
       "evidence_hash": "47030734e51ea6d9",
       "ai": {
         "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 20,
+        "reason": "The received amount is less than the expected amount, and no candidate matches were provided to explain this partial payment.",
+        "next_step": "Contact the customer or check payment gateway records to understand why only a partial payment was received for ORD-00053.",
+        "evidence": [
+          "Record ORD-00053 shows an expected amount of Rs 599.00 and a received amount of Rs 461.25.",
+          "No candidate matches were provided."
+        ],
+        "missing_evidence": [
+          "Customer communication regarding the partial payment.",
+          "Details of any discounts or deductions applied.",
+          "Payment gateway transaction details."
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:25.628011",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2105,7 +2319,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00068": {
       "case_id": "CASE-ORD-00068",
@@ -2118,7 +2332,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 89950,
       "received": 86298,
       "delta": -3652,
@@ -2130,23 +2344,32 @@
       "candidates": [],
       "evidence_hash": "4bd2f69fd29e5d77",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this case, making it impossible to reconcile the partial payment with any specific transaction.",
+        "next_step": "Verify with the payment gateway for transaction details related to ORD-00068.",
+        "evidence": [
+          "Record ID: ORD-00068",
+          "Expected amount: Rs 899.50",
+          "Received amount: Rs 862.98",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction logs",
+          "Customer communication regarding payment discrepancy"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:30.378705",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2158,7 +2381,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00052": {
       "case_id": "CASE-ORD-00052",
@@ -2171,7 +2394,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59950,
       "received": 58029,
       "delta": -1921,
@@ -2183,23 +2406,32 @@
       "candidates": [],
       "evidence_hash": "703cd1a58affef2d",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No candidate matches were provided for this case, making it impossible to reconcile the partial payment with any specific transaction.",
+        "next_step": "Contact the payment gateway to investigate the discrepancy for ORD-00052.",
+        "evidence": [
+          "Record ID: ORD-00052",
+          "Expected amount: Rs 599.50",
+          "Received amount: Rs 580.29",
+          "No candidate matches provided"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction logs",
+          "Customer communication regarding payment discrepancy"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "error": "GEMINI_API_KEY is not set (or still a placeholder) in .env."
+        "action": "escalate",
+        "investigated_at": "2026-08-30T02:43:30.378705",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-30T02:43:30.378705",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2211,7 +2443,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00058": {
       "case_id": "CASE-ORD-00058",
@@ -2236,10 +2468,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -2252,7 +2484,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00074": {
       "case_id": "CASE-ORD-00074",
@@ -2277,10 +2509,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -2293,7 +2525,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-00091": {
       "case_id": "CASE-ORD-00091",
@@ -2318,10 +2550,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -2334,7 +2566,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-BULK201": {
       "case_id": "CASE-ORD-BULK201",
@@ -2359,10 +2591,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -2375,7 +2607,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     },
     "CASE-ORD-BULK202": {
       "case_id": "CASE-ORD-BULK202",
@@ -2400,10 +2632,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T00:20:06.780776",
+      "created_at": "2026-08-30T02:43:30.378705",
       "history": [
         {
-          "at": "2026-08-30T00:20:06.780776",
+          "at": "2026-08-30T02:43:30.378705",
           "event": "awaiting settlement"
         }
       ],
@@ -2416,7 +2648,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T00:20:06.780776"
+      "updated_at": "2026-08-30T02:43:30.378705"
     }
   }
 }

@@ -143,7 +143,10 @@ All calls go through `src/lib/api.ts`. Money is **integer paise** everywhere.
 | POST | `/api/cases/{id}/comment` | Save working comment |
 | POST | `/api/cases/{id}/retry-ai` | Retry rate-limited AI |
 | POST | `/api/cases/{id}/investigate-further` | One extra agentic AI step |
-| POST | `/api/ask-ai` | `{ question, case_id? }` → `{ answer, source }` |
+| POST | `/api/ask-ai` | `{ question, case_id?, history[] }` → `{ answer, source }` |
+| GET | `/api/cases/{id}/evidence` | Real order / settlement / fee-band records behind a case |
+| GET | `/api/cases/{id}/message-options` | Who it makes sense to contact, from the case's own facts |
+| POST | `/api/cases/{id}/draft-message` | `{ recipient_type }` → drafted subject + body (**never sends**) |
 | GET | `/api/health` | Health check |
 
 Auth: Bearer token in `localStorage` key `ledgr_token`.
@@ -174,6 +177,21 @@ Constants: `COD_WARN_DAYS = 14` in `constants.ts`.
 - After 14 days → `R2_REMITTANCE_OVERDUE` exception enters case review.
 - Helpers: `isAwaitingSettlementCase`, `isWithinCodSettlementWindow`, `isOpenForReview` in `caseUtils.ts`.
 
+### AI providers — failover chain
+
+Three providers, tried in order: **Gemini → OpenRouter → Groq** (`ai_client.PROVIDER_ORDER`).
+Each is a separate account with independent limits — genuine resilience, not quota
+farming. A provider with no key is skipped silently.
+
+- If **every** provider fails, cases still land on `ai_pending` and Ask AI falls
+  back to the deterministic answerer. Failover adds capacity; it never removes
+  the honesty path.
+- Each AI verdict records the `provider` that produced it — models calibrate
+  confidence differently, so an unattributed 80% is not auditable.
+- `GET /api/settings` exposes `ai_providers` so the UI can show what's active.
+- Ask AI answers show which provider replied ("Answered by AI (openrouter)"), or
+  "AI unavailable — answered directly from your data" on the Python fallback.
+
 ### Money & confidence
 
 - Amounts: **integer paise** → display with `formatINR()` from `lib/money.ts`.
@@ -196,6 +214,9 @@ Constants: `COD_WARN_DAYS = 14` in `constants.ts`.
 
 - **No fabricated history:** no sparklines, “vs last month”, or forecasts unless data exists in API responses.
 - **AI contribution %** on dashboard = `ai_resolved / total_records` from each run (engine `ai_assisted` bucket). Not the same as “cases Gemini investigated” — label honestly.
+- **Ask AI now routes every question to a model.** The old Python-keyword-first
+  path was removed from the primary route after it confidently answered the wrong
+  question; it survives only as a fallback when all providers are exhausted.
 - **Reconciliation trend chart** needs data in the selected period; otherwise empty state.
 
 ---
@@ -449,12 +470,15 @@ Prioritized gaps — **not** blockers for a demo of login → sync → review �
 
 ### P1 — Case detail actions (API ready)
 
-| Feature | Endpoint | Notes |
-|---------|----------|-------|
-| Ask AI panel | `POST /api/ask-ai` | Case-scoped Q&A; show `source` (python vs gemini) |
-| Investigate further | `POST …/investigate-further` | One extra AI pass |
-| Retry AI | `POST …/retry-ai` | For `ai_pending` / rate-limit errors |
-| Standalone comment | `POST …/comment` | Save without resolving |
+| Feature | Endpoint | Status |
+|---------|----------|--------|
+| Ask AI panel | `POST /api/ask-ai` | ✅ **Built** — global (header) + case-scoped, with conversation history |
+| Supporting Documents | `GET …/evidence` | ✅ **Built** — modals with real order/settlement/fee records |
+| Draft a message | `POST …/draft-message` | ✅ **Built** — courier / gateway / customer; Ledgr never sends |
+| Investigate further | `POST …/investigate-further` | ❌ **Not wired** — API ready, no UI calls it |
+| Retry AI | `POST …/retry-ai` | ❌ **Not wired** — needed for `ai_pending` cases |
+| Standalone comment | `POST …/comment` | ❌ **Not wired** — save without resolving |
+| Settings from API | `GET /api/settings` | ❌ **Not wired** — real tolerance bands + AI config unused |
 
 ### P2 — Wiring & polish
 
@@ -512,11 +536,16 @@ Customer name, source channel, settled-on timestamp — join from orders/settlem
 | Dashboard | ✅ Built (v1) — line trend chart, date nav |
 | Reconciliations | ✅ Built (v1) — COD panel, AI queue, run history |
 | Cases list | ✅ Built (v1) |
-| Case detail | ✅ Built (v1) — resolve, bookmark, reopen; Ask AI / investigate / retry / comment **pending** |
+| Case detail | ✅ Built (v2) — resolve, bookmark, reopen, **Ask AI, Supporting Documents, Draft message**; investigate-further / retry / standalone-comment **still pending** |
 | Transactions | ✅ Built (v1) — date, payment mode, status filters |
 | Settings | ✅ Built (v1) |
 
 **Demo-ready path:** Login → Reconcile → Review cases → Resolve → Transactions.
+
+**Overall: ~70% complete.** Remaining engineering is ~5 hours; the larger
+remaining risk is that **no clean end-to-end rehearsal has ever been run** —
+verification so far has been piecemeal, sometimes against a rate-limited
+provider or a stale server process.
 
 ---
 
@@ -548,4 +577,9 @@ Customer name, source channel, settled-on timestamp — join from orders/settlem
 
 ---
 
-*Last updated: Aug 30, 2026 — Cases, case detail, transactions v1; COD 14-day rules; reconciliation trend line chart; sync stays manual/batch-only (no live per-order sync).*
+*Last updated: Aug 30, 2026 (evening) — backend fully wired via `api.py` (22 endpoints);
+multi-provider AI failover (Gemini → OpenRouter → Groq); Ask AI live (global + case-scoped,
+with conversation history); Supporting Documents open real records; AI message drafting
+(never sends); cases sorted by AI confidence descending. Fixed: deep-link/refresh redirect
+to /dashboard, AI prioritising by `delta` instead of `amount_at_risk`, raw paise in drafted
+messages. Still unwired: investigate-further, retry-AI, standalone comment, settings.*

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { AskAiPanel } from '../components/AskAiPanel'
 import { CaseAiAnalysisPanel } from '../components/cases/CaseAiAnalysisPanel'
 import { CaseDetailNav } from '../components/cases/CaseDetailNav'
 import { CaseDocumentsPanel } from '../components/cases/CaseDocumentsPanel'
+import { CaseDraftMessagePanel } from '../components/cases/CaseDraftMessagePanel'
 import { CaseResolvedBanner } from '../components/cases/CaseTimeline'
 import { CaseSummaryPanel } from '../components/cases/CaseSummaryPanel'
 import { CaseTimeline } from '../components/cases/CaseTimeline'
@@ -17,10 +19,6 @@ import {
 import { isOpenForReview, canReopenCase } from '../lib/caseUtils'
 import { caseNeighbors, caseQueuePath, filterCases } from '../lib/caseQueue'
 import type { Case } from '../types/case'
-
-function scrollToSection(sectionId: string) {
-  document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
 
 export function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>()
@@ -233,7 +231,7 @@ export function CaseDetailPage() {
       <div className="grid gap-5 lg:grid-cols-3">
         <CaseSummaryPanel caseItem={caseItem} />
         <CaseAiAnalysisPanel caseItem={caseItem} />
-        <CaseDocumentsPanel onNavigate={scrollToSection} />
+        <CaseDocumentsPanel caseId={caseItem.case_id} />
       </div>
 
       {!resolved && (
@@ -344,6 +342,13 @@ export function CaseDetailPage() {
           <CaseTimeline history={caseItem.history ?? []} />
         </div>
       </section>
+
+      {/* Scoped to this case: the backend passes only this case's own records
+          as context, so answers can't drift onto unrelated data. Read-only —
+          asking never changes the case's status or resolution. */}
+      <CaseDraftMessagePanel caseId={caseItem.case_id} />
+
+      <AskAiPanel caseId={caseItem.case_id} />
     </div>
   )
 }
