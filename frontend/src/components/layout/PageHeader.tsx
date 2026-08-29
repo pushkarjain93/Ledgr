@@ -149,10 +149,9 @@ export function PageHeader({ title, showWelcome = false, children }: PageHeaderP
         </div>
 
         {showWelcome && (
-          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
-            <p className="text-[15px] text-zinc-600">
-              Welcome back
-              {merchant?.company_name ? `, ${merchant.company_name.split(' ')[0]}` : ''}
+          <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+            <p className="text-[20px] font-semibold tracking-[-0.01em] text-zinc-800">
+              Welcome back 👋
             </p>
             <div className="flex flex-col items-end gap-0.5">
               <label htmlFor="dashboard-date" className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">

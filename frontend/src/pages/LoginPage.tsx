@@ -60,8 +60,7 @@ export function LoginPage() {
     if (!validate()) return
 
     setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    const ok = login(email, password)
+    const ok = await login(email, password)
     setIsSubmitting(false)
 
     if (ok) {
