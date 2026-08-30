@@ -29,6 +29,7 @@ never looped beyond that one extra call.
 import hashlib
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 
 import ai_client
@@ -343,28 +344,48 @@ def investigate_new_cases_batched(cases, batch_size=None):
     """
     batch_size = batch_size or ai_client.DEFAULT_BATCH_SIZE
     pending = [c for c in cases if c["case_status"] == "needs_ai"]
+    if not pending:
+        return cases
     chunks = [pending[i:i + batch_size] for i in range(0, len(pending), batch_size)]
 
-    for i, chunk in enumerate(chunks):
+    def run_chunk(chunk):
+        """Investigate one chunk and apply its results.
+
+        Runs entirely inside the worker thread, including apply_ai_result(),
+        because ai_client tracks the answering provider per-thread -- reading it
+        back on the main thread would attribute the wrong model to a case.
+        """
         contexts = [build_case_context(c) for c in chunk]
         try:
             results = ai_client.investigate_batch(contexts)
-        except ai_client.AIRateLimitError as exc:
-            remaining = chunk + [c for later_chunk in chunks[i + 1:] for c in later_chunk]
-            for c in remaining:
-                _mark_ai_pending(c, str(exc))
-            break
-        except (ai_client.AIAuthError, ai_client.AIAPIError) as exc:
+        except (ai_client.AIRateLimitError, ai_client.AIAuthError,
+                ai_client.AIAPIError) as exc:
+            # Every provider refused this chunk. Mark ONLY this chunk pending;
+            # sibling chunks are independent requests and may well succeed,
+            # possibly on a different provider.
             for c in chunk:
                 _mark_ai_pending(c, str(exc))
-            continue
+            return
 
         for c in chunk:
             result = results.get(c["case_id"])
             if result is None:
-                _mark_ai_pending(c, "Gemini's response omitted this case (partial batch result).")
+                _mark_ai_pending(c, "The AI response omitted this case (partial batch result).")
             else:
                 apply_ai_result(c, result)
+
+    # Chunks are fully independent, so sending them sequentially just multiplied
+    # latency by the number of chunks (4 x ~10s made a sync take 40s+, when the
+    # reconciliation itself takes under a second). Dispatch them together,
+    # capped so a burst doesn't trip a provider's per-minute limit.
+    if len(chunks) == 1:
+        run_chunk(chunks[0])
+    else:
+        workers = min(len(chunks), ai_client.MAX_CONCURRENT_BATCHES)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            # list() forces every future to complete before returning, so all
+            # cases are resolved (or marked pending) by the time we exit.
+            list(pool.map(run_chunk, chunks))
 
     return cases
 
@@ -420,28 +441,127 @@ def _customer_order_history(customer_name, orders_lookup, exclude_order_id=None)
     ]
 
 
-def fetch_missing_evidence(case, orders_lookup):
+def _find_settlement_candidates(order_amount_paise, order_date, settlements_lookup,
+                                 matched_settlement_ids=None, max_candidates=5):
     """
-    Deterministic, honest attempt to fetch ONE named piece of missing
-    evidence. Only customer order history is actually fetchable today --
-    if the model asked for something this system genuinely doesn't have
-    (e.g. a bank remittance document), this says so plainly instead of
-    inventing it.
+    The mirror of _find_orphan_candidates: given an ORDER that never matched,
+    find settlements that plausibly belong to it.
+
+    Ranked by amount closeness then date proximity to the order -- the same
+    reasoning used for orphan credits, because the same weakness applies:
+    order values repeat across a small price set, so amount alone is a weak
+    signal and date proximity is what separates a likely match from a
+    coincidence.
+
+    A settlement already reconciled to a DIFFERENT order is still returned,
+    flagged with `already_matched_to`. That is deliberate: "the only
+    amount-match is already reconciled elsewhere" is genuinely useful evidence
+    for ruling a theory out, and hiding it would leave the model with an
+    incomplete picture.
+
+    Returns [] honestly when nothing is within tolerance.
+    """
+    matched_settlement_ids = matched_settlement_ids or {}
+    tolerance = max(100, int(order_amount_paise * 0.02))  # Rs 1 or 2%, whichever is larger
+    ordered_on = None
+    if order_date:
+        try:
+            ordered_on = date.fromisoformat(str(order_date))
+        except ValueError:
+            ordered_on = None
+
+    out = []
+    for s in settlements_lookup:
+        try:
+            amt = to_paise(s.get("amount_received") or 0)
+        except Exception:
+            continue
+        diff = abs(amt - order_amount_paise)
+        if diff > tolerance:
+            continue
+        settled_on = s.get("settled_on", "")
+        days = None
+        if ordered_on and settled_on:
+            try:
+                days = (date.fromisoformat(str(settled_on)) - ordered_on).days
+            except ValueError:
+                days = None
+        sid = s.get("settlement_id", "")
+        out.append({
+            "settlement_id": sid,
+            "amount": fmt(amt),
+            "amount_difference": fmt(diff),
+            "settled_on": settled_on,
+            "days_after_order": days,
+            "source": s.get("source", ""),
+            "bank_utr": s.get("bank_utr", ""),
+            "gateway_ref_id": s.get("gateway_ref_id", ""),
+            "already_matched_to": matched_settlement_ids.get(sid),
+        })
+    out.sort(key=lambda c: (to_paise(c["amount_difference"].replace("Rs ", "").replace(",", "")),
+                            abs(c["days_after_order"]) if c["days_after_order"] is not None else 999))
+    return out[:max_candidates]
+
+
+def fetch_missing_evidence(case, orders_lookup, settlements_lookup=None,
+                            matched_settlement_ids=None):
+    """
+    Deterministic, honest attempt to gather whatever additional evidence this
+    system genuinely holds for a case.
+
+    Fetches what is ACTUALLY available rather than only what the model literally
+    named -- most asks are for payment-gateway logs this system does not have,
+    and answering only those would make every follow-up a dead end. What IS
+    fetchable:
+
+      - candidate settlements for an order that never matched (see
+        _find_settlement_candidates)
+      - the customer's other orders, when the ask mentions customer history
+
+    Anything named but unavailable is reported explicitly in
+    `still_unavailable`, so the model can see the gap rather than assume the
+    absence of data means absence of a problem.
     """
     missing = (case.get("ai") or {}).get("missing_evidence") or []
+    evidence = {}
+
+    # Candidate settlements -- only meaningful for an order-side case that
+    # never matched. An orphan settlement already carries its candidates from
+    # build_cases_for_batch, and a matched case has nothing to search for.
+    if (settlements_lookup and case.get("order_id") and not case.get("settlement_id")
+            and int(case.get("expected") or 0) > 0):
+        candidates = _find_settlement_candidates(
+            int(case["expected"]), case.get("order_date"), settlements_lookup,
+            matched_settlement_ids)
+        evidence["candidate_settlements"] = candidates or (
+            "none -- no settlement in the current feed is within 2% of this "
+            "order's value, so the money has not arrived under a different reference")
+
+    # Customer history, when that is what was asked for.
     wants_history = any(kw in m.lower() for m in missing
                         for kw in ("customer", "history", "other order"))
-    customer_name = next((c.get("customer_name") for c in case.get("candidates", [])
-                          if c.get("customer_name")), None)
+    customer_name = case.get("customer_name") or next(
+        (c.get("customer_name") for c in case.get("candidates", []) if c.get("customer_name")), None)
     if wants_history and customer_name:
-        history = _customer_order_history(customer_name, orders_lookup, exclude_order_id=case.get("order_id"))
-        if history:
-            return {"customer_order_history": history}
-        return {"customer_order_history": "none -- this customer has no other orders in the current dataset"}
-    return {"note": "The requested evidence is not available in this system."}
+        history = _customer_order_history(customer_name, orders_lookup,
+                                           exclude_order_id=case.get("order_id"))
+        evidence["customer_order_history"] = history or (
+            "none -- this customer has no other orders in the current dataset")
+
+    unavailable = [m for m in missing
+                   if not any(kw in m.lower() for kw in ("customer", "history", "other order"))]
+    if unavailable:
+        evidence["still_unavailable"] = (
+            f"Not held by this system: {'; '.join(unavailable)}. Ledgr reconciles "
+            "order and settlement feeds only -- it has no access to gateway-side "
+            "logs or payment-processor internals.")
+
+    return evidence or {"note": "No additional evidence is available for this case."}
 
 
-def investigate_case_followup(state, case_id, orders_lookup):
+def investigate_case_followup(state, case_id, orders_lookup,
+                               settlements_lookup=None,
+                               matched_settlement_ids=None):
     """
     The controlled agentic step: fetch whatever additional evidence is
     realistically available for this case's missing_evidence, then make
@@ -453,7 +573,8 @@ def investigate_case_followup(state, case_id, orders_lookup):
     if not case or not case.get("ai"):
         return None
     original_context = build_case_context(case)
-    new_evidence = fetch_missing_evidence(case, orders_lookup)
+    new_evidence = fetch_missing_evidence(
+        case, orders_lookup, settlements_lookup, matched_settlement_ids)
     try:
         result = ai_client.investigate_followup(original_context, case["ai"], new_evidence)
         result.setdefault("missing_evidence", [])

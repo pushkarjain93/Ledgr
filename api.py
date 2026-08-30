@@ -552,6 +552,35 @@ def case_evidence(case_id: str, merchant: dict = Depends(current_merchant)):
     }
 
 
+def _matched_settlement_map(state) -> dict:
+    """
+    settlement_id -> the record it is already reconciled to, across every
+    processed batch.
+
+    Derived by re-running the engine rather than read from the case store,
+    because CLEANLY MATCHED records never become cases -- reading only the
+    case store would report the vast majority of settlements as unmatched.
+    Handing that to the follow-up investigation would be actively misleading:
+    an exact-amount settlement described as "unmatched" invites the model to
+    conclude it belongs to this order when it is already reconciled elsewhere.
+    """
+    batch_ids = _processed_batch_ids(state)
+    if not batch_ids:
+        return {}
+    orders_df, settlements_df, _o, _s = _batch_frames(batch_ids)
+    if orders_df.empty:
+        return {}
+    result_df = reconcile(orders_df, settlements_df)
+    out = {}
+    for r in result_df.to_dict("records"):
+        sid = r.get("matched_settlement")
+        # An orphan credit is emitted with matched_settlement == its OWN id
+        # (self-referential); that is not "matched to an order".
+        if sid and sid != r["record_id"]:
+            out[sid] = r["record_id"]
+    return out
+
+
 @app.get("/api/cases/{case_id}/message-options")
 def message_options(case_id: str, merchant: dict = Depends(current_merchant)):
     """
@@ -759,7 +788,12 @@ def investigate_further(case_id: str, merchant: dict = Depends(current_merchant)
                             detail="This case has not been investigated yet")
 
     prior = (case.get("ai") or {}).get("confidence")
-    updated = case_engine.investigate_case_followup(state, case_id, shopify.fetch_orders())
+    # Settlements + which are already reconciled elsewhere, so the follow-up can
+    # search for a settlement this order might actually belong to.
+    settlements = _local_settlements().to_dict("records")
+    matched = _matched_settlement_map(state)
+    updated = case_engine.investigate_case_followup(
+        state, case_id, shopify.fetch_orders(), settlements, matched)
     if updated and updated.get("ai") and prior is not None:
         if updated["ai"].get("confidence") is not None:
             updated["ai"]["previous_confidence"] = prior

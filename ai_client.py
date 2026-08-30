@@ -21,6 +21,7 @@ it's given.
 """
 import json
 import os
+import threading
 
 import requests
 from dotenv import load_dotenv
@@ -67,24 +68,55 @@ GROQ_MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "4000"))
 # credit balance. Left unset it reserves the model's maximum (65k+), which a
 # free-tier account cannot afford -- the request is refused with a 402 before
 # any tokens are actually spent. Capping this to what a batched response
-# realistically needs (5 cases x ~400 tokens of reasoning, generously rounded)
-# keeps free accounts working. Gemini has no equivalent reservation, so this
-# applies only to the OpenAI-compatible path.
-OPENROUTER_MAX_TOKENS = int(os.environ.get("OPENROUTER_MAX_TOKENS", "8000"))
+# realistically needs keeps free accounts working. Gemini has no equivalent
+# reservation, so this applies only to the OpenAI-compatible path.
+#
+# Sized for CONCURRENCY: OpenRouter counts all IN-FLIGHT requests against the
+# balance together, so MAX_CONCURRENT_BATCHES x this value must fit. A 5-case
+# batched response measures ~1.5k tokens, so 3000 is generous per request and
+# still leaves room for parallel chunks.
+OPENROUTER_MAX_TOKENS = int(os.environ.get("OPENROUTER_MAX_TOKENS", "3000"))
 
 # Order matters: first configured provider wins, later ones are failover.
-PROVIDER_ORDER = ("gemini", "openrouter", "groq")
+#
+# Ordered by MEASURED latency on an identical 5-case batched investigation,
+# not by preference. Gemini's direct endpoint was by far the slowest and also
+# has the tightest daily cap, so it moved from first to last:
+#
+#   openrouter (gemini-2.5-flash)   ~6.5s   <- primary
+#   groq       (gpt-oss-20b)        ~1.9s   <- fastest, but see TPM note below
+#   gemini     (gemini-3.6-flash)  ~20.8s   <- slowest + 20/day cap, last resort
+#
+# Groq is fastest but is NOT first on purpose: its free tier limits TOKENS PER
+# MINUTE (8000), and MAX_CONCURRENT_BATCHES parallel requests each reserving
+# GROQ_MAX_TOKENS would exceed that ceiling and 413 immediately. As failover it
+# serves whatever OpenRouter could not, at a concurrency the TPM budget absorbs.
+# OpenRouter routes to a Gemini-family model, so putting it first keeps verdict
+# quality in line with what the project was already producing.
+PROVIDER_ORDER = ("openrouter", "groq", "gemini")
 
-# Set to the provider that produced the most recent successful response, so
-# callers can record WHICH model actually judged a case. Different models
-# calibrate confidence differently -- an 80 from one is not necessarily an 80
-# from another -- so this is stored per case rather than left ambiguous.
-_last_provider: str | None = None
+# How many batched investigation requests may be in flight at once. Chunks are
+# fully independent (each carries its own cases), so running them sequentially
+# just multiplies latency by the number of chunks -- 4 chunks x ~10s was making
+# a sync take 40s+ when the actual reconciliation takes under a second. Kept
+# modest so a burst doesn't trip per-minute limits: at 4, concurrent chunks
+# were overwhelming every provider at once and whole chunks fell to
+# ai_pending. 2 keeps most of the speedup without that contention.
+MAX_CONCURRENT_BATCHES = int(os.environ.get("AI_MAX_CONCURRENT_BATCHES", "2"))
+
+# Which provider produced the most recent successful response, so callers can
+# record WHICH model judged a case -- models calibrate confidence differently,
+# so an 80 from one is not an 80 from another.
+#
+# THREAD-LOCAL on purpose: batched investigations run concurrently, and a
+# single shared global would let one thread's provider be recorded against
+# another thread's case. Each worker reads back only its own value.
+_local = threading.local()
 
 
 def last_provider() -> str | None:
-    """Provider name behind the most recent successful generation."""
-    return _last_provider
+    """Provider behind the most recent successful generation ON THIS THREAD."""
+    return getattr(_local, "provider", None)
 
 
 def available_providers() -> list[str]:
@@ -190,28 +222,33 @@ def _generate(system_prompt: str, user_message: str, schema: dict | None = None,
     rate-limit error if one occurred, so callers still land on `ai_pending`
     rather than a misleading "manual review" verdict.
     """
-    global _last_provider
-
     providers = available_providers()
     if not providers:
         raise AIAuthError(
             "No AI provider is configured. Set GEMINI_API_KEY or OPENROUTER_API_KEY in .env.")
 
-    rate_limit_error = None
-    last_error = None
+    failures = []
+    any_rate_limited = False
 
     for name in providers:
         try:
             result = _PROVIDERS[name](system_prompt, user_message, schema, temperature)
-            _last_provider = name
+            _local.provider = name
             return result
-        except AIRateLimitError as exc:
-            rate_limit_error = exc
-            last_error = exc
-        except (AIAPIError, AIAuthError) as exc:
-            last_error = exc
+        except (AIRateLimitError, AIAPIError, AIAuthError) as exc:
+            if isinstance(exc, AIRateLimitError):
+                any_rate_limited = True
+            # First line only: provider error bodies are long, and what matters
+            # is WHICH provider failed and roughly why.
+            detail = str(exc).splitlines()[0][:160]
+            failures.append(f"{name}: {detail}")
 
-    raise rate_limit_error or last_error
+    # Report EVERY provider that refused, not just the last one tried. Surfacing
+    # only the final failure names the wrong culprit -- a chunk that OpenRouter
+    # rate-limited and Groq refused would be reported as a Gemini problem purely
+    # because Gemini happens to be last in the chain.
+    summary = "All AI providers failed. " + " | ".join(failures)
+    raise (AIRateLimitError(summary) if any_rate_limited else AIAPIError(summary))
 
 
 def _gemini_generate(system_prompt: str, user_message: str, schema: dict | None,

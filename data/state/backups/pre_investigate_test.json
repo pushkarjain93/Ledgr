@@ -261,25 +261,17 @@
         "classification": "no_match",
         "recommendation": "escalate",
         "confidence": 10,
-        "reason": "The new evidence explicitly states that the requested information (payment gateway confirmation) is not available in the system. Therefore, the original assessment remains unchanged: there are no candidate matches or any evidence to link a payment to ORD-00004. The ambiguity persists.",
+        "reason": "No candidate matches or evidence to link a payment to ORD-00004.",
         "next_step": "Escalate to the payment gateway to confirm whether any payment was received for ORD-00004.",
-        "evidence": [
-          "ORIGINAL CASE",
-          "NEWLY GATHERED EVIDENCE"
+        "evidence": [],
+        "missing_evidence": [
+          "payment gateway confirmation"
         ],
-        "missing_evidence": [],
-        "candidate_rankings": [
-          {
-            "id": "N/A",
-            "confidence": 10,
-            "reason": "The new evidence explicitly states that the requested information (payment gateway confirmation) is not available in the system. Therefore, the original assessment remains unchanged: there are no candidate matches or any evidence to link a payment to ORD-00004. The ambiguity persists."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:18:29.912572",
-        "provider": "openrouter",
-        "error": null,
-        "previous_confidence": 10
+        "investigated_at": "2026-08-30T17:52:44.671315",
+        "provider": "groq",
+        "error": null
       },
       "created_at": "2026-08-30T17:52:46.169935",
       "history": [
@@ -290,10 +282,6 @@
         {
           "at": "2026-08-30T18:10:31.939020",
           "event": "reconciled (AI result reused -- evidence unchanged)"
-        },
-        {
-          "at": "2026-08-30T18:18:29.912572",
-          "event": "ai follow-up investigation completed"
         }
       ],
       "bookmarked": false,
@@ -305,7 +293,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:18:29.912572"
+      "updated_at": "2026-08-30T18:10:31.939020"
     },
     "CASE-STL-X1001": {
       "case_id": "CASE-STL-X1001",
@@ -463,25 +451,17 @@
         "classification": "no_match",
         "recommendation": "escalate",
         "confidence": 10,
-        "reason": "The new evidence provided candidate settlements, but none of them are a direct match for ORD-00049. Settlements STL-00080, STL-00023, and STL-00044 are already matched to other orders. Settlements STL-00014-D and STL-00014 have the correct amount but settled significantly before the order date, making them unlikely matches. The requested payment gateway confirmation was not available, so the original ambiguity remains.",
-        "next_step": "Escalate to the payment gateway to confirm whether any payment was received for ORD-00049, as this information is still unavailable.",
-        "evidence": [
-          "candidate_settlements",
-          "still_unavailable"
+        "reason": "No candidate matches or evidence to link a payment to ORD-00049.",
+        "next_step": "Escalate to the payment gateway to confirm whether any payment was received for ORD-00049.",
+        "evidence": [],
+        "missing_evidence": [
+          "payment gateway confirmation"
         ],
-        "missing_evidence": [],
-        "candidate_rankings": [
-          {
-            "id": "N/A",
-            "confidence": 10,
-            "reason": "The new evidence provided candidate settlements, but none of them are a direct match for ORD-00049. Settlements STL-00080, STL-00023, and STL-00044 are already matched to other orders. Settlements STL-00014-D and STL-00014 have the correct amount but settled significantly before the order date, making them unlikely matches. The requested payment gateway confirmation was not available, so the original ambiguity remains."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:22:35.204754",
-        "provider": "openrouter",
-        "error": null,
-        "previous_confidence": 10
+        "investigated_at": "2026-08-30T17:52:44.671315",
+        "provider": "groq",
+        "error": null
       },
       "created_at": "2026-08-30T17:52:46.169935",
       "history": [
@@ -492,10 +472,6 @@
         {
           "at": "2026-08-30T18:10:31.939020",
           "event": "reconciled (AI result reused -- evidence unchanged)"
-        },
-        {
-          "at": "2026-08-30T18:22:35.204754",
-          "event": "ai follow-up investigation completed"
         }
       ],
       "bookmarked": false,
@@ -507,7 +483,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:22:35.204754"
+      "updated_at": "2026-08-30T18:10:31.939020"
     },
     "CASE-STL-X1002": {
       "case_id": "CASE-STL-X1002",
@@ -768,7 +744,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "exception",
+      "case_status": "ai_pending",
       "expected": 124999,
       "received": 0,
       "delta": 0,
@@ -780,25 +756,18 @@
       "candidates": [],
       "evidence_hash": "900e3759c5805528",
       "ai": {
-        "classification": "no_match",
-        "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "No candidate matches were found for this order, and no payment was received against the expected amount.",
-        "next_step": "Verify with the payment gateway if any transaction for ORD-00008 was initiated or completed.",
-        "evidence": [
-          "Expected amount: Rs 1,249.99",
-          "Received amount: Rs 0.00",
-          "No candidate matches provided"
-        ],
-        "missing_evidence": [
-          "Payment gateway records for ORD-00008",
-          "Communication logs with the customer"
-        ],
+        "classification": "remittance_overdue",
+        "recommendation": null,
+        "confidence": null,
+        "reason": null,
+        "next_step": null,
+        "evidence": [],
+        "missing_evidence": [],
         "candidate_rankings": [],
-        "action": "escalate",
-        "investigated_at": "2026-08-30T18:19:18.812922",
-        "provider": "openrouter",
-        "error": null
+        "action": null,
+        "investigated_at": null,
+        "provider": null,
+        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
       },
       "created_at": "2026-08-30T17:52:46.169935",
       "history": [
@@ -809,10 +778,6 @@
         {
           "at": "2026-08-30T18:10:31.939020",
           "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-08-30T18:19:18.812922",
-          "event": "ai investigated"
         }
       ],
       "bookmarked": false,
@@ -824,7 +789,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:19:18.812922"
+      "updated_at": "2026-08-30T18:10:31.939020"
     },
     "CASE-STL-SHADOW01": {
       "case_id": "CASE-STL-SHADOW01",

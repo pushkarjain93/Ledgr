@@ -126,6 +126,53 @@ export function CaseDetailPage() {
     }
   }
 
+  async function handleRetryAi() {
+    if (!caseItem || acting) return
+    setActing(true)
+    setActionError(null)
+    try {
+      const updated = await api.retryAi(caseItem.case_id)
+      setCaseItem(updated)
+      await refresh()
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError && err.status === 429
+          ? 'Every AI provider is rate-limited right now. Try again shortly.'
+          : err instanceof Error
+            ? err.message
+            : 'Could not retry the investigation',
+      )
+    } finally {
+      setActing(false)
+    }
+  }
+
+  /**
+   * The one controlled agentic step: AI named evidence it was missing, so we
+   * fetch what is realistically available and ask for ONE more verdict.
+   * User-triggered only, never automatic, and never looped further.
+   */
+  async function handleInvestigateFurther() {
+    if (!caseItem || acting) return
+    setActing(true)
+    setActionError(null)
+    try {
+      const updated = await api.investigateFurther(caseItem.case_id)
+      setCaseItem(updated)
+      await refresh()
+    } catch (err) {
+      setActionError(
+        err instanceof ApiError && err.status === 429
+          ? 'Every AI provider is rate-limited right now. Try again shortly.'
+          : err instanceof Error
+            ? err.message
+            : 'Could not complete the follow-up investigation',
+      )
+    } finally {
+      setActing(false)
+    }
+  }
+
   async function handleBookmark() {
     if (!caseItem || acting) return
     setActing(true)
@@ -164,6 +211,16 @@ export function CaseDetailPage() {
   const reopenable = canReopenCase(caseItem)
   const canDecide = isOpenForReview(caseItem) && !acting
   const tier = confidenceTier(caseItem.ai?.confidence)
+  // Only offer the follow-up when AI actually named something it was missing —
+  // otherwise there is nothing new to fetch and the extra call would be waste.
+  const missingEvidence = caseItem.ai?.missing_evidence ?? []
+  const canInvestigateFurther = !resolved && missingEvidence.length > 0
+  const prevConf = caseItem.ai?.previous_confidence
+  const confidenceDelta =
+    prevConf !== null && prevConf !== undefined &&
+    caseItem.ai?.confidence !== null && caseItem.ai?.confidence !== undefined
+      ? caseItem.ai.confidence - prevConf
+      : null
 
   return (
     <div className="mx-auto max-w-[1120px] space-y-6 px-6 py-6 lg:px-8 lg:py-8">
@@ -192,6 +249,21 @@ export function CaseDetailPage() {
             {caseItem.ai?.confidence !== null && caseItem.ai?.confidence !== undefined && (
               <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${tier.badgeClass}`}>
                 {caseItem.ai.confidence}% Confidence
+              </span>
+            )}
+            {/* Real before/after from a follow-up investigation — a diff of two
+                genuine scores, never a fabricated trend. */}
+            {confidenceDelta !== null && (
+              <span
+                title={`Confidence moved from ${caseItem.ai?.previous_confidence}% after the follow-up investigation`}
+                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
+                  confidenceDelta > 0
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+                    : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300'
+                }`}
+              >
+                {confidenceDelta > 0 ? '▲' : '▼'}
+                {Math.abs(confidenceDelta)}% after follow-up
               </span>
             )}
           </div>
@@ -236,6 +308,30 @@ export function CaseDetailPage() {
 
       {!resolved && (
         <div className="flex flex-wrap items-center justify-end gap-3 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+          {caseItem.case_status === 'ai_pending' && (
+            <button
+              type="button"
+              disabled={acting}
+              onClick={handleRetryAi}
+              title="AI could not reach a verdict earlier. Try again."
+              className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-[14px] font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300"
+            >
+              {acting ? 'Retrying…' : 'Retry AI investigation'}
+            </button>
+          )}
+
+          {canInvestigateFurther && (
+            <button
+              type="button"
+              disabled={acting}
+              onClick={handleInvestigateFurther}
+              title={`AI asked for: ${missingEvidence.join('; ')}`}
+              className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-[14px] font-medium text-violet-700 transition-colors hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-300"
+            >
+              {acting ? 'Investigating…' : 'Investigate further'}
+            </button>
+          )}
+
           <button
             type="button"
             disabled={!canDecide}

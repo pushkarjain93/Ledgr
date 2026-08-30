@@ -26,6 +26,11 @@ export type CaseAiBlock = {
   next_step: string | null
   evidence?: string[]
   missing_evidence?: string[]
+  /** Set only after a follow-up investigation, so the UI can show a real
+   *  before/after delta rather than a fabricated trend. */
+  previous_confidence?: number | null
+  /** Which provider produced this verdict — models calibrate differently. */
+  provider?: string | null
   candidate_rankings?: Array<{ id: string; confidence: number; reason: string }>
   action: 'resolve' | 'manual_review' | 'escalate' | null
   investigated_at?: string | null
