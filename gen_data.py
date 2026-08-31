@@ -109,6 +109,10 @@ BULK_ORDERS_PER_BATCH = 2             # COD bulk-remittance group size, per batc
 ORPHAN_CREDITS_PER_BATCH = 2          # settlements with no order behind them
 
 orders, settlements, truth = [], [], []
+# Courier remittance detail -- belongs to the existing Bank / COD source, NOT
+# a new one. These are the per-order rows behind a single bank credit, which
+# is what a courier's remittance portal actually provides.
+remittances = []
 
 
 def batch_of(i_one_indexed):
@@ -361,9 +365,36 @@ for bid in range(1, N_BATCHES + 1):
     bulk_utr = new_utr(850000 + bid)
     bulk_gross = sum(bulk_orders)
     bulk_fee_total = sum(min(fee_band(a, "COD"), int(a * 0.025)) for a in bulk_orders)
-    add_settlement(f"STL-BULK0{bid}", bulk_day + timedelta(days=7), "", bulk_utr,
+    remitted_on = bulk_day + timedelta(days=7)
+    add_settlement(f"STL-BULK0{bid}", remitted_on, "", bulk_utr,
                    bulk_gross - bulk_fee_total, "BANK",
                    courier_narration(bulk_courier, bulk_utr, batch_no=f"BATCH0{bid}"), bid)
+
+    # ---- the courier's remittance detail for that one bank credit ----------
+    # The paperwork a real courier publishes alongside the payment: one row per
+    # delivered order, naming the order it belongs to. It is what turns "one
+    # credit, which orders?" from a guess into a lookup.
+    #
+    # Written so the rows RECONCILE EXACTLY: sum(net_payout) == the bank credit
+    # above. That equality is the checksum remittance.py verifies.
+    for k, amt in enumerate(bulk_orders, start=1):
+        fee = min(fee_band(amt, "COD"), int(amt * 0.025))
+        remittances.append({
+            "settlement_utr": bulk_utr,
+            "order_id": f"ORD-BULK{bid}{k:02d}",
+            "awb": f"AWB{bid}{k:07d}",
+            "cod_collected": to_rupees(amt),
+            "cod_fee": to_rupees(fee),
+            "freight_fee": to_rupees(0),
+            "net_payout": to_rupees(amt - fee),
+            "remitted_on": str(remitted_on),
+            "courier": bulk_courier,
+            # Same batch_id every other feed carries, so remittance detail is
+            # revealed with its own batch. Without it a later batch's rows are
+            # visible while its bank credit is not, and the checksum reports a
+            # missing credit that has simply not arrived yet.
+            "batch_id": bid,
+        })
     # No ground_truth entries for these bulk orders/settlement -- intentional.
 
     # ---- settlements with no order behind them -----------------------------
@@ -414,6 +445,7 @@ counts = {
     "orders.csv": dump("orders.csv", orders),
     "settlements.csv": dump("settlements.csv", settlements),
     "ground_truth.csv": dump("ground_truth.csv", truth),
+    "remittances.csv": dump("remittances.csv", remittances),
 }
 
 print("=" * 66)

@@ -77,7 +77,12 @@ def _may_auto_resolve(case, result) -> bool:
 # normal window, and shown separately (see the "Awaiting Settlement" widget
 # in app_new.py) rather than in the Review Queue.
 _AI_ELIGIBLE_TYPES = ("partial_payment", "overpayment", "ambiguous_match",
-                      "unmatched_settlement", "unmatched_order", "remittance_overdue")
+                      "unmatched_settlement", "unmatched_order", "remittance_overdue",
+                      # A remittance discrepancy is DETECTED deterministically
+                      # (remittance.py proves it from the file), but explaining
+                      # what it means and drafting the dispute is judgement --
+                      # exactly the half AI keeps.
+                      "remittance_discrepancy")
 
 
 def _case_type_for(row, is_ambiguous, is_orphan_settlement):
@@ -309,6 +314,114 @@ def build_cases_for_batch(result_df, batch_id, orders_lookup, settlements_lookup
                 "_event": "settlement arrived, resolved automatically",
             })
     return cases
+
+
+def apply_remittance_to_cases(cases, remittance_result, batch_id):
+    """
+    Rewrite the cases that the courier's remittance detail explains, and raise
+    new ones for what it contradicts.
+
+    Runs AFTER build_cases_for_batch, on its output. engine.py's waterfall is
+    untouched: it correctly reported these orders as unpaid and the credit as
+    unexplained, because on the data it had that was true. The remittance file
+    is the missing evidence, and this is where it gets applied.
+
+    Two rewrites:
+      * an order named in a SQUARED batch is provably paid -- it stops being
+        "overdue, chase the courier"
+      * the bank credit that batch paid is provably accounted for -- it stops
+        being "an unexplained credit, consider refunding"
+
+    Those two were previously raised against the SAME money, telling the user
+    to chase a courier for a payment that had already arrived and to consider
+    refunding it back. Both disappear together or not at all.
+
+    A batch whose rows do not sum to the credit links NOTHING -- see
+    remittance.reconcile_remittances. Unproven paperwork must not clear money.
+    """
+    links = remittance_result.get("links") or {}
+    batches = remittance_result.get("batches") or {}
+    explained = {b["settlement_id"]: b for b in batches.values()
+                 if b.get("checksum_ok") and b.get("settlement_id")}
+
+    now = datetime.now().isoformat()
+    for case in cases:
+        rid = case["record_id"]
+        link = links.get(rid)
+        if link:
+            case.update({
+                "case_status": "resolved", "amount_at_risk": 0,
+                "settlement_id": link["settlement_id"],
+                "received": link["net_payout"],
+                "explanation": (
+                    f"Paid by {link['courier']} in the remittance batch settled on "
+                    f"{link['remitted_on']} ({link['utr']}), which covered "
+                    f"{link['batch_order_count']} orders. This order's share was "
+                    f"{fmt(link['cod_collected'])} collected less "
+                    f"{fmt(link['cod_fee'] + link['freight_fee'])} in courier fees, "
+                    f"paid out as {fmt(link['net_payout'])}."),
+                "remittance": link,
+                "resolution": {"resolved": True, "resolution_type": "auto_resolved",
+                               "resolved_at": now, "resolved_by": "system"},
+                "_event": "matched to courier remittance detail",
+            })
+            continue
+
+        batch = explained.get(rid) or explained.get(case.get("settlement_id") or "")
+        if batch and case["case_type"] == "unmatched_settlement":
+            case.update({
+                "case_status": "resolved", "amount_at_risk": 0,
+                "explanation": (
+                    f"Courier remittance for {batch['courier']} covering "
+                    f"{batch['order_count']} orders ({', '.join(batch['order_ids'])}). "
+                    f"The per-order rows total {fmt(batch['rows_total'])}, matching this "
+                    f"credit exactly."),
+                "remittance_batch": batch,
+                "resolution": {"resolved": True, "resolution_type": "auto_resolved",
+                               "resolved_at": now, "resolved_by": "system"},
+                "_event": "explained by courier remittance detail",
+            })
+
+    cases.extend(_remittance_discrepancy_cases(
+        remittance_result.get("discrepancies") or [], cases, batch_id))
+    return cases
+
+
+def _remittance_discrepancy_cases(discrepancies, cases, batch_id):
+    """
+    One case per remittance discrepancy the join could not square.
+
+    Skips anything already covered by an existing case for the same record --
+    an order that is already an open exception does not need a second ticket,
+    it needs the remittance evidence attached to the one it has.
+    """
+    by_record = {c["record_id"]: c for c in cases}
+    new_cases = []
+    for d in discrepancies:
+        rid = d.get("order_id") or d.get("utr")
+        if not rid:
+            continue
+        existing = by_record.get(rid)
+        if existing:
+            existing.setdefault("remittance_findings", []).append(d)
+            existing["explanation"] = f"{existing['explanation']} {d['detail']}".strip()
+            continue
+        new_cases.append({
+            "case_id": f"CASE-REMIT-{rid}", "record_id": rid,
+            "order_id": d.get("order_id"), "settlement_id": None,
+            "batch_id": batch_id, "case_type": "remittance_discrepancy",
+            "tier": 5, "status": "EXCEPTION", "case_status": "needs_ai",
+            "expected": 0, "received": 0, "delta": 0,
+            "amount_at_risk": int(d.get("amount_at_risk") or 0),
+            "reason": d["kind"], "reason_label": "Remittance discrepancy",
+            "explanation": d["detail"], "priority": "",
+            "candidates": [], "evidence_hash": None, "ai": None,
+            "remittance_findings": [d],
+            "resolution": {"resolved": False, "resolution_type": None,
+                           "resolved_at": None, "resolved_by": None},
+            "_event": "raised from courier remittance detail",
+        })
+    return new_cases
 
 
 def build_case_context(case):
@@ -606,6 +719,29 @@ def fetch_missing_evidence(case, orders_lookup, settlements_lookup=None,
     return evidence or {"note": "No additional evidence is available for this case."}
 
 
+def _followup_evidence_labels(new_evidence: dict) -> list[str]:
+    """
+    Plain-language summary of what the follow-up actually went and checked.
+
+    Reports the real shape of what came back -- "no matching settlement found"
+    is a genuine finding and must not be presented as if nothing was looked at.
+    """
+    labels = []
+    cand = new_evidence.get("candidate_settlements")
+    if isinstance(cand, list):
+        labels.append(f"Searched the settlement feed — {len(cand)} possible match"
+                      f"{'' if len(cand) == 1 else 'es'} found")
+    elif cand:
+        labels.append("Searched the settlement feed — no payment found under any reference")
+
+    hist = new_evidence.get("customer_history")
+    if isinstance(hist, list):
+        labels.append(f"Checked this customer's other orders — {len(hist)} found")
+    elif hist:
+        labels.append("Checked this customer's order history")
+    return labels
+
+
 def investigate_case_followup(state, case_id, orders_lookup,
                                settlements_lookup=None,
                                matched_settlement_ids=None):
@@ -622,10 +758,31 @@ def investigate_case_followup(state, case_id, orders_lookup,
     original_context = build_case_context(case)
     new_evidence = fetch_missing_evidence(
         case, orders_lookup, settlements_lookup, matched_settlement_ids)
+    # Snapshot the verdict BEFORE the follow-up overwrites it. Without this the
+    # UI can only show the new conclusion, which makes "Investigate further"
+    # look like it did nothing when it re-confirms an existing finding -- the
+    # value is in what CHANGED and what evidence was actually retrieved.
+    #
+    # apply_ai_result stores the verdict as `action`/`reason`/`next_step`, NOT
+    # under the model's own `recommended_action`/`reasoning` names -- reading
+    # the latter silently produced None on both sides and made `changed`
+    # always False.
+    prior = {
+        "action": case["ai"].get("action"),
+        "reasoning": case["ai"].get("reason"),
+        "next_step": case["ai"].get("next_step"),
+    }
     try:
         result = ai_client.investigate_followup(original_context, case["ai"], new_evidence)
         result.setdefault("missing_evidence", [])
         apply_ai_result(case, result)
+        case["ai"]["followup"] = {
+            "at": datetime.now().isoformat(timespec="seconds"),
+            "evidence_checked": _followup_evidence_labels(new_evidence),
+            "still_unavailable": new_evidence.get("still_unavailable") or [],
+            "previous": prior,
+            "changed": prior.get("action") != case["ai"].get("action"),
+        }
         case["_event"] = "ai follow-up investigation completed"
     except (ai_client.AIAuthError, ai_client.AIAPIError) as exc:
         case["_event"] = f"ai follow-up investigation unavailable: {exc}"
@@ -768,7 +925,23 @@ def build_ask_context(state, case_id=None):
     runs = state["reconciliation_runs"]
     cases = state_store.list_cases(state)
     contacts_by_order = {o["order_id"]: o for o in shopify_client.fetch_orders()}
+
+    # Every status, INCLUDING the ones at zero.
+    #
+    # Absence is ambiguous to a model: with no ai_pending entries in the list
+    # it cannot tell "none are waiting on AI" from "the list was truncated".
+    # Asked which cases were waiting on AI, it answered with five cases that
+    # had all already been investigated -- it pattern-matched their reason
+    # text ("Large variance flagged by AI") because nothing told it the count
+    # was actually zero. An explicit 0 cannot be misread.
+    status_counts = {s: 0 for s in (
+        "pending_settlement", "needs_ai", "ai_pending",
+        "ai_recommendation", "manual_review", "exception", "resolved")}
+    for c in cases:
+        status_counts[c["case_status"]] = status_counts.get(c["case_status"], 0) + 1
+
     return {
+        "case_status_counts": status_counts,
         "cumulative_totals": {
             "total_reconciliations": len(runs),
             "auto_matched": sum(r["auto_matched"] for r in runs),

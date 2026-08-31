@@ -69,7 +69,9 @@ export function TransactionsTable({
                   {record.record_id}
                 </td>
                 <td className="px-5 py-3.5 text-zinc-500">
-                  {record.tier} · {record.tier_name}
+                  {/* Settlement-feed rows have no tier -- show the name
+                      alone rather than a dangling "· Settlement feed". */}
+                  {record.tier === null ? record.tier_name : `${record.tier} · ${record.tier_name}`}
                 </td>
                 <td className="px-5 py-3.5 tabular-nums">{formatINR(record.expected)}</td>
                 <td className="px-5 py-3.5 tabular-nums">{formatINR(record.received)}</td>

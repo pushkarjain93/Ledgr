@@ -20,6 +20,7 @@ export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
   const finding = ai?.reason?.trim() || caseItem.explanation || 'No AI finding available yet.'
   const recommendation = ai?.next_step?.trim() || '—'
   const evidence = ai?.evidence ?? []
+  const followup = ai?.followup ?? null
 
   return (
     <section
@@ -28,7 +29,52 @@ export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-50">AI Analysis</h2>
+        {followup && (
+          <span className="rounded-full bg-violet-50 px-2.5 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+            Updated by deeper investigation
+          </span>
+        )}
       </div>
+
+      {/* What "Investigate further" actually did. Shown ABOVE the finding
+          because it is the newest information on the page, and because a
+          re-confirmed verdict otherwise reads as though the button did
+          nothing. */}
+      {followup && (
+        <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50/50 p-3.5 dark:border-violet-500/25 dark:bg-violet-500/[0.07]">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-violet-700 dark:text-violet-300">
+            What the deeper look found
+          </p>
+          <p className="mt-2 text-[13px] font-medium leading-relaxed text-zinc-800 dark:text-zinc-100">
+            {followup.changed
+              ? 'New evidence changed the recommendation.'
+              : 'The original finding was re-checked and still holds.'}
+          </p>
+          {followup.evidence_checked.length > 0 && (
+            <ul className="mt-2.5 space-y-1.5">
+              {followup.evidence_checked.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-[12.5px] text-zinc-700 dark:text-zinc-300">
+                  <CheckIcon />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {followup.changed && followup.previous.next_step && (
+            <p className="mt-2.5 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+              Previously advised:{' '}
+              <span className="line-through decoration-zinc-400">
+                {followup.previous.next_step}
+              </span>
+            </p>
+          )}
+          {followup.still_unavailable.length > 0 && (
+            <p className="mt-2.5 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+              Could not check: {followup.still_unavailable.join(', ')}.
+            </p>
+          )}
+        </div>
+      )}
 
       {ai?.error && (
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200">

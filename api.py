@@ -39,6 +39,7 @@ import ai_client
 import case_engine
 import razorpay_client as rzp
 import shopify_client as shopify
+import remittance
 import state_store
 from auth import authenticate, get_merchant_by_email
 import config
@@ -276,9 +277,14 @@ def sources(merchant: dict = Depends(current_merchant)):
                    "message": shop_message, "count": len(shop_rows)},
         "settlements": {"name": "Razorpay", "status": rzp_status,
                         "message": rzp_message, "count": len(rzp_rows)},
+        # Courier remittance detail belongs to THIS source -- it is the
+        # per-order breakdown behind a bank credit, not a separate
+        # integration, so it is reported here rather than as a fourth source.
         "bank": {"name": "Bank / COD", "status": "demo_data",
-                 "message": f"Demo data -- {len(bank_rows)} bank credit(s).",
-                 "count": len(bank_rows)},
+                 "message": (f"Demo data -- {len(bank_rows)} bank credit(s), "
+                             f"{len(remittance.load_remittances())} remittance detail row(s)."),
+                 "count": len(bank_rows),
+                 "remittance_rows": len(remittance.load_remittances())},
     }
 
 
@@ -471,6 +477,30 @@ def sync_and_reconcile(background: BackgroundTasks,
         result_df, batch_id, order_rows, settlement_rows,
         previously_open_order_ids=pending_ids,
         existing_cases=state.get("cases", {}))
+    # Courier remittance detail -- part of the existing Bank / COD source, not
+    # a new one. Deterministic join: a bulk credit's own paperwork names the
+    # orders it paid, so no model is asked to guess the grouping.
+    #
+    # Scoped to EXACTLY the batch whose orders and settlements were loaded
+    # above. The scope has to match on both sides: reading the whole file
+    # surfaced batch 2's rows during batch 1 (a credit that had not arrived
+    # yet), and reading every processed batch surfaced batch 1's rows during
+    # batch 2, whose orders are no longer in scope -- reporting real orders as
+    # "not in our order book".
+    remit_rows = [r for r in remittance.load_remittances()
+                  if str(r.get("batch_id", "")) == str(batch_id)]
+    if remit_rows:
+        remit = remittance.reconcile_remittances(remit_rows, order_rows, settlement_rows)
+        case_engine.apply_remittance_to_cases(cases, remit, batch_id)
+        linked = len(remit["links"])
+        issues = len(remit["discrepancies"])
+        steps.append({
+            "label": "Courier remittance detail",
+            "result": (f"{linked} order(s) matched to bulk remittances"
+                       + (f", {issues} discrepancy(ies) raised" if issues else "")
+                       if linked or issues else "No bulk remittances to match"),
+        })
+
     needs_ai_ids = [c["case_id"] for c in cases if c.get("case_status") == "needs_ai"]
     needs_ai = len(needs_ai_ids)
     case_engine.save_cases(state, cases)

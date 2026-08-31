@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../lib/api'
 
 /**
@@ -42,6 +42,22 @@ export function AskAiPanel({ caseId, compact = false }: AskAiPanelProps) {
   const [turns, setTurns] = useState<Turn[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Start a fresh conversation whenever the case changes.
+  //
+  // Navigating /cases/A -> /cases/B keeps this component MOUNTED (same route,
+  // different param), so without this the previous case's Q&A stayed on
+  // screen -- and, worse, was still sent as `history` on the next case's
+  // questions. A question about case B answered with case A's context is a
+  // wrong answer about real money, not just stale UI.
+  //
+  // Done inside the component rather than with a key={caseId} at the call
+  // site, so no future call site can forget it.
+  useEffect(() => {
+    setTurns([])
+    setQuestion('')
+    setError(null)
+  }, [caseId])
 
   const suggestions = caseId ? CASE_SUGGESTIONS : GLOBAL_SUGGESTIONS
 

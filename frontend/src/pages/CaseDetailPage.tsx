@@ -6,6 +6,7 @@ import { CaseAiAnalysisPanel } from '../components/cases/CaseAiAnalysisPanel'
 import { CaseDetailNav } from '../components/cases/CaseDetailNav'
 import { CaseDocumentsPanel } from '../components/cases/CaseDocumentsPanel'
 import { CaseDraftMessagePanel } from '../components/cases/CaseDraftMessagePanel'
+import { CaseRemittancePanel } from '../components/cases/CaseRemittancePanel'
 import { CaseResolvedBanner } from '../components/cases/CaseTimeline'
 import { CaseSummaryPanel } from '../components/cases/CaseSummaryPanel'
 import { CaseTimeline } from '../components/cases/CaseTimeline'
@@ -417,6 +418,10 @@ export function CaseDetailPage() {
       {/* Scoped to this case: the backend passes only this case's own records
           as context, so answers can't drift onto unrelated data. Read-only —
           asking never changes the case's status or resolution. */}
+      {/* Renders only when this case actually has courier remittance detail,
+          so it never shows as an empty section on the other cases. */}
+      <CaseRemittancePanel caseItem={caseItem} />
+
       <CaseDraftMessagePanel caseId={caseItem.case_id} />
 
       <AskAiPanel caseId={caseItem.case_id} />

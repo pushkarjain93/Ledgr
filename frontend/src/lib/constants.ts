@@ -19,6 +19,7 @@ export const ISSUE_TYPE_LABELS: Record<string, string> = {
   unmatched_settlement: 'Unmatched settlement',
   unmatched_order: 'Unmatched order',
   remittance_overdue: 'Remittance overdue',
+  remittance_discrepancy: 'Remittance discrepancy',
   pending_settlement: 'Awaiting settlement',
   settlement_matched: 'Settlement matched',
   exception: 'Exception',

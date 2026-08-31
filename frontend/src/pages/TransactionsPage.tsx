@@ -11,6 +11,7 @@ import {
   hasActiveTransactionFilters,
   type TransactionFilters,
   uniquePaymentModes,
+  uniqueTierOptions,
 } from '../lib/transactionDisplay'
 
 const DEFAULT_FILTERS: TransactionFilters = {
@@ -18,6 +19,7 @@ const DEFAULT_FILTERS: TransactionFilters = {
   date: '',
   paymentMode: 'all',
   status: 'all',
+  tier: 'all',
 }
 
 export function TransactionsPage() {
@@ -64,6 +66,7 @@ export function TransactionsPage() {
   )
 
   const paymentModes = useMemo(() => uniquePaymentModes(records), [records])
+  const tiers = useMemo(() => uniqueTierOptions(records), [records])
 
   const filtered = useMemo(
     () => filterTransactions(records, filters),
@@ -103,6 +106,7 @@ export function TransactionsPage() {
           <TransactionFiltersBar
             filters={filters}
             paymentModes={paymentModes}
+            tiers={tiers}
             onChange={setFilters}
           />
 

@@ -811,9 +811,80 @@ ASK_SYSTEM_PROMPT = (
     "pass. Age matters too: an older unresolved case is more urgent than a "
     "newer one of similar value. "
     "\n\n"
+    "CASE STATUS IS A FIXED FIELD, NOT A DESCRIPTION. Read `case_status` "
+    "literally; never infer a case's state from its `reason` wording. The "
+    "only valid values are:\n"
+    "  pending_settlement - money is not due yet; the COD window is still open\n"
+    "  needs_ai           - queued for investigation, not yet looked at\n"
+    "  ai_pending         - AI could NOT reach this case (rate limit); retryable\n"
+    "  ai_recommendation  - AI investigated and proposes a resolution\n"
+    "  manual_review      - AI investigated and wants a human to decide\n"
+    "  exception          - AI investigated and found nothing conclusive\n"
+    "  resolved           - closed by a human or by an auto-resolve rule\n"
+    "\n"
+    "So: 'waiting on AI', 'pending AI', 'not yet reviewed by AI' means "
+    "`case_status == \"ai_pending\"` AND NOTHING ELSE. A case whose reason "
+    "text mentions AI (for example 'Large variance flagged by AI') has "
+    "ALREADY been through AI and is NOT waiting on it. Use "
+    "`case_status_counts` to answer 'how many' questions; when the count for "
+    "a status is 0, say plainly that there are none rather than offering "
+    "cases in some other status.\n"
+    "\n"
+    "Those status values are for YOUR reasoning only. Never print a raw field "
+    "name or status code back to the user -- say 'no cases are waiting on AI' "
+    "or 'five cases need a human decision', not 'the ai_pending count is 0'. "
+    "The reader is a finance operator, not an engineer.\n"
+    "\n"
     "Reply in plain text. Do not use markdown formatting such as ** for "
-    "bold -- it is rendered literally."
+    "bold or backticks for code -- both are rendered literally."
 )
+
+
+# Internal field names that mean nothing to a finance operator. The prompt
+# already forbids printing them, but a weaker failover model ignores that
+# instruction often enough to matter -- one answer came back citing
+# "amount_at_risk" in bold markdown. Formatting is enforceable in code, so it
+# is enforced in code rather than merely requested. Longest keys first so
+# `amount_at_risk` is replaced before `at_risk` could match inside it.
+_FIELD_WORDS = {
+    "amount_at_risk": "amount at risk",
+    "pending_settlement": "awaiting settlement",
+    "ai_recommendation": "AI recommendation",
+    "unmatched_settlement": "unmatched settlement",
+    "remittance_overdue": "remittance overdue",
+    "partial_payment": "short payment",
+    "unmatched_order": "unmatched order",
+    "ambiguous_match": "ambiguous match",
+    "manual_review": "manual review",
+    "case_status": "status",
+    "ai_pending": "waiting on AI",
+    "order_date": "order date",
+    "needs_ai": "queued for AI",
+    "record_id": "record",
+    "case_id": "case",
+    "overpayment": "overpayment",
+    "at_risk": "at risk",
+}
+
+# DOUBLE asterisk minimum, deliberately. Matching a single `*` also eats
+# multiplication -- "a 5*3 grid" became "a 53 grid" in testing, and silently
+# corrupting a number is far worse than leaving one stray asterisk on screen.
+_MD_BOLD = re.compile(r"\*{2,3}(?=\S)(.+?)(?<=\S)\*{2,3}", re.DOTALL)
+
+
+def _plain_text(text: str) -> str:
+    """
+    Strip markdown and internal jargon from a model answer.
+
+    The Ask panel renders raw text, so `**bold**` and backticks show up
+    literally as punctuation. Both are stripped here rather than trusted to
+    the prompt.
+    """
+    out = _MD_BOLD.sub(r"\1", text or "")
+    out = out.replace("`", "")
+    for field, word in _FIELD_WORDS.items():
+        out = re.sub(rf"\b{re.escape(field)}\b", word, out)
+    return out.strip()
 
 
 def ask(question: str, context: dict, history: list[dict] | None = None) -> str:
@@ -849,7 +920,8 @@ def ask(question: str, context: dict, history: list[dict] | None = None) -> str:
         "Reconciliation data (the ONLY source of truth available to you):\n"
         + json.dumps(context, indent=2, default=str)
     )
-    return _generate(ASK_SYSTEM_PROMPT, "\n\n".join(parts), schema=None, temperature=0.1)
+    return _plain_text(
+        _generate(ASK_SYSTEM_PROMPT, "\n\n".join(parts), schema=None, temperature=0.1))
 
 
 if __name__ == "__main__":

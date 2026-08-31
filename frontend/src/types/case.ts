@@ -5,6 +5,8 @@ export type CaseType =
   | 'unmatched_settlement'
   | 'unmatched_order'
   | 'remittance_overdue'
+  /** Courier remittance detail contradicts our records - see remittance.py. */
+  | 'remittance_discrepancy'
   | 'pending_settlement'
   | 'settlement_matched'
   | 'exception'
@@ -31,6 +33,18 @@ export type CaseAiBlock = {
   previous_confidence?: number | null
   /** Which provider produced this verdict — models calibrate differently. */
   provider?: string | null
+  /**
+   * Present only after "Investigate further" has run. Records what the extra
+   * step actually checked and whether the verdict moved, so a re-confirmed
+   * finding still visibly reports work done instead of looking like a no-op.
+   */
+  followup?: {
+    at: string
+    evidence_checked: string[]
+    still_unavailable: string[]
+    changed: boolean
+    previous: { action: string | null; reasoning: string | null; next_step: string | null }
+  } | null
   candidate_rankings?: Array<{ id: string; confidence: number; reason: string }>
   action: 'resolve' | 'manual_review' | 'escalate' | null
   investigated_at?: string | null
@@ -53,6 +67,20 @@ export type Case = {
   payment_mode?: string
   batch_id: string | number
   case_type: CaseType
+  /** Set when this order was paid inside a bulk courier remittance. */
+  remittance?: {
+    utr: string; settlement_id: string; awb: string; courier: string
+    remitted_on: string; cod_collected: number; cod_fee: number
+    freight_fee: number; net_payout: number
+    batch_order_count: number; batch_credit: number
+  } | null
+  /** Set on the bank credit itself: the batch it turned out to be. */
+  remittance_batch?: {
+    utr: string; courier: string; remitted_on: string; order_count: number
+    rows_total: number; credit_amount: number; order_ids: string[]
+  } | null
+  /** Discrepancies the remittance join could not square for this record. */
+  remittance_findings?: { kind: string; detail: string; amount_at_risk: number }[]
   case_status: CaseStatus
   expected: number
   received: number

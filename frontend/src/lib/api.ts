@@ -147,7 +147,12 @@ export type TransactionRecord = {
   record_id: string
   order_date: string
   payment_mode: string
-  tier: number
+  /**
+   * null for settlement-feed rows. Those are the settlement side of the
+   * ledger and never go through engine.py's order-side tier waterfall, so
+   * they genuinely have no tier -- declaring this `number` was a type lie.
+   */
+  tier: number | null
   tier_name: string
   status: string
   reason: string
