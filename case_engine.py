@@ -37,10 +37,38 @@ import shopify_client
 import state_store
 from config import fmt, to_paise
 
-# Confidence floor below which an AI "resolve" recommendation is downgraded
-# to manual_review regardless of what the model said -- mirrors this
-# project's standing "never auto-clear without justification" rule.
-AUTO_RESOLVE_CONFIDENCE_FLOOR = 85
+# When may an AI "resolve" recommendation become a one-click action?
+#
+# NOT on the model's confidence score. Measured against this project's own
+# data, that number carried almost no information: 83% of cases came back at
+# exactly 10, evidence count did not correlate with it at all, and the single
+# case that cleared the old 85 threshold was one the deterministic engine had
+# explicitly flagged "verify before clearing". An uncalibrated self-report
+# should not authorise signing off money.
+#
+# Gate on the facts instead. A case is one-click resolvable only when the
+# exposure is genuinely small -- both relatively and in absolute terms -- and
+# the model did not say it was missing something. Anything larger goes to a
+# human no matter how sure the model sounds. This is the "financial risk is
+# low" condition CLAUDE.md always specified but the code never implemented.
+AUTO_RESOLVE_MAX_PCT = 0.10        # at-risk must be <= 10% of the order value
+AUTO_RESOLVE_MAX_ABS = 50000       # and <= Rs 500.00 in absolute terms
+
+
+def _may_auto_resolve(case, result) -> bool:
+    """Deterministic check on whether AI's 'resolve' can be offered as one
+    click. Never consults the confidence score."""
+    if (result.get("missing_evidence") or []):
+        return False
+    at_risk = abs(int(case.get("amount_at_risk") or 0))
+    expected = abs(int(case.get("expected") or 0))
+    if at_risk > AUTO_RESOLVE_MAX_ABS:
+        return False
+    # A case with no order value to compare against (orphan credit) has no
+    # meaningful ratio -- the absolute cap above is the only guard.
+    if expected and at_risk > expected * AUTO_RESOLVE_MAX_PCT:
+        return False
+    return True
 
 # unmatched_order/remittance_overdue are genuinely NOT ambiguous (there is
 # no candidate at all) -- they're still sent to AI, but only for a next-step
@@ -81,7 +109,8 @@ def _status_from_ai_action(action):
             "escalate": "exception"}.get(action, "manual_review")
 
 
-def _find_orphan_candidates(settlement_amount_paise, settled_on, orders_lookup, max_candidates=5):
+def _find_orphan_candidates(settlement_amount_paise, settled_on, orders_lookup,
+                             settled_orders=None, max_candidates=5):
     """
     Real candidate search for an orphan settlement (a credit with no
     order matched to it): every order in the currently-known dataset
@@ -103,6 +132,12 @@ def _find_orphan_candidates(settlement_amount_paise, settled_on, orders_lookup, 
         except ValueError:
             settled_date = None
 
+    # Orders that ALREADY have their money. Without this the model sees an
+    # exact amount match and recommends "link this settlement to that order",
+    # not knowing the order was paid days ago -- which is precisely how a
+    # DUPLICATE PAYMENT gets mistaken for a missing one. The right call on an
+    # already-settled order is a refund, not a link.
+    settled_orders = settled_orders or {}
     candidates = []
     for o in orders_lookup:
         amt = to_paise(o["order_amount"])
@@ -120,6 +155,7 @@ def _find_orphan_candidates(settlement_amount_paise, settled_on, orders_lookup, 
             "order_date": order_date_str, "days_from_settlement": days_apart,
             "customer_name": o.get("customer_name", ""),
             "payment_mode": o.get("payment_mode", ""),
+            "already_settled_by": settled_orders.get(o["order_id"]),
         })
     candidates.sort(key=lambda c: (abs(c["amount_paise"] - settlement_amount_paise),
                                     c["days_from_settlement"] if c["days_from_settlement"] is not None else 999))
@@ -172,6 +208,15 @@ def build_cases_for_batch(result_df, batch_id, orders_lookup, settlements_lookup
     existing_cases = existing_cases or {}
     settled_on_by_id = {s["settlement_id"]: s.get("settled_on", "") for s in settlements_lookup}
     orders_by_id = {o["order_id"]: o for o in orders_lookup}
+    # order_id -> the settlement that already paid it, straight from the
+    # engine's own matching. Cleanly matched orders never become cases, so this
+    # is the only place that knowledge exists.
+    settled_orders = {
+        r["record_id"]: r["matched_settlement"]
+        for r in result_df.to_dict("records")
+        if r.get("matched_settlement") and r["matched_settlement"] != r["record_id"]
+        and int(r.get("received") or 0) > 0
+    }
     needs_case = result_df[
         result_df["ai_assisted"]
         | (result_df["status"] == "EXCEPTION")
@@ -196,7 +241,8 @@ def build_cases_for_batch(result_df, batch_id, orders_lookup, settlements_lookup
         det_candidates = list(r.get("candidates") or [])
         if is_orphan_settlement and not det_candidates:
             settled_on = settled_on_by_id.get(settlement_id, "")
-            det_candidates = _find_orphan_candidates(int(r["received"]), settled_on, orders_lookup)
+            det_candidates = _find_orphan_candidates(
+                int(r["received"]), settled_on, orders_lookup, settled_orders)
 
         ai_block, evidence_hash, case_status = None, None, "manual_review"
         if is_pending:
@@ -297,7 +343,8 @@ def apply_ai_result(case, result):
     between each real call rather than after one opaque function."""
     confidence = result.get("confidence")
     action = result.get("recommended_action", "manual_review")
-    if action == "resolve" and (confidence or 0) < AUTO_RESOLVE_CONFIDENCE_FLOOR:
+    # Downgrade a 'resolve' the money says a human should look at.
+    if action == "resolve" and not _may_auto_resolve(case, result):
         action = "manual_review"
     candidate_id = result.get("candidate_id")
     case["ai"] = {

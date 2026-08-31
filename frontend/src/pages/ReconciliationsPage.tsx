@@ -4,7 +4,7 @@ import { ReconciliationResultsWorkspace } from '../components/reconciliation/Rec
 import { RunHistoryTable } from '../components/reconciliation/RunHistoryTable'
 import { useApp } from '../context/AppContext'
 import { scrollAppMainToTop } from '../lib/scrollAppMain'
-import { formatLastSync, formatNextBatchAt } from '../components/reconciliation/SourceCards'
+import { formatLastSync } from '../components/reconciliation/SourceCards'
 import { api, ApiError, type SyncResult, type TransactionRecord } from '../lib/api'
 import { buildReconciliationViewModel } from '../lib/reconciliationFinancials'
 import { parseRun } from '../lib/reconciliationMetrics'
@@ -44,9 +44,12 @@ function syncStatusMessage(
 
   if (nextBatchAvailableAt) {
     return {
-      eyebrow: 'Awaiting new data',
-      title: 'Waiting for new data',
-      detail: `More orders and settlements are expected around ${formatNextBatchAt(nextBatchAvailableAt)}. This page will update automatically.`,
+      eyebrow: 'Up to date',
+      title: 'No new data to reconcile',
+      // Deliberately no predicted arrival time: in production nobody knows
+      // when the next orders or settlements land, and promising a clock time
+      // we cannot honour reads as a bug the moment it slips.
+      detail: 'Everything received so far has been reconciled. New orders and settlements appear here automatically as they arrive.',
       tone: 'waiting',
     }
   }
@@ -127,7 +130,7 @@ export function ReconciliationsPage() {
         )
       } else if (nextBatchAvailableAt) {
         setSyncNotice(
-          `No new data to sync yet. Your sources are up to date — more orders and settlements are expected around ${formatNextBatchAt(nextBatchAvailableAt)}.`,
+          'No new data to sync. Everything received so far has been reconciled.',
         )
       } else {
         setSyncNotice('No new data to sync. Your sources are already up to date.')
@@ -207,7 +210,7 @@ export function ReconciliationsPage() {
 
         {status.tone === 'waiting' && nextBatchAvailableAt && !batchAvailable && (
           <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13px] text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200">
-            New data is on the way. Orders and settlements will appear here automatically when they arrive.
+            This page updates automatically when new orders or settlements arrive.
           </p>
         )}
 

@@ -22,12 +22,12 @@ export function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-[1160px] space-y-6 px-6 py-6 lg:px-8 lg:py-8">
         {/* Sync & Reconcile CTA */}
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
           <div>
-            <p className="text-[15px] font-medium text-zinc-900">
+            <p className="text-[15px] font-medium text-zinc-900 dark:text-zinc-50">
               {isEmpty ? 'No reconciliation yet' : `${recon.totalRuns} run(s) on this date`}
             </p>
-            <p className="mt-0.5 text-[13px] text-zinc-500">
+            <p className="mt-0.5 text-[13px] text-zinc-500 dark:text-zinc-400">
               {isEmpty
                 ? 'Sync your sources and run your first reconciliation to populate the dashboard.'
                 : `Showing activity for ${formatDisplayDate(selectedDate)}`}

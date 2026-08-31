@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../../context/AppContext'
 import { AskAiPanel } from '../AskAiPanel'
+import { playNotificationChime } from '../../lib/notificationSound'
 import { shiftISODate, todayISO } from '../../lib/merchantState'
 import { BellBatchPopover, BellEmptyPopover } from './NewBatchOverlay'
 
@@ -73,7 +74,6 @@ type PageHeaderProps = {
 export function PageHeader({ title, variant = 'default', children }: PageHeaderProps) {
   const {
     merchant,
-    state,
     cases,
     logout,
     hasNewBatch,
@@ -89,15 +89,20 @@ export function PageHeader({ title, variant = 'default', children }: PageHeaderP
   const profileRef = useRef<HTMLDivElement>(null)
   const bellRef = useRef<HTMLDivElement>(null)
 
-  const batchNum = state?.notification_batch ?? state?.current_batch ?? 1
   const today = todayISO()
   const canGoNext = selectedDate < today
 
-  // Auto-show the popover when a new batch lands; closing it only hides the panel.
+  // Auto-show the popover when new data lands; closing it only hides the panel.
+  // The chime fires on the false -> true EDGE only, so it sounds once when data
+  // actually arrives rather than on every re-render or navigation.
+  const wasNotifying = useRef(false)
   useEffect(() => {
-    if (hasNewBatch) setBatchPopoverOpen(true)
-    else setBatchPopoverOpen(false)
-  }, [hasNewBatch, batchNum])
+    if (hasNewBatch && !wasNotifying.current) {
+      playNotificationChime()
+    }
+    wasNotifying.current = hasNewBatch
+    setBatchPopoverOpen(hasNewBatch)
+  }, [hasNewBatch])
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -148,7 +153,7 @@ export function PageHeader({ title, variant = 'default', children }: PageHeaderP
         </button>
 
         {hasNewBatch && batchPopoverOpen && (
-          <BellBatchPopover batchNum={batchNum} onClose={() => setBatchPopoverOpen(false)} />
+          <BellBatchPopover onClose={() => setBatchPopoverOpen(false)} />
         )}
         {bellMenuOpen && !hasNewBatch && (
           <BellEmptyPopover onClose={() => setBellMenuOpen(false)} />

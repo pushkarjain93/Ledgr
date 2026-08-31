@@ -9,7 +9,7 @@ import { scrollAppMainToTop } from '../lib/scrollAppMain'
 export function CasesPage() {
   const [params] = useSearchParams()
   const filter = params.get('filter')
-  const { cases } = useApp()
+  const { cases, aiInProgress } = useApp()
   const topRef = useRef<HTMLDivElement>(null)
 
   const filtered = useMemo(() => filterCases(cases, filter), [cases, filter])
@@ -29,6 +29,14 @@ export function CasesPage() {
           {filtered.length} {filtered.length === 1 ? 'case' : 'cases'}
           {filter === 'resolved' || filter === 'bookmarked' ? '' : ' open'}
         </p>
+        {/* Reconciliation finishes in about a second; AI verdicts land after.
+            Say so, rather than leaving rows looking permanently unanalysed. */}
+        {aiInProgress > 0 && (
+          <p className="mt-1.5 flex items-center gap-2 text-[13px] text-blue-600 dark:text-blue-400">
+            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-500" />
+            AI is investigating {aiInProgress} case{aiInProgress === 1 ? '' : 's'} — results appear automatically
+          </p>
+        )}
       </div>
 
       <CaseFilterBar />

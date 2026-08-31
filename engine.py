@@ -242,6 +242,81 @@ def reconcile(orders: pd.DataFrame, setls: pd.DataFrame) -> pd.DataFrame:
 # ===========================================================================
 # Scorecard
 # ===========================================================================
+def score_metrics(res: pd.DataFrame) -> dict:
+    """
+    The scorecard as DATA rather than printed text, so the API can serve the
+    same numbers the CLI reports. score() below prints from this, keeping ONE
+    source of truth for accuracy -- a second implementation could drift and
+    then the product would claim a number the engine never measured.
+    """
+    gt = pd.read_csv(f"{DATA}/ground_truth.csv", dtype=str).fillna("")
+    gt = gt.set_index("record_id")
+    j = res.set_index("record_id").join(gt, how="outer", rsuffix="_gt")
+
+    missing = j[j["tier"].isna()]        # labelled but never processed
+    extra = j[j["expected_tier"].isna()]  # processed but not labelled
+    j = j.dropna(subset=["tier", "expected_tier"])
+
+    j["tier_ok"] = j["tier"].astype(int) == j["expected_tier"].astype(int)
+    j["status_ok"] = j["status"] == j["expected_status"]
+    j["reason_ok"] = j["reason"] == j["expected_reason"]
+
+    CLEAR = {"AUTO_CLEARED", "CLEARED_WITH_FEE"}
+    pred_clear = j["status"].isin(CLEAR)
+    true_clear = j["expected_status"].isin(CLEAR)
+    tp = int((pred_clear & true_clear).sum())
+    fp = int((pred_clear & ~true_clear).sum())
+    fn = int((~pred_clear & true_clear).sum())
+
+    ai = int(res["ai_assisted"].sum())
+    bad = j[~j["tier_ok"] | ~j["status_ok"] | ~j["reason_ok"]]
+
+    return {
+        "records_scored": int(len(j)),
+        "labelled_not_processed": int(len(missing)),
+        "processed_not_labelled": int(len(extra)),
+        "tier_correct": int(j["tier_ok"].sum()),
+        "tier_accuracy": float(j["tier_ok"].mean()) if len(j) else 1.0,
+        "disposition_correct": int(j["status_ok"].sum()),
+        "disposition_accuracy": float(j["status_ok"].mean()) if len(j) else 1.0,
+        "reason_correct": int(j["reason_ok"].sum()),
+        "reason_accuracy": float(j["reason_ok"].mean()) if len(j) else 1.0,
+        # precision: of everything we cleared, how much SHOULD have been cleared.
+        # A false clear is money signed off that a human should have seen.
+        "clearing_precision": float(tp / (tp + fp)) if (tp + fp) else 1.0,
+        "false_clears": fp,
+        # recall: of everything that should have cleared, how much we did.
+        # A missed clear is a human bothered for nothing.
+        "clearing_recall": float(tp / (tp + fn)) if (tp + fn) else 1.0,
+        "missed_clears": fn,
+        # NOT a count of model calls. `ai_assisted` is a structural TIER flag
+        # (tier 3, or tier 4 needing review) meaning "deterministic rules could
+        # not settle this on their own". engine.py makes no network calls at
+        # all, so nothing here has been near a model -- these records are merely
+        # the ones HANDED ON for judgement. The real model-call count lives in
+        # the `ai` block of /api/reports, sourced from stored case verdicts.
+        # Named to say so: reporting these as "sent to the model" put two
+        # contradictory numbers on the same page.
+        "settled_by_rules": int(len(res) - ai),
+        "needed_judgement": ai,
+        "total_records": int(len(res)),
+        "tier_distribution": [
+            {"tier": t, "name": TIER_NAMES[t],
+             "engine": int((res["tier"] == t).sum()),
+             "labelled": int((gt["expected_tier"].astype(int) == t).sum())}
+            for t in range(6)
+        ],
+        "misclassified": [
+            {"record_id": rid, "got_tier": int(r["tier"]), "got_status": r["status"],
+             "got_reason": r["reason"], "want_tier": int(r["expected_tier"]),
+             "want_status": r["expected_status"], "want_reason": r["expected_reason"],
+             "scenario": r.get("scenario", "")}
+            for rid, r in bad.head(25).iterrows()
+        ],
+        "perfect": bool(len(bad) == 0 and not len(missing) and not len(extra)),
+    }
+
+
 def score(res: pd.DataFrame):
     gt = pd.read_csv(f"{DATA}/ground_truth.csv", dtype=str).fillna("")
     gt = gt.set_index("record_id")

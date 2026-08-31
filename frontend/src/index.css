@@ -15,9 +15,19 @@
 
   --color-ledgr-card-border: rgba(26, 35, 53, 0.12);
   --color-ledgr-card: #ffffff;
+  /* Input/field surface. Separate from --color-ledgr-card so a field stays
+     distinguishable from the card behind it in BOTH themes — in dark they
+     must not collapse to the same flat colour. The login inputs previously
+     hardcoded bg-white and stayed blinding white on the dark card. */
+  --color-ledgr-field: #ffffff;
   --color-ledgr-error: #dc2626;
   --color-ledgr-error-border: #fecaca;
   --color-ledgr-error-soft: #fef2f2;
+
+  /* Login page backdrop. A token rather than an inline literal so it can
+     actually respond to the theme. */
+  --ledgr-login-bg: radial-gradient(
+    ellipse 80% 65% at 50% 42%, #eeecf3 0%, #e8e6ee 50%, #e2e0e8 100%);
 }
 
 .dark {
@@ -27,9 +37,13 @@
   --color-ledgr-primary-soft: rgba(59, 130, 246, 0.18);
   --color-ledgr-card-border: rgba(255, 255, 255, 0.12);
   --color-ledgr-card: #18181b;
+  --color-ledgr-field: #27272a;
   --color-ledgr-error: #fca5a5;
   --color-ledgr-error-border: rgba(252, 165, 165, 0.35);
   --color-ledgr-error-soft: rgba(127, 29, 29, 0.45);
+
+  --ledgr-login-bg: radial-gradient(
+    ellipse 80% 65% at 50% 42%, #1c1c20 0%, #151518 50%, #0f0f11 100%);
 }
 
 *,

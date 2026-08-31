@@ -24,11 +24,14 @@ tools quietly lose money.
 Run:  uvicorn api:app --reload --port 8000
 Docs: http://localhost:8000/docs
 """
+import os
 import secrets
+import threading
+import time
 from datetime import datetime
 
 import pandas as pd
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -38,7 +41,9 @@ import razorpay_client as rzp
 import shopify_client as shopify
 import state_store
 from auth import authenticate, get_merchant_by_email
+import config
 from config import (
+    fmt,
     COD_FRESH_DAYS,
     COD_TOLERANCE_ABS,
     COD_TOLERANCE_PCT,
@@ -49,7 +54,7 @@ from config import (
     fee_band,
     to_paise,
 )
-from engine import reconcile
+from engine import reconcile, score_metrics
 
 app = FastAPI(title="Ledgr API", version="1.0.0")
 
@@ -219,6 +224,18 @@ def me(merchant: dict = Depends(current_merchant)):
 # ---------------------------------------------------------------------------
 # State
 # ---------------------------------------------------------------------------
+def _cases_with_payment_mode(state) -> dict:
+    """The case store keyed by case_id, each enriched with payment_mode.
+
+    /api/state is what the UI's context actually reads, so anything the case
+    LIST needs must be attached here too -- attaching it only to /api/cases
+    leaves every row showing a blank payment mode.
+    """
+    orders_by_id = {o["order_id"]: o for o in shopify.fetch_orders()}
+    return {cid: _with_payment_mode(c, orders_by_id)
+            for cid, c in (state.get("cases") or {}).items()}
+
+
 @app.get("/api/state")
 def get_state(merchant: dict = Depends(current_merchant)):
     """Everything the shell needs on load: batch progress, saved runs, the
@@ -237,7 +254,10 @@ def get_state(merchant: dict = Depends(current_merchant)):
         "notification_seen": state.get("notification_seen", True),
         "notification_batch": state.get("notification_batch"),
         "reconciliation_runs": state.get("reconciliation_runs", []),
-        "cases": state.get("cases", {}),
+        "cases": _cases_with_payment_mode(state),
+        # Cases still queued for AI. The UI polls until this reaches zero.
+        "ai_in_progress": sum(1 for c in (state.get("cases") or {}).values()
+                              if c.get("case_status") == "needs_ai"),
         "run_date": RUN_DATE.isoformat(),
     }
 
@@ -282,7 +302,13 @@ def settings(merchant: dict = Depends(current_merchant)):
         # UI can be honest about how much AI capacity actually exists rather
         # than implying a single hardcoded vendor.
         "ai_providers": ai_client.available_providers(),
-        "auto_resolve_confidence_floor": case_engine.AUTO_RESOLVE_CONFIDENCE_FLOOR,
+        # The auto-resolve gate is EXPOSURE-based, not confidence-based. This
+        # used to report case_engine.AUTO_RESOLVE_CONFIDENCE_FLOOR, which was
+        # deleted when confidence scores were removed (they carried almost no
+        # signal -- 83% of them were exactly 10). Nothing in the UI reads this
+        # endpoint, so the stale attribute went unnoticed and returned a 500.
+        "auto_resolve_max_pct": case_engine.AUTO_RESOLVE_MAX_PCT,
+        "auto_resolve_max_abs_paise": case_engine.AUTO_RESOLVE_MAX_ABS,
         "total_batches": state_store.TOTAL_BATCHES,
     }
 
@@ -299,8 +325,100 @@ def reset(merchant: dict = Depends(current_merchant)):
 # ---------------------------------------------------------------------------
 # The main pipeline
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Background AI investigation
+#
+# Reconciliation itself takes well under a second; the AI pass takes tens of
+# seconds because free-tier providers are slow and throttled. Blocking the Sync
+# button on it made a ~1s operation feel like a 30-60s one. So the request now
+# returns as soon as the real reconciliation is done -- every case exists
+# immediately, marked `needs_ai` -- and verdicts fill in behind it.
+#
+# The UI polls /api/state and watches `ai_in_progress` fall to zero.
+# ---------------------------------------------------------------------------
+# Per-minute provider budgets recover, so a rate-limited chunk is retried a
+# few times before being given up on. Nobody is waiting on this work.
+#
+# Sized against the real constraint: Groq is the only consistently-available
+# provider and caps TOKENS PER MINUTE (8000). A full first batch is ~29
+# AI-eligible cases = 6 chunks of 5, and each chunk reserves prompt + max_tokens
+# (~3.2k), so the whole set genuinely cannot clear in under ~2-3 minutes no
+# matter how it is scheduled. Three rounds spanned only ~105s, which is why a
+# third of the cases were still `ai_pending` when the user looked. Six rounds
+# covers ~210s with headroom.
+AI_RETRY_ROUNDS = int(os.environ.get("AI_RETRY_ROUNDS", "6"))
+AI_RETRY_DELAY_SECONDS = int(os.environ.get("AI_RETRY_DELAY_SECONDS", "35"))
+
+_state_lock = threading.Lock()
+
+
+def _merge_investigated(merchant_id: str, investigated: list[dict]) -> None:
+    """Merge AI verdicts back into stored state, preserving human decisions.
+
+    Re-reads state under a lock before writing: the user may have resolved or
+    bookmarked something while this was running, and a blind overwrite would
+    silently discard their action.
+    """
+    with _state_lock:
+        fresh = state_store.load_state(merchant_id)
+        for case in investigated:
+            existing = state_store.get_case(fresh, case["case_id"])
+            # The case is gone from current state -- the demo was reset (or
+            # the batch re-run) while this pass was in flight. Writing it
+            # back would RESURRECT deleted cases, which is exactly what
+            # happened once: batch-2 cases reappeared after a reset and
+            # outlived the run that created them, leaving AI reasoning that
+            # referenced orders no longer in the ledger.
+            if not existing:
+                continue
+            # A human decision taken while AI was thinking always wins.
+            if existing.get("resolution", {}).get("resolved"):
+                continue
+            state_store.upsert_case(fresh, case)
+        state_store.save_state(merchant_id, fresh)
+
+
+def _investigate_in_background(merchant_id: str, case_ids: list[str]) -> None:
+    """Investigate the given cases, then merge results back into stored state.
+
+    Re-reads state under a lock before writing: the user may have resolved or
+    bookmarked something while this was running, and a blind overwrite would
+    silently discard their action.
+    """
+    try:
+        state = state_store.load_state(merchant_id)
+        pending = [c for c in state_store.list_cases(state) if c["case_id"] in set(case_ids)]
+        if not pending:
+            return
+        investigated = case_engine.investigate_new_cases_batched(pending)
+        # Persist after EVERY round, not once at the end. Retries can span
+        # several minutes; holding all verdicts until the last round meant the
+        # UI showed nothing filling in for the whole window, and a crash or
+        # restart part-way through discarded every verdict already paid for.
+        _merge_investigated(merchant_id, investigated)
+
+        # Free tiers cap TOKENS PER MINUTE, so a large batch routinely exhausts
+        # the budget partway and leaves most cases `ai_pending`. That limit
+        # RECOVERS on its own -- and since nobody is waiting on this request,
+        # we can simply pause and pick up the rest. Bounded retries only; if
+        # capacity genuinely never returns the cases stay honestly `ai_pending`
+        # and the user can retry them by hand.
+        for _ in range(AI_RETRY_ROUNDS):
+            stuck = [c for c in investigated if c.get("case_status") == "ai_pending"]
+            if not stuck:
+                break
+            time.sleep(AI_RETRY_DELAY_SECONDS)
+            for c in stuck:
+                c["case_status"] = "needs_ai"
+            case_engine.investigate_new_cases_batched(stuck)
+            _merge_investigated(merchant_id, stuck)
+    except Exception as exc:  # never let a worker crash take the server with it
+        print(f"[background AI] {merchant_id}: {type(exc).__name__}: {exc}")
+
+
 @app.post("/api/sync-and-reconcile")
-def sync_and_reconcile(merchant: dict = Depends(current_merchant)):
+def sync_and_reconcile(background: BackgroundTasks,
+                        merchant: dict = Depends(current_merchant)):
     """
     Runs the real pipeline for the next available batch, in the same order
     and through the same functions the old Streamlit flow used:
@@ -353,18 +471,16 @@ def sync_and_reconcile(merchant: dict = Depends(current_merchant)):
         result_df, batch_id, order_rows, settlement_rows,
         previously_open_order_ids=pending_ids,
         existing_cases=state.get("cases", {}))
-    needs_ai = sum(1 for c in cases if c.get("case_status") == "needs_ai")
-    cases = case_engine.investigate_new_cases_batched(cases)
+    needs_ai_ids = [c["case_id"] for c in cases if c.get("case_status") == "needs_ai"]
+    needs_ai = len(needs_ai_ids)
     case_engine.save_cases(state, cases)
-    pending_after = sum(1 for c in cases if c.get("case_status") == "ai_pending")
     # Deliberately does not claim WHY a case is still pending -- ai_pending
     # is usually a rate limit but can be any transient failure, and the real
     # reason is already stored per-case in ai.error. Don't assert a cause
     # this line doesn't actually know.
     steps.append({
         "label": "AI investigation",
-        "result": (f"{needs_ai} case(s) sent to AI"
-                   + (f", {pending_after} still awaiting investigation" if pending_after else "")
+        "result": (f"{needs_ai} case(s) queued — verdicts will appear shortly"
                    if needs_ai else "No cases required AI investigation"),
     })
 
@@ -388,7 +504,12 @@ def sync_and_reconcile(merchant: dict = Depends(current_merchant)):
     state_store.schedule_next_batch(state, batch_id)
     _save(merchant, state)
 
-    return {"run": run, "steps": steps, "cases": state.get("cases", {})}
+    if needs_ai_ids:
+        background.add_task(_investigate_in_background,
+                            merchant["merchant_id"], needs_ai_ids)
+
+    return {"run": run, "steps": steps, "cases": _cases_with_payment_mode(state),
+            "ai_queued": len(needs_ai_ids)}
 
 
 @app.get("/api/transactions")
@@ -419,6 +540,7 @@ def transactions(merchant: dict = Depends(current_merchant)):
         order = orders_by_id.get(r["record_id"])
         records.append({
             "record_id": r["record_id"],
+            "record_kind": "order",
             "order_date": order.get("order_date", "") if order else "",
             "payment_mode": order.get("payment_mode", "") if order else "",
             "tier": int(r["tier"]),
@@ -437,18 +559,83 @@ def transactions(merchant: dict = Depends(current_merchant)):
             "ai_assisted": bool(r["ai_assisted"]),
             "case_id": cases_by_record.get(r["record_id"]),
         })
+    # ---- settlement side ----------------------------------------------
+    # reconcile() emits every ORDER plus orphan credits, but a settlement that
+    # was considered and not matched (e.g. two settlements claiming the same
+    # payment ref, where the engine correctly refused to pick) is emitted
+    # nowhere. That left most of the settlement feed invisible: a user -- or an
+    # AI cross-link -- searching for STL-00014-D found nothing, even though the
+    # record exists and is central to the case. The ledger claims to cover
+    # "orders and settlements", so it has to actually contain both.
+    already = {r["record_id"] for r in records}
+    matched = _matched_settlement_map(state)
+    for srow in settlements_df.to_dict("records"):
+        sid = srow.get("settlement_id", "")
+        if not sid or sid in already:
+            continue
+        amount = to_paise(srow.get("amount_received") or 0)
+        matched_order = matched.get(sid)
+        records.append({
+            "record_id": sid,
+            "record_kind": "settlement",
+            # Settlements have a settled_on, not an order date. Reusing the
+            # same field keeps the existing date filter working for both.
+            "order_date": srow.get("settled_on", ""),
+            "payment_mode": "",
+            "tier": None,
+            "tier_name": "Settlement feed",
+            "status": "MATCHED" if matched_order else "UNMATCHED",
+            "reason": "",
+            "reason_label": (f"Reconciled to {matched_order}" if matched_order
+                             else "No order matched to this credit"),
+            "expected": 0,
+            "received": amount,
+            "delta": 0,
+            # Money already reconciled to an order is not at risk; an
+            # unclaimed credit is money that cannot be accounted for.
+            "amount_at_risk": 0 if matched_order else amount,
+            "priority": "",
+            "explanation": (
+                f"Settlement of {fmt(amount)} from {srow.get('source', '')} on "
+                f"{srow.get('settled_on', '')}."
+                + (f" Reconciled to order {matched_order}." if matched_order
+                   else " No order in the feed claims this credit.")),
+            "matched_settlement": matched_order or "",
+            "age_days": None,
+            "ai_assisted": False,
+            "case_id": cases_by_record.get(sid),
+        })
+
     return {"records": records, "total": len(records)}
 
 
 # ---------------------------------------------------------------------------
 # Cases
 # ---------------------------------------------------------------------------
+def _with_payment_mode(case: dict, orders_by_id: dict | None = None) -> dict:
+    """
+    Attach the order's payment_mode to a case for display.
+
+    Read from the order feed rather than stored on the case, so it works for
+    cases created before this field existed -- no re-sync required. Blank when
+    the case has no order side (an orphan settlement genuinely has no payment
+    mode) rather than guessed.
+    """
+    if not case:
+        return case
+    if orders_by_id is None:
+        orders_by_id = {o["order_id"]: o for o in shopify.fetch_orders()}
+    order = orders_by_id.get(case.get("order_id") or "")
+    return {**case, "payment_mode": (order or {}).get("payment_mode", "")}
+
+
 @app.get("/api/cases")
 def list_cases(case_status: str | None = None, case_type: str | None = None,
                merchant: dict = Depends(current_merchant)):
     state = _load(merchant)
-    return {"cases": state_store.list_cases(state, case_status=case_status,
-                                            case_type=case_type)}
+    cases = state_store.list_cases(state, case_status=case_status, case_type=case_type)
+    orders_by_id = {o["order_id"]: o for o in shopify.fetch_orders()}
+    return {"cases": [_with_payment_mode(c, orders_by_id) for c in cases]}
 
 
 @app.get("/api/cases/{case_id}")
@@ -456,7 +643,7 @@ def get_case(case_id: str, merchant: dict = Depends(current_merchant)):
     case = state_store.get_case(_load(merchant), case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
-    return case
+    return _with_payment_mode(case)
 
 
 @app.get("/api/cases/{case_id}/evidence")
@@ -591,10 +778,15 @@ def message_options(case_id: str, merchant: dict = Depends(current_merchant)):
     there is no point drafting a courier chase for an online card payment,
     or a customer email for an orphan settlement with no customer attached.
 
-    `address` is empty when we genuinely don't have one -- courier and
-    gateway support addresses are not in this dataset. The UI must show
-    that plainly; inventing "support@razorpay.com" would be fabricating
-    contact details.
+    Courier and gateway addresses come from config.py's DEMO contact table
+    and are flagged `is_demo: true`. They are on the RFC-2606 reserved
+    example.com domain, so they are unroutable by construction -- the flow
+    can be demonstrated end to end without any chance of a draft reaching a
+    real stranger's inbox. A customer address, by contrast, is real data off
+    the order and is never flagged.
+
+    `address` is still empty when we genuinely hold nothing (an unknown
+    courier), and the UI must say so rather than invent one.
     """
     state = _load(merchant)
     case = state_store.get_case(state, case_id)
@@ -610,17 +802,24 @@ def message_options(case_id: str, merchant: dict = Depends(current_merchant)):
     options = []
 
     if mode == "COD" and courier:
+        addr = config.courier_contact(courier)
         options.append({
             "recipient_type": "courier", "label": f"Courier ({courier})",
-            "address": "",
-            "note": f"No email on file for {courier} — copy the draft into your own thread.",
+            "address": addr,
+            "is_demo": bool(addr),
+            "note": (
+                "Demo remittance address — replace with the courier's real desk before sending."
+                if addr
+                else f"No email on file for {courier} — copy the draft into your own thread."
+            ),
             "why": "COD cash is collected by the courier and remitted separately.",
         })
     if mode and mode != "COD":
         options.append({
             "recipient_type": "gateway", "label": "Payment gateway (Razorpay)",
-            "address": "",
-            "note": "No support address on file — copy the draft into your gateway ticket.",
+            "address": config.GATEWAY_CONTACT,
+            "is_demo": True,
+            "note": "Demo support address — replace with your real gateway ticket contact.",
             "why": "The payment was taken online, so the gateway holds the transaction record.",
         })
     if order and order.get("customer_email"):
@@ -628,6 +827,8 @@ def message_options(case_id: str, merchant: dict = Depends(current_merchant)):
             "recipient_type": "customer",
             "label": f"Customer ({order.get('customer_name') or 'unknown'})",
             "address": order["customer_email"],
+            # Real data off the order, not a placeholder.
+            "is_demo": False,
             "note": "",
             "why": "The customer can confirm what they were charged or paid.",
         })
@@ -841,6 +1042,87 @@ def ask_ai(body: AskBody, merchant: dict = Depends(current_merchant)):
         if isinstance(exc, ai_client.AIRateLimitError):
             raise HTTPException(status_code=429, detail=str(exc))
         raise HTTPException(status_code=503, detail=f"AI is temporarily unavailable: {exc}")
+
+
+@app.get("/api/reports")
+def reports(merchant: dict = Depends(current_merchant)):
+    """
+    The evidence page: measured accuracy, where the money sits, what the
+    system could NOT resolve, and how that was decided.
+
+    Accuracy comes from engine.score_metrics() -- the same scorecard the CLI
+    prints -- graded against the labelled ground_truth.csv. Nothing here is
+    estimated or projected; every figure is a count or a ratio over records
+    the engine actually processed.
+    """
+    state = _load(merchant)
+    batch_ids = _processed_batch_ids(state)
+    if not batch_ids:
+        return {"has_data": False}
+
+    orders_df, settlements_df, _o, _s = _batch_frames(batch_ids)
+    result_df = reconcile(orders_df, settlements_df)
+    accuracy = score_metrics(result_df)
+
+    cases = state_store.list_cases(state)
+    open_cases = [c for c in cases if not c.get("resolution", {}).get("resolved")]
+
+    # --- exceptions the system could not resolve, grouped by what went wrong
+    by_type: dict[str, dict] = {}
+    for c in open_cases:
+        t = c["case_type"]
+        row = by_type.setdefault(t, {"case_type": t, "count": 0, "amount_at_risk": 0})
+        row["count"] += 1
+        row["amount_at_risk"] += int(c.get("amount_at_risk") or 0)
+    exceptions = sorted(by_type.values(), key=lambda r: -r["amount_at_risk"])
+
+    # --- how AI actually performed, from stored verdicts only
+    investigated = [c for c in cases if (c.get("ai") or {}).get("investigated_at")]
+    providers: dict[str, int] = {}
+    for c in investigated:
+        p = (c.get("ai") or {}).get("provider")
+        if p:
+            providers[p] = providers.get(p, 0) + 1
+    ai_actions: dict[str, int] = {}
+    for c in investigated:
+        a = (c.get("ai") or {}).get("action") or "unknown"
+        ai_actions[a] = ai_actions.get(a, 0) + 1
+
+    runs = state.get("reconciliation_runs", [])
+    return {
+        "has_data": True,
+        "generated_at": datetime.now().isoformat(),
+        "accuracy": accuracy,
+        "coverage": {
+            "records_processed": accuracy["total_records"],
+            "records_labelled": accuracy["records_scored"],
+            # Orphan credits have no order-side label in ground_truth.csv, so
+            # they are processed but not graded. Stated rather than hidden --
+            # quietly scoring only the easy subset would inflate the result.
+            "records_unlabelled": accuracy["processed_not_labelled"],
+        },
+        "throughput": {
+            "runs": len(runs),
+            "records_total": sum(int(r.get("total_records") or 0) for r in runs),
+            "last_run_at": runs[0]["timestamp"] if runs else None,
+        },
+        "money": {
+            "expected": int(result_df["expected"].sum()),
+            "received": int(result_df["received"].sum()),
+            "at_risk_open": sum(int(c.get("amount_at_risk") or 0) for c in open_cases),
+            "recovered": sum(int(c.get("amount_at_risk") or 0) for c in cases
+                             if c.get("resolution", {}).get("resolved")),
+        },
+        "exceptions": exceptions,
+        "ai": {
+            "cases_investigated": len(investigated),
+            "actions": ai_actions,
+            "providers": providers,
+            "never_reached": sum(1 for c in cases if c["case_status"] == "ai_pending"),
+            "model_batch_size": ai_client.DEFAULT_BATCH_SIZE,
+            "providers_configured": ai_client.available_providers(),
+        },
+    }
 
 
 @app.get("/api/health")

@@ -12,7 +12,7 @@ import {
 } from '../components/icons'
 
 const DEMO_EMAIL = 'demo@acmecorp.com'
-const DEMO_PASSWORD = 'demo123'
+const DEMO_PASSWORD = 'Lx7#Recon@2026Kq'
 
 export function LoginPage() {
   const { login, merchant } = useApp()
@@ -81,10 +81,7 @@ export function LoginPage() {
   return (
     <div
       className="relative min-h-screen overflow-hidden text-ledgr-ink"
-      style={{
-        background:
-          'radial-gradient(ellipse 80% 65% at 50% 42%, #eeecf3 0%, #e8e6ee 50%, #e2e0e8 100%)',
-      }}
+      style={{ background: 'var(--ledgr-login-bg)' }}
     >
 
       {/* Centered login stage — optimized for 1440×900 */}
@@ -149,10 +146,10 @@ export function LoginPage() {
                       aria-describedby={
                         fieldErrors.email ? `${emailId}-error` : undefined
                       }
-                      className={`w-full rounded-[9px] border bg-white py-[11px] pl-10 pr-3.5 text-[14px] text-ledgr-ink outline-none transition-[border-color,box-shadow] placeholder:text-[#a0a8b4] ${
+                      className={`w-full rounded-[9px] border bg-ledgr-field py-[11px] pl-10 pr-3.5 text-[14px] text-ledgr-ink outline-none transition-[border-color,box-shadow] placeholder:text-[#a0a8b4] ${
                         fieldErrors.email
                           ? 'border-ledgr-error-border focus:border-ledgr-error focus:ring-2 focus:ring-ledgr-error/15'
-                          : 'border-[rgba(26,35,53,0.12)] focus:border-ledgr-primary focus:ring-2 focus:ring-ledgr-primary-soft'
+                          : 'border-ledgr-card-border focus:border-ledgr-primary focus:ring-2 focus:ring-ledgr-primary-soft'
                       }`}
                     />
                   </div>
@@ -196,10 +193,10 @@ export function LoginPage() {
                       aria-describedby={
                         fieldErrors.password ? `${passwordId}-error` : undefined
                       }
-                      className={`w-full rounded-[9px] border bg-white py-[11px] pl-10 pr-11 text-[14px] text-ledgr-ink outline-none transition-[border-color,box-shadow] placeholder:text-[#a0a8b4] ${
+                      className={`w-full rounded-[9px] border bg-ledgr-field py-[11px] pl-10 pr-11 text-[14px] text-ledgr-ink outline-none transition-[border-color,box-shadow] placeholder:text-[#a0a8b4] ${
                         fieldErrors.password
                           ? 'border-ledgr-error-border focus:border-ledgr-error focus:ring-2 focus:ring-ledgr-error/15'
-                          : 'border-[rgba(26,35,53,0.12)] focus:border-ledgr-primary focus:ring-2 focus:ring-ledgr-primary-soft'
+                          : 'border-ledgr-card-border focus:border-ledgr-primary focus:ring-2 focus:ring-ledgr-primary-soft'
                       }`}
                     />
                     <button

@@ -1,12 +1,9 @@
 import { Link } from 'react-router-dom'
 import { formatINR } from '../../lib/money'
+import { issueTypeLabel } from '../../lib/caseUtils'
 import { caseDetailPath } from '../../lib/caseQueue'
 import {
-  aiRecommendationText,
   caseDisplayId,
-  caseStatusBadgeClass,
-  caseStatusLabel,
-  confidenceTier,
 } from '../../lib/caseDisplay'
 import type { Case } from '../../types/case'
 
@@ -33,16 +30,14 @@ export function CasesTable({ cases, filter = null, emptyMessage = 'No cases matc
             <th className="px-5 py-3">Order ID</th>
             <th className="px-5 py-3">Expected</th>
             <th className="px-5 py-3">Received</th>
-            <th className="px-5 py-3">AI Confidence</th>
-            <th className="px-5 py-3">AI Recommendation</th>
-            <th className="px-5 py-3">Status</th>
+            <th className="px-5 py-3 text-right">At risk</th>
+            <th className="px-5 py-3">Payment mode</th>
+            <th className="px-5 py-3">Issue</th>
             <th className="px-5 py-3">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {cases.map((c) => {
-            const conf = c.ai?.confidence
-            const tier = confidenceTier(conf)
             const id = caseDisplayId(c)
 
             return (
@@ -72,22 +67,28 @@ export function CasesTable({ cases, filter = null, emptyMessage = 'No cases matc
                 </td>
                 <td className="px-5 py-3.5 tabular-nums">{formatINR(c.expected)}</td>
                 <td className="px-5 py-3.5 tabular-nums">{formatINR(c.received)}</td>
-                <td className="px-5 py-3.5">
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${tier.badgeClass}`}
-                  >
-                    {conf !== null && conf !== undefined ? `${conf}%` : '—'} {tier.label}
-                  </span>
-                </td>
-                <td className="max-w-[220px] truncate px-5 py-3.5 text-zinc-600 dark:text-zinc-400">
-                  {aiRecommendationText(c)}
+                <td className="px-5 py-3.5 text-right font-medium tabular-nums text-zinc-900 dark:text-zinc-50">
+                  {formatINR(c.amount_at_risk)}
                 </td>
                 <td className="px-5 py-3.5">
-                  <span
-                    className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${caseStatusBadgeClass(c.case_status, Boolean(c.resolution?.resolved))}`}
-                  >
-                    {caseStatusLabel(c)}
-                  </span>
+                    {c.payment_mode ? (
+                      <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                        {c.payment_mode}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-400">—</span>
+                    )}
+                  </td>
+                <td className="px-5 py-3.5">
+                  <span className="text-zinc-700 dark:text-zinc-300">{issueTypeLabel(c.case_type)}</span>
+                  {c.case_status === 'ai_pending' && (
+                    <span
+                      title="AI has not managed to analyse this case yet"
+                      className="ml-2 rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                    >
+                      AI pending
+                    </span>
+                  )}
                 </td>
                 <td className="px-5 py-3.5">
                   <Link

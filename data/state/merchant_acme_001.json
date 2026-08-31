@@ -205,7 +205,7 @@
     {
       "run_id": "RUN-merchant_acme_001-B2",
       "batch_id": 2,
-      "timestamp": "2026-08-30T18:10:31.939020",
+      "timestamp": "2026-08-31T18:46:17.459913",
       "sources": "Shopify + Razorpay + Bank",
       "status": "Completed",
       "auto_matched": 51,
@@ -218,7 +218,7 @@
     {
       "run_id": "RUN-merchant_acme_001-B1",
       "batch_id": 1,
-      "timestamp": "2026-08-30T17:52:46.169935",
+      "timestamp": "2026-08-31T18:21:03.014502",
       "sources": "Shopify + Razorpay + Bank",
       "status": "Completed",
       "auto_matched": 37,
@@ -258,42 +258,35 @@
       "candidates": [],
       "evidence_hash": "d4a9d8338a878541",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "The new evidence explicitly states that the requested information (payment gateway confirmation) is not available in the system. Therefore, the original assessment remains unchanged: there are no candidate matches or any evidence to link a payment to ORD-00004. The ambiguity persists.",
-        "next_step": "Escalate to the payment gateway to confirm whether any payment was received for ORD-00004.",
-        "evidence": [
-          "ORIGINAL CASE",
-          "NEWLY GATHERED EVIDENCE"
+        "confidence": 0,
+        "reason": "The order expected Rs 9,999.50 but no money was received and there are no candidate settlements to explain it.",
+        "next_step": "Check the payment gateway for any failed transaction or contact the customer to confirm payment.",
+        "evidence": [],
+        "missing_evidence": [
+          "payment gateway record for ORD-00004",
+          "customer payment attempt"
         ],
-        "missing_evidence": [],
-        "candidate_rankings": [
-          {
-            "id": "N/A",
-            "confidence": 10,
-            "reason": "The new evidence explicitly states that the requested information (payment gateway confirmation) is not available in the system. Therefore, the original assessment remains unchanged: there are no candidate matches or any evidence to link a payment to ORD-00004. The ambiguity persists."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:18:29.912572",
+        "investigated_at": "2026-08-31T18:22:23.112106",
         "provider": "openrouter",
-        "error": null,
-        "previous_confidence": 10
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "reconciled (AI result reused -- evidence unchanged)"
-        },
-        {
-          "at": "2026-08-30T18:18:29.912572",
-          "event": "ai follow-up investigation completed"
         }
       ],
       "bookmarked": false,
@@ -305,7 +298,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:18:29.912572"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-STL-X1001": {
       "case_id": "CASE-STL-X1001",
@@ -330,25 +323,30 @@
       "candidates": [],
       "evidence_hash": "35d2b8589265ed0d",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "No candidate matches or evidence to link a payment to STL-X1001.",
-        "next_step": "Escalate to the payment gateway to verify if settlement STL-X1001 was processed.",
+        "confidence": 0,
+        "reason": "A settlement of Rs 8,420.00 appeared with no matching order.",
+        "next_step": "Ask the payment gateway where this money came from or hold the funds until the source is clear.",
         "evidence": [],
         "missing_evidence": [
-          "payment gateway confirmation"
+          "source of the settlement",
+          "related order or refund"
         ],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T17:52:44.671315",
-        "provider": "groq",
+        "investigated_at": "2026-08-31T18:22:23.112106",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigated"
         }
       ],
@@ -361,7 +359,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:22:23.113462"
     },
     "CASE-ORD-00014": {
       "case_id": "CASE-ORD-00014",
@@ -399,30 +397,33 @@
       ],
       "evidence_hash": "a5574a4cfa88b4be",
       "ai": {
-        "classification": "ambiguous_match",
+        "classification": "manual_review",
         "recommendation": "manual_review",
-        "confidence": 50,
-        "reason": "Two settlements match the expected amount for ORD-00014, but both are distinct records, making it unclear which is the correct match.",
-        "next_step": "Manually review settlement records for ORD-00014 to determine the correct match.",
+        "confidence": 0,
+        "reason": "Two Razorpay settlements both match the order amount of Rs 6,499.00, one dated 2026-08-04 and the other a repost on 2026-08-05, making it unclear which is correct.",
+        "next_step": "Check the bank statement or Razorpay dashboard to see which settlement actually cleared, or contact Razorpay to confirm which is correct.",
         "evidence": [
-          "Order expected Rs 6,499.00, received Rs 0.00",
-          "Settlement STL-00014 amount Rs 6,499.00 on 2026-08-04",
-          "Settlement STL-00014-D amount Rs 6,499.00 on 2026-08-05"
+          "settlement_id: STL-00014, amount_paise: 649900, settled_on: 2026-08-04, narration: RAZORPAY SETTLEMENT UTR000400014",
+          "settlement_id: STL-00014-D, amount_paise: 649900, settled_on: 2026-08-05, narration: RAZORPAY SETTLEMENT REPOST UTR000400014"
         ],
         "missing_evidence": [
-          "customer payment confirmation",
-          "order status"
+          "bank statement showing which settlement cleared",
+          "Razorpay dashboard confirmation"
         ],
         "candidate_rankings": [],
         "action": "manual_review",
-        "investigated_at": "2026-08-30T17:52:44.671315",
-        "provider": "groq",
+        "investigated_at": "2026-08-31T18:22:23.112106",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigated"
         }
       ],
@@ -435,7 +436,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:22:23.113462"
     },
     "CASE-ORD-00049": {
       "case_id": "CASE-ORD-00049",
@@ -460,42 +461,35 @@
       "candidates": [],
       "evidence_hash": "a0909189c56cede6",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "The new evidence provided candidate settlements, but none of them are a direct match for ORD-00049. Settlements STL-00080, STL-00023, and STL-00044 are already matched to other orders. Settlements STL-00014-D and STL-00014 have the correct amount but settled significantly before the order date, making them unlikely matches. The requested payment gateway confirmation was not available, so the original ambiguity remains.",
-        "next_step": "Escalate to the payment gateway to confirm whether any payment was received for ORD-00049, as this information is still unavailable.",
-        "evidence": [
-          "candidate_settlements",
-          "still_unavailable"
+        "confidence": 0,
+        "reason": "The order expected Rs 6,499.00 but no money was received and there are no candidate settlements to explain it.",
+        "next_step": "Check the payment gateway for any failed transaction or contact the customer to confirm payment.",
+        "evidence": [],
+        "missing_evidence": [
+          "payment gateway record for ORD-00049",
+          "customer payment attempt"
         ],
-        "missing_evidence": [],
-        "candidate_rankings": [
-          {
-            "id": "N/A",
-            "confidence": 10,
-            "reason": "The new evidence provided candidate settlements, but none of them are a direct match for ORD-00049. Settlements STL-00080, STL-00023, and STL-00044 are already matched to other orders. Settlements STL-00014-D and STL-00014 have the correct amount but settled significantly before the order date, making them unlikely matches. The requested payment gateway confirmation was not available, so the original ambiguity remains."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:22:35.204754",
+        "investigated_at": "2026-08-31T18:22:23.112106",
         "provider": "openrouter",
-        "error": null,
-        "previous_confidence": 10
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigated"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "reconciled (AI result reused -- evidence unchanged)"
-        },
-        {
-          "at": "2026-08-30T18:22:35.204754",
-          "event": "ai follow-up investigation completed"
         }
       ],
       "bookmarked": false,
@@ -507,7 +501,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:22:35.204754"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-STL-X1002": {
       "case_id": "CASE-STL-X1002",
@@ -532,25 +526,30 @@
       "candidates": [],
       "evidence_hash": "58451ecfeedb764b",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "No candidate matches or evidence to link a payment to STL-X1002.",
-        "next_step": "Escalate to the payment gateway to confirm whether settlement STL-X1002 was processed.",
+        "confidence": 0,
+        "reason": "A settlement of Rs 5,764.00 appeared with no matching order.",
+        "next_step": "Ask the payment gateway where this money came from or hold the funds until the source is clear.",
         "evidence": [],
         "missing_evidence": [
-          "payment gateway confirmation"
+          "source of the settlement",
+          "related order or refund"
         ],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T17:52:44.671315",
-        "provider": "groq",
+        "investigated_at": "2026-08-31T18:22:23.112106",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigated"
         }
       ],
@@ -563,7 +562,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:22:23.113462"
     },
     "CASE-ORD-00027": {
       "case_id": "CASE-ORD-00027",
@@ -589,23 +588,27 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-08-30T18:10:23.118117",
+        "resolved_at": "2026-08-31T18:46:17.459913",
         "resolved_by": "system"
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:22:23.113462",
+          "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-31T18:46:17.459913",
           "event": "settlement arrived, resolved automatically"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00030": {
       "case_id": "CASE-ORD-00030",
@@ -631,23 +634,27 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-08-30T18:10:23.118117",
+        "resolved_at": "2026-08-31T18:46:17.459913",
         "resolved_by": "system"
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:22:23.113462",
+          "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-31T18:46:17.459913",
           "event": "settlement arrived, resolved automatically"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00024": {
       "case_id": "CASE-ORD-00024",
@@ -660,7 +667,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 399999,
       "received": 200000,
       "delta": -199999,
@@ -672,24 +679,36 @@
       "candidates": [],
       "evidence_hash": "83a1e15ce24d6dc6",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "Only part of the expected amount was received.",
+        "next_step": "Check if the customer used a split payment, coupon, or refund, and contact them or the payment provider to collect the remaining balance.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "missing_evidence": [
+          "remaining payment"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "NONE",
+            "confidence": 0,
+            "reason": "Only part of the expected amount was received."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:21:26.834298",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -701,7 +720,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:22:23.113462"
     },
     "CASE-STL-BULK01": {
       "case_id": "CASE-STL-BULK01",
@@ -714,7 +733,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 165556,
       "delta": 165556,
@@ -726,24 +745,36 @@
       "candidates": [],
       "evidence_hash": "efcf776e76b83781",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "A settlement arrived that does not match any known order.",
+        "next_step": "Trace the source of this unexpected payment with the bank or payment gateway and determine if it should be refunded or allocated elsewhere.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "missing_evidence": [
+          "order reference"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "NONE",
+            "confidence": 0,
+            "reason": "A settlement arrived that does not match any known order."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:21:26.834298",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -755,7 +786,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:22:23.113462"
     },
     "CASE-ORD-00008": {
       "case_id": "CASE-ORD-00008",
@@ -780,39 +811,40 @@
       "candidates": [],
       "evidence_hash": "900e3759c5805528",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "No candidate matches were found for this order, and no payment was received against the expected amount.",
-        "next_step": "Verify with the payment gateway if any transaction for ORD-00008 was initiated or completed.",
-        "evidence": [
-          "Expected amount: Rs 1,249.99",
-          "Received amount: Rs 0.00",
-          "No candidate matches provided"
-        ],
+        "confidence": 0,
+        "reason": "No remittance has been received from the courier for this order.",
+        "next_step": "Follow up with the courier for proof of delivery and request the outstanding payment.",
+        "evidence": [],
         "missing_evidence": [
-          "Payment gateway records for ORD-00008",
-          "Communication logs with the customer"
+          "courier remittance"
         ],
-        "candidate_rankings": [],
+        "candidate_rankings": [
+          {
+            "id": "NONE",
+            "confidence": 0,
+            "reason": "No remittance has been received from the courier for this order."
+          }
+        ],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:19:18.812922",
+        "investigated_at": "2026-08-31T18:21:26.834298",
         "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-08-30T18:19:18.812922",
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -824,7 +856,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:19:18.812922"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-STL-SHADOW01": {
       "case_id": "CASE-STL-SHADOW01",
@@ -837,7 +869,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 0,
       "received": 124999,
       "delta": 124999,
@@ -853,7 +885,8 @@
           "order_date": "2026-08-28",
           "days_from_settlement": 1,
           "customer_name": "Arjun Menon",
-          "payment_mode": "UPI"
+          "payment_mode": "UPI",
+          "already_settled_by": "STL-00047"
         },
         {
           "order_id": "ORD-00032",
@@ -861,7 +894,8 @@
           "order_date": "2026-08-09",
           "days_from_settlement": 20,
           "customer_name": "Aarav Sharma",
-          "payment_mode": "UPI"
+          "payment_mode": "UPI",
+          "already_settled_by": "STL-00032"
         },
         {
           "order_id": "ORD-00008",
@@ -869,7 +903,8 @@
           "order_date": "2026-08-04",
           "days_from_settlement": 25,
           "customer_name": "Aditya Rao",
-          "payment_mode": "COD"
+          "payment_mode": "COD",
+          "already_settled_by": null
         },
         {
           "order_id": "ORD-00033",
@@ -877,7 +912,8 @@
           "order_date": "2026-08-29",
           "days_from_settlement": 0,
           "customer_name": "Yash Malhotra",
-          "payment_mode": "WALLET"
+          "payment_mode": "WALLET",
+          "already_settled_by": "STL-00033"
         },
         {
           "order_id": "ORD-00001",
@@ -885,29 +921,46 @@
           "order_date": "2026-08-04",
           "days_from_settlement": 25,
           "customer_name": "Diya Patel",
-          "payment_mode": "UPI"
+          "payment_mode": "UPI",
+          "already_settled_by": "STL-00001"
         }
       ],
       "evidence_hash": "07a71d75e17fcddb",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
+        "classification": "resolve",
+        "recommendation": "resolve",
+        "confidence": 0,
+        "reason": "The settlement amount of Rs 1,249.99 matches order ORD-00008 exactly and that order has not been settled yet.",
+        "next_step": "Mark settlement STL-SHADOW01 as matched to ORD-00008 and close the case.",
+        "evidence": [
+          "ORD-00008"
+        ],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "candidate_rankings": [
+          {
+            "id": "ORD-00008",
+            "confidence": 0,
+            "reason": "The settlement amount of Rs 1,249.99 matches order ORD-00008 exactly and that order has not been settled yet."
+          }
+        ],
+        "action": "manual_review",
+        "investigated_at": "2026-08-31T18:23:58.422460",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -919,7 +972,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:23:58.423460"
     },
     "CASE-ORD-00039": {
       "case_id": "CASE-ORD-00039",
@@ -932,7 +985,7 @@
       "case_type": "overpayment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 999950,
       "received": 1099945,
       "delta": 99995,
@@ -944,24 +997,38 @@
       "candidates": [],
       "evidence_hash": "3e7123b24a6fbd31",
       "ai": {
-        "classification": "overpayment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No order matches the received amount, so we cannot tell where the extra money came from.",
+        "next_step": "Ask the payment team to check the payment system for a duplicate charge and arrange a refund of the excess to the customer.",
         "evidence": [],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No order matches the received amount, so we cannot tell where the extra money came from."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:58.422460",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -973,7 +1040,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:23:58.423460"
     },
     "CASE-ORD-BULK101": {
       "case_id": "CASE-ORD-BULK101",
@@ -986,7 +1053,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 99900,
       "received": 0,
       "delta": 0,
@@ -998,28 +1065,42 @@
       "candidates": [],
       "evidence_hash": "4e2b0b7cd6346b91",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No settlement has arrived for this order, so the money is still missing.",
+        "next_step": "Contact the courier or logistics partner to request the overdue remittance.",
         "evidence": [],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No settlement has arrived for this order, so the money is still missing."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:58.422460",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -1031,7 +1112,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-BULK102": {
       "case_id": "CASE-ORD-BULK102",
@@ -1044,7 +1125,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 69900,
       "received": 0,
       "delta": 0,
@@ -1056,28 +1137,42 @@
       "candidates": [],
       "evidence_hash": "3904461e2829f8b8",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No settlement has arrived for this order, so the money is still missing.",
+        "next_step": "Contact the courier or logistics partner to request the overdue remittance.",
         "evidence": [],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No settlement has arrived for this order, so the money is still missing."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:58.422460",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -1089,7 +1184,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00002": {
       "case_id": "CASE-ORD-00002",
@@ -1102,7 +1197,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 34950,
       "received": 0,
       "delta": 0,
@@ -1114,28 +1209,42 @@
       "candidates": [],
       "evidence_hash": "927d65c79741dd56",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No settlement has arrived for this order, so the money is still missing.",
+        "next_step": "Check with the payment system to see if the payment failed and ask the customer to retry or use another method.",
         "evidence": [],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No settlement has arrived for this order, so the money is still missing."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:58.422460",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
+        },
+        {
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
       "bookmarked": false,
@@ -1147,7 +1256,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00016": {
       "case_id": "CASE-ORD-00016",
@@ -1160,7 +1269,7 @@
       "case_type": "partial_payment",
       "tier": 4,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 249950,
       "received": 223163,
       "delta": -26787,
@@ -1172,24 +1281,32 @@
       "candidates": [],
       "evidence_hash": "8b8426bff55be214",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 5,
+        "reason": "No candidate settlement was provided, so we cannot match the received amount to a known payment.",
+        "next_step": "Check with the payment gateway to confirm if the payment was received; if not, contact the customer.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:00.380463",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1201,7 +1318,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:23:58.423460"
     },
     "CASE-ORD-00013": {
       "case_id": "CASE-ORD-00013",
@@ -1214,7 +1331,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59999,
       "received": 36000,
       "delta": -23999,
@@ -1226,24 +1343,32 @@
       "candidates": [],
       "evidence_hash": "cb7f128ce01bf30f",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 5,
+        "reason": "No candidate settlement was provided, so we cannot match the received amount to a known payment.",
+        "next_step": "Check with the payment gateway to confirm if the payment was received; if not, contact the customer.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:00.380463",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1255,7 +1380,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:23:58.423460"
     },
     "CASE-ORD-00050": {
       "case_id": "CASE-ORD-00050",
@@ -1268,7 +1393,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59950,
       "received": 44963,
       "delta": -14987,
@@ -1280,24 +1405,32 @@
       "candidates": [],
       "evidence_hash": "2353167861c6617f",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 5,
+        "reason": "No candidate settlement was provided, so we cannot match the received amount to a known payment.",
+        "next_step": "Check with the payment gateway to confirm if the payment was received; if not, contact the customer.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:00.380463",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1309,7 +1442,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:23:58.423460"
     },
     "CASE-ORD-00032": {
       "case_id": "CASE-ORD-00032",
@@ -1322,7 +1455,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 124999,
       "received": 120333,
       "delta": -4666,
@@ -1334,24 +1467,32 @@
       "candidates": [],
       "evidence_hash": "dc77799fe7fb55cc",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 5,
+        "reason": "No candidate settlement was provided, so we cannot match the received amount to a known payment.",
+        "next_step": "Check with the payment gateway to confirm if the payment was received; if not, contact the customer.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6666, Requested 2846. Please try again in 11.34s. Need more tokens? Upgrade to Dev Tier today at https://conso"
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:23:00.380463",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:22:23.113462",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:23:58.423460",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1363,7 +1504,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T17:52:46.169935"
+      "updated_at": "2026-08-31T18:23:58.423460"
     },
     "CASE-ORD-00005": {
       "case_id": "CASE-ORD-00005",
@@ -1388,14 +1529,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -1408,7 +1549,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00006": {
       "case_id": "CASE-ORD-00006",
@@ -1433,14 +1574,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -1453,7 +1594,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00012": {
       "case_id": "CASE-ORD-00012",
@@ -1478,14 +1619,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -1498,7 +1639,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00028": {
       "case_id": "CASE-ORD-00028",
@@ -1523,14 +1664,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -1543,7 +1684,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00037": {
       "case_id": "CASE-ORD-00037",
@@ -1568,14 +1709,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T17:52:46.169935",
+      "created_at": "2026-08-31T18:21:03.014502",
       "history": [
         {
-          "at": "2026-08-30T17:52:46.169935",
+          "at": "2026-08-31T18:21:03.014502",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -1588,7 +1729,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-STL-SHADOW02": {
       "case_id": "CASE-STL-SHADOW02",
@@ -1601,7 +1742,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_recommendation",
+      "case_status": "manual_review",
       "expected": 0,
       "received": 999999,
       "delta": 999999,
@@ -1617,7 +1758,8 @@
           "order_date": "2026-08-02",
           "days_from_settlement": 1,
           "customer_name": "Sara Khan",
-          "payment_mode": "UPI"
+          "payment_mode": "UPI",
+          "already_settled_by": "STL-00073"
         },
         {
           "order_id": "ORD-00004",
@@ -1625,7 +1767,8 @@
           "order_date": "2026-08-10",
           "days_from_settlement": 7,
           "customer_name": "Diya Patel",
-          "payment_mode": "NETBANKING"
+          "payment_mode": "NETBANKING",
+          "already_settled_by": null
         },
         {
           "order_id": "ORD-00057",
@@ -1633,7 +1776,8 @@
           "order_date": "2026-08-14",
           "days_from_settlement": 11,
           "customer_name": "Sara Khan",
-          "payment_mode": "COD"
+          "payment_mode": "COD",
+          "already_settled_by": "STL-00057"
         },
         {
           "order_id": "ORD-00072",
@@ -1641,7 +1785,8 @@
           "order_date": "2026-08-07",
           "days_from_settlement": 4,
           "customer_name": "Priya Desai",
-          "payment_mode": "CARD"
+          "payment_mode": "CARD",
+          "already_settled_by": "STL-00072"
         },
         {
           "order_id": "ORD-00083",
@@ -1649,38 +1794,41 @@
           "order_date": "2026-08-12",
           "days_from_settlement": 9,
           "customer_name": "Aarav Sharma",
-          "payment_mode": "UPI"
+          "payment_mode": "UPI",
+          "already_settled_by": "STL-00083"
         }
       ],
       "evidence_hash": "02be1b410c19dfd0",
       "ai": {
-        "classification": "overpayment",
-        "recommendation": "resolve",
-        "confidence": 90,
-        "reason": "Settlement amount Rs 9,999.99 matches candidate ORD-00073 amount Rs 9,999.99, and days_from_settlement is 1, indicating a close match.",
-        "next_step": "Accept settlement STL-SHADOW02 as matched to order ORD-00073; mark order as paid.",
+        "classification": "manual_review",
+        "recommendation": "manual_review",
+        "confidence": 0,
+        "reason": "The received Rs 9,999.99 matches order ORD-00073 exactly, but that order was already settled by STL-00073, indicating a likely duplicate payment.",
+        "next_step": "Check the payment gateway for a duplicate charge and, if confirmed, refund the customer.",
         "evidence": [
-          "Settlement amount Rs 9,999.99 matches candidate ORD-00073 amount Rs 9,999.99.",
-          "Candidate ORD-00073 has days_from_settlement 1, close to settlement date.",
-          "Payment mode UPI matches typical settlement."
+          "ORD-00073"
         ],
         "missing_evidence": [],
         "candidate_rankings": [
           {
             "id": "ORD-00073",
-            "confidence": 90,
-            "reason": "Settlement amount Rs 9,999.99 matches candidate ORD-00073 amount Rs 9,999.99, and days_from_settlement is 1, indicating a close match."
+            "confidence": 0,
+            "reason": "The received Rs 9,999.99 matches order ORD-00073 exactly, but that order was already settled by STL-00073, indicating a likely duplicate payment."
           }
         ],
-        "action": "resolve",
-        "investigated_at": "2026-08-30T18:10:29.828333",
-        "provider": "groq",
+        "action": "manual_review",
+        "investigated_at": "2026-08-31T18:47:00.018005",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
           "event": "ai investigated"
         }
       ],
@@ -1693,7 +1841,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-ORD-00078": {
       "case_id": "CASE-ORD-00078",
@@ -1718,27 +1866,33 @@
       "candidates": [],
       "evidence_hash": "125b70783cfacd0b",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 20,
-        "reason": "Order expected Rs 6,499.50 but no settlement received; no candidate matches.",
-        "next_step": "Verify with payment gateway for missing transaction records.",
-        "evidence": [
-          "Order expected Rs 6,499.50, received Rs 0.00."
+        "confidence": 0,
+        "reason": "No settlement was found for the expected Rs 6,499.50 from order ORD-00078.",
+        "next_step": "Contact the customer to confirm payment or check the payment gateway for a failed transaction.",
+        "evidence": [],
+        "missing_evidence": [],
+        "candidate_rankings": [
+          {
+            "id": "null",
+            "confidence": 0,
+            "reason": "No settlement was found for the expected Rs 6,499.50 from order ORD-00078."
+          }
         ],
-        "missing_evidence": [
-          "payment gateway logs"
-        ],
-        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:10:29.828333",
-        "provider": "groq",
+        "investigated_at": "2026-08-31T18:47:00.018005",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
           "event": "ai investigated"
         }
       ],
@@ -1751,7 +1905,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-STL-X2002": {
       "case_id": "CASE-STL-X2002",
@@ -1776,27 +1930,33 @@
       "candidates": [],
       "evidence_hash": "6110070af024703c",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 20,
-        "reason": "Settlement received Rs 6,160.00 but no order matches; no candidate matches.",
-        "next_step": "Verify with payment gateway for missing transaction records.",
-        "evidence": [
-          "Settlement received Rs 6,160.00, expected Rs 0.00."
+        "confidence": 0,
+        "reason": "No order matches the received Rs 6,160.00 settlement.",
+        "next_step": "Verify with the payment gateway where this settlement originated and whether it is a fee, refund, or adjustment.",
+        "evidence": [],
+        "missing_evidence": [],
+        "candidate_rankings": [
+          {
+            "id": "null",
+            "confidence": 0,
+            "reason": "No order matches the received Rs 6,160.00 settlement."
+          }
         ],
-        "missing_evidence": [
-          "payment gateway logs"
-        ],
-        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:10:29.828333",
-        "provider": "groq",
+        "investigated_at": "2026-08-31T18:47:00.018005",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
           "event": "ai investigated"
         }
       ],
@@ -1809,7 +1969,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-ORD-00079": {
       "case_id": "CASE-ORD-00079",
@@ -1834,27 +1994,33 @@
       "candidates": [],
       "evidence_hash": "027e4e54b21c1029",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 20,
-        "reason": "Order expected Rs 3,999.50 but no settlement received; no candidate matches.",
-        "next_step": "Verify with payment gateway for missing transaction records.",
-        "evidence": [
-          "Order expected Rs 3,999.50, received Rs 0.00."
+        "confidence": 0,
+        "reason": "No settlement was found for the expected Rs 3,999.50 from order ORD-00079.",
+        "next_step": "Contact the customer to confirm payment or review the payment gateway for any failed transaction.",
+        "evidence": [],
+        "missing_evidence": [],
+        "candidate_rankings": [
+          {
+            "id": "null",
+            "confidence": 0,
+            "reason": "No settlement was found for the expected Rs 3,999.50 from order ORD-00079."
+          }
         ],
-        "missing_evidence": [
-          "payment gateway logs"
-        ],
-        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:10:29.828333",
-        "provider": "groq",
+        "investigated_at": "2026-08-31T18:47:00.018005",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
           "event": "ai investigated"
         }
       ],
@@ -1867,7 +2033,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-STL-BULK02": {
       "case_id": "CASE-STL-BULK02",
@@ -1892,27 +2058,33 @@
       "candidates": [],
       "evidence_hash": "fa8d368daeffa35b",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 20,
-        "reason": "Settlement received Rs 3,410.56 but no order matches; no candidate matches.",
-        "next_step": "Verify with payment gateway for missing transaction records.",
-        "evidence": [
-          "Settlement received Rs 3,410.56, expected Rs 0.00."
+        "confidence": 0,
+        "reason": "No order matches the received Rs 3,410.56 settlement.",
+        "next_step": "Check the payment gateway to see if this amount is a fee, adjustment, or refund that needs to be accounted for.",
+        "evidence": [],
+        "missing_evidence": [],
+        "candidate_rankings": [
+          {
+            "id": "null",
+            "confidence": 0,
+            "reason": "No order matches the received Rs 3,410.56 settlement."
+          }
         ],
-        "missing_evidence": [
-          "payment gateway logs"
-        ],
-        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-08-30T18:10:29.828333",
-        "provider": "groq",
+        "investigated_at": "2026-08-31T18:47:00.018005",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
           "event": "ai investigated"
         }
       ],
@@ -1925,7 +2097,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-STL-X2001": {
       "case_id": "CASE-STL-X2001",
@@ -1938,7 +2110,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 0,
       "received": 299100,
       "delta": 299100,
@@ -1950,24 +2122,36 @@
       "candidates": [],
       "evidence_hash": "2a14847bfbf332e3",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "resolve",
+        "confidence": 0,
+        "reason": "No settlement matches any order, so the source of the Rs 2,991 received is unclear.",
+        "next_step": "Check the payment gateway or bank statement to see where this money came from and whether it is a fee, refund, or mistaken credit.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "missing_evidence": [
+          "source of unexpected credit"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No settlement matches any order, so the source of the Rs 2,991 received is unclear."
+          }
+        ],
+        "action": "manual_review",
+        "investigated_at": "2026-08-31T18:47:14.406289",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1979,7 +2163,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-ORD-00051": {
       "case_id": "CASE-ORD-00051",
@@ -1992,7 +2176,7 @@
       "case_type": "ambiguous_match",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 59950,
       "received": 0,
       "delta": 0,
@@ -2017,24 +2201,37 @@
       ],
       "evidence_hash": "8bd22d5b22f6f922",
       "ai": {
-        "classification": "ambiguous_match",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
+        "classification": "manual_review",
+        "recommendation": "manual_review",
+        "confidence": 50,
+        "reason": "Two settlements of Rs 599.50 exist but no money shows as received, making it unclear which, if any, is the correct payment.",
+        "next_step": "Look at the bank account for those two settlement dates; if the money arrived, link the correct settlement and refund any duplicate.",
+        "evidence": [
+          "STL-00051-D",
+          "STL-00051"
+        ],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "candidate_rankings": [
+          {
+            "id": "STL-00051-D",
+            "confidence": 50,
+            "reason": "Two settlements of Rs 599.50 exist but no money shows as received, making it unclear which, if any, is the correct payment."
+          }
+        ],
+        "action": "manual_review",
+        "investigated_at": "2026-08-31T18:47:14.406289",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2046,7 +2243,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-ORD-00097": {
       "case_id": "CASE-ORD-00097",
@@ -2059,7 +2256,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 34950,
       "received": 0,
       "delta": 0,
@@ -2071,24 +2268,36 @@
       "candidates": [],
       "evidence_hash": "6ca188c587fd940c",
       "ai": {
-        "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No settlement matches the order, so the expected Rs 349.50 has not been received.",
+        "next_step": "Contact the courier or logistics partner to ask for the overdue remittance.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "missing_evidence": [
+          "incoming remittance"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No settlement matches the order, so the expected Rs 349.50 has not been received."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:47:14.406289",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2100,7 +2309,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-ORD-00093": {
       "case_id": "CASE-ORD-00093",
@@ -2113,7 +2322,7 @@
       "case_type": "overpayment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 189900,
       "received": 208890,
       "delta": 18990,
@@ -2125,24 +2334,36 @@
       "candidates": [],
       "evidence_hash": "9759e1517af7b8a8",
       "ai": {
-        "classification": "overpayment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No settlement matches the order, yet Rs 2,088.90 was received, which is more than the expected Rs 1,899.00.",
+        "next_step": "Review the payment gateway for any duplicate charge or extra fee and arrange a refund if the excess is not owed.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "missing_evidence": [
+          "explanation for excess credit"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No settlement matches the order, yet Rs 2,088.90 was received, which is more than the expected Rs 1,899.00."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:47:14.406289",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2154,7 +2375,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-ORD-00053": {
       "case_id": "CASE-ORD-00053",
@@ -2167,7 +2388,7 @@
       "case_type": "partial_payment",
       "tier": 4,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59900,
       "received": 46125,
       "delta": -13775,
@@ -2179,24 +2400,36 @@
       "candidates": [],
       "evidence_hash": "47030734e51ea6d9",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No settlement matches the order, and only Rs 461.25 was received against the expected Rs 599.00.",
+        "next_step": "Reach out to the customer to collect the remaining balance of Rs 137.75.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "missing_evidence": [
+          "remaining payment"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No settlement matches the order, and only Rs 461.25 was received against the expected Rs 599.00."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:47:14.406289",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2208,7 +2441,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:47:14.409029"
     },
     "CASE-ORD-00068": {
       "case_id": "CASE-ORD-00068",
@@ -2221,7 +2454,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 89950,
       "received": 86298,
       "delta": -3652,
@@ -2233,24 +2466,45 @@
       "candidates": [],
       "evidence_hash": "4bd2f69fd29e5d77",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No matching payment or settlement was found for this order.",
+        "next_step": "Check with the payment gateway to see if the payment was attempted and, if not, ask the customer to pay the remaining amount.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "missing_evidence": [
+          "payment_gateway_response",
+          "customer_communication_log"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "ORD-00068",
+            "confidence": 0,
+            "reason": "No matching payment or settlement was found for this order."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:48:42.072852",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:47:49.861252",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:48:42.080916",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2262,7 +2516,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:48:42.080916"
     },
     "CASE-ORD-00052": {
       "case_id": "CASE-ORD-00052",
@@ -2275,7 +2529,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 59950,
       "received": 58029,
       "delta": -1921,
@@ -2287,24 +2541,45 @@
       "candidates": [],
       "evidence_hash": "703cd1a58affef2d",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No matching payment or settlement was found for this order.",
+        "next_step": "Check with the payment gateway to see if the payment was attempted and, if not, ask the customer to pay the remaining amount.",
         "evidence": [],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7758, Requested 5485. Please try again in 39.3225s. Need more tokens? Upgrade to Dev Tier today at https://con"
+        "missing_evidence": [
+          "payment_gateway_response",
+          "customer_communication_log"
+        ],
+        "candidate_rankings": [
+          {
+            "id": "ORD-00052",
+            "confidence": 0,
+            "reason": "No matching payment or settlement was found for this order."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-08-31T18:48:42.072852",
+        "provider": "openrouter",
+        "error": null
       },
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
+          "event": "reconciled, queued for AI investigation"
+        },
+        {
+          "at": "2026-08-31T18:47:14.409029",
           "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:47:49.861252",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-08-31T18:48:42.080916",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2316,7 +2591,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:48:42.080916"
     },
     "CASE-ORD-00058": {
       "case_id": "CASE-ORD-00058",
@@ -2341,10 +2616,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -2357,7 +2632,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00074": {
       "case_id": "CASE-ORD-00074",
@@ -2382,10 +2657,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -2398,7 +2673,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-00091": {
       "case_id": "CASE-ORD-00091",
@@ -2423,10 +2698,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -2439,7 +2714,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-BULK201": {
       "case_id": "CASE-ORD-BULK201",
@@ -2464,10 +2739,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -2480,7 +2755,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     },
     "CASE-ORD-BULK202": {
       "case_id": "CASE-ORD-BULK202",
@@ -2505,10 +2780,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-08-30T18:10:31.939020",
+      "created_at": "2026-08-31T18:46:17.459913",
       "history": [
         {
-          "at": "2026-08-30T18:10:31.939020",
+          "at": "2026-08-31T18:46:17.459913",
           "event": "awaiting settlement"
         }
       ],
@@ -2521,7 +2796,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-08-30T18:10:31.939020"
+      "updated_at": "2026-08-31T18:46:17.459913"
     }
   }
 }

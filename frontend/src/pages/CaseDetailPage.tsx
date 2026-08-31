@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { AskAiPanel } from '../components/AskAiPanel'
+import { BackToCaseLink } from '../components/BackToCaseLink'
 import { CaseAiAnalysisPanel } from '../components/cases/CaseAiAnalysisPanel'
 import { CaseDetailNav } from '../components/cases/CaseDetailNav'
 import { CaseDocumentsPanel } from '../components/cases/CaseDocumentsPanel'
@@ -14,7 +15,6 @@ import {
   caseDisplayId,
   caseStatusBadgeClass,
   caseStatusLabel,
-  confidenceTier,
 } from '../lib/caseDisplay'
 import { isOpenForReview, canReopenCase } from '../lib/caseUtils'
 import { caseNeighbors, caseQueuePath, filterCases } from '../lib/caseQueue'
@@ -210,20 +210,15 @@ export function CaseDetailPage() {
   const resolved = Boolean(caseItem.resolution?.resolved)
   const reopenable = canReopenCase(caseItem)
   const canDecide = isOpenForReview(caseItem) && !acting
-  const tier = confidenceTier(caseItem.ai?.confidence)
   // Only offer the follow-up when AI actually named something it was missing —
   // otherwise there is nothing new to fetch and the extra call would be waste.
   const missingEvidence = caseItem.ai?.missing_evidence ?? []
   const canInvestigateFurther = !resolved && missingEvidence.length > 0
-  const prevConf = caseItem.ai?.previous_confidence
-  const confidenceDelta =
-    prevConf !== null && prevConf !== undefined &&
-    caseItem.ai?.confidence !== null && caseItem.ai?.confidence !== undefined
-      ? caseItem.ai.confidence - prevConf
-      : null
 
   return (
     <div className="mx-auto max-w-[1120px] space-y-6 px-6 py-6 lg:px-8 lg:py-8">
+      <BackToCaseLink />
+
       <CaseDetailNav filter={filter} prev={prev} next={next} position={position} total={total} />
 
       <div>
@@ -246,26 +241,6 @@ export function CaseDetailPage() {
             >
               {caseStatusLabel(caseItem)}
             </span>
-            {caseItem.ai?.confidence !== null && caseItem.ai?.confidence !== undefined && (
-              <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${tier.badgeClass}`}>
-                {caseItem.ai.confidence}% Confidence
-              </span>
-            )}
-            {/* Real before/after from a follow-up investigation — a diff of two
-                genuine scores, never a fabricated trend. */}
-            {confidenceDelta !== null && (
-              <span
-                title={`Confidence moved from ${caseItem.ai?.previous_confidence}% after the follow-up investigation`}
-                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${
-                  confidenceDelta > 0
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
-                    : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300'
-                }`}
-              >
-                {confidenceDelta > 0 ? '▲' : '▼'}
-                {Math.abs(confidenceDelta)}% after follow-up
-              </span>
-            )}
           </div>
           <p className="mt-1 text-[13px] text-zinc-500">{caseItem.case_id}</p>
         </div>

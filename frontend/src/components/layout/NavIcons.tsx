@@ -46,6 +46,15 @@ export function NavIconTransactions({ className = base }: IconProps) {
   )
 }
 
+export function NavIconReports({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <rect x="3.5" y="3.5" width="13" height="13" rx="2" />
+      <path d="M7 13V9.5M10 13V7M13 13v-2.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function NavIconSettings({ className = base }: IconProps) {
   return (
     <svg

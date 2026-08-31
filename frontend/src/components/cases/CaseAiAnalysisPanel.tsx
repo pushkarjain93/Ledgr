@@ -1,4 +1,5 @@
-import { confidenceTier } from '../../lib/caseDisplay'
+import { LinkedRecordText } from '../LinkedRecordText'
+import { useApp } from '../../context/AppContext'
 import type { Case } from '../../types/case'
 
 type CaseAiAnalysisPanelProps = {
@@ -14,8 +15,8 @@ function CheckIcon() {
 }
 
 export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
+  const { cases } = useApp()
   const ai = caseItem.ai
-  const tier = confidenceTier(ai?.confidence)
   const finding = ai?.reason?.trim() || caseItem.explanation || 'No AI finding available yet.'
   const recommendation = ai?.next_step?.trim() || '—'
   const evidence = ai?.evidence ?? []
@@ -27,11 +28,6 @@ export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-50">AI Analysis</h2>
-        {ai?.confidence !== null && ai?.confidence !== undefined && (
-          <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${tier.badgeClass}`}>
-            {ai.confidence}% Confidence · {tier.label}
-          </span>
-        )}
       </div>
 
       {ai?.error && (
@@ -42,7 +38,9 @@ export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
 
       <div className="mt-4">
         <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">Finding</p>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">{finding}</p>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+          <LinkedRecordText text={finding} cases={cases} currentRecordId={caseItem.record_id} currentCaseId={caseItem.case_id} />
+        </p>
       </div>
 
       {evidence.length > 0 && (
@@ -64,7 +62,7 @@ export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
           AI Recommendation
         </p>
         <p className="mt-1 text-[13px] font-medium leading-relaxed text-zinc-800 dark:text-zinc-100">
-          {recommendation}
+          <LinkedRecordText text={recommendation} cases={cases} currentRecordId={caseItem.record_id} currentCaseId={caseItem.case_id} />
         </p>
       </div>
 

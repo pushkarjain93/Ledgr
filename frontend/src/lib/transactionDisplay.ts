@@ -17,7 +17,15 @@ export type TransactionFilters = {
 }
 
 export function transactionUiStatus(record: TransactionRecord): TransactionUiStatus {
-  if (record.status === 'AUTO_CLEARED' || record.status === 'CLEARED_WITH_FEE') {
+  // 'MATCHED'/'UNMATCHED' come from settlement-feed rows (see api.py's
+  // transactions endpoint). Without them a settlement that reconciled cleanly
+  // fell through to 'exception' and was shown in red while its own detail
+  // panel said "Engine status: MATCHED".
+  if (
+    record.status === 'AUTO_CLEARED' ||
+    record.status === 'CLEARED_WITH_FEE' ||
+    record.status === 'MATCHED'
+  ) {
     return 'matched'
   }
   if (

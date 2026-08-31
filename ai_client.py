@@ -21,7 +21,9 @@ it's given.
 """
 import json
 import os
+import re
 import threading
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -53,29 +55,75 @@ DEFAULT_BATCH_SIZE = 5
 # path, because that honesty is what makes the verdicts trustworthy.
 # --------------------------------------------------------------------------
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+
+# A ":free" model on purpose, NOT a paid one.
+#
+# OpenRouter reserves max_tokens against your CREDIT BALANCE before running
+# anything, so a paid model on a nearly-empty free-tier account fails with a
+# 402 on every single request -- a permanent death, not a transient limit.
+# That is exactly what happened with the previous default
+# (google/gemini-2.5-flash): the account could "only afford 2558" tokens while
+# we asked for 3000, so OpenRouter never once served as failover and every
+# overflow case fell to ai_pending.
+#
+# A ":free" model costs 0 credits, so nothing is reserved and no balance can
+# run out. Verified against the alternatives before choosing:
+#   nvidia/nemotron-3-super-120b-a12b:free  honours json_schema exactly, ~4.8s
+#   minimax/minimax-m2.7:free               IGNORED the schema -- wrapped the
+#                                           reply in a markdown fence and
+#                                           renamed the keys. Unusable here.
+# Free models are billed nothing but are flakier upstream (see the embedded
+# -error handling in _openai_compatible_generate), which is acceptable for a
+# failover tier whose whole job is to catch Groq's overflow.
+OPENROUTER_MODEL = os.environ.get(
+    "OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
+
+# OpenRouter accepts a `models` array (MAXIMUM 3 -- a 4th is a hard 400) and
+# routes to the first one actually serving right now. Free models are hosted on
+# spare capacity and genuinely do go down: nemotron returned "Service
+# temporarily overloaded" mid-testing, which without a backup means the whole
+# failover tier is dead for that request.
+#
+# The backups are strictly a last resort and are NOT equally trustworthy -- one
+# observed attempt fell through to a weaker model that ignored json_schema and
+# replied with prose. That is safe here only because a non-JSON reply is
+# REJECTED by the parser and fails over to Gemini; a schema violation must
+# never be coerced into a verdict. Ordered best-first.
+OPENROUTER_FALLBACK_MODELS = [
+    m.strip() for m in os.environ.get(
+        "OPENROUTER_FALLBACK_MODELS",
+        "z-ai/glm-5.2:free,google/gemma-4-31b-it:free").split(",") if m.strip()
+]
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 
-# Groq's free tier caps TOKENS PER MINUTE (8000 by default), and the reservation
-# counts prompt + max_tokens together. A batched 5-case prompt is ~2-3k tokens,
-# so this leaves comfortable headroom under that ceiling. Too high and every
-# request is refused with a 413 before any work happens.
-GROQ_MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "4000"))
-
-# OpenRouter reserves the FULL max_tokens of the model up-front against your
-# credit balance. Left unset it reserves the model's maximum (65k+), which a
-# free-tier account cannot afford -- the request is refused with a 402 before
-# any tokens are actually spent. Capping this to what a batched response
-# realistically needs keeps free accounts working. Gemini has no equivalent
-# reservation, so this applies only to the OpenAI-compatible path.
+# Groq's free tier caps TOKENS PER MINUTE (8000), and the reservation counts
+# prompt + max_tokens TOGETHER, across all in-flight requests.
 #
-# Sized for CONCURRENCY: OpenRouter counts all IN-FLIGHT requests against the
-# balance together, so MAX_CONCURRENT_BATCHES x this value must fit. A 5-case
-# batched response measures ~1.5k tokens, so 3000 is generous per request and
-# still leaves room for parallel chunks.
-OPENROUTER_MAX_TOKENS = int(os.environ.get("OPENROUTER_MAX_TOKENS", "3000"))
+# Sized from a real measurement, not a guess: a 5-case batched investigation
+# prompt is ~1010 tokens (system prompt ~570 + ~90/case). So each request
+# reserves 1010 + GROQ_MAX_TOKENS, and MAX_CONCURRENT_BATCHES of them must fit
+# under 8000:
+#
+#     2 x (1010 + 2200) = 6420   <- headroom
+#     2 x (1010 + 3000) = 8020   <- the old value: 20 tokens OVER the ceiling
+#
+# That 20-token overshoot meant the FIRST pair of concurrent chunks was always
+# refused with a 429, which then tripped the provider cooldown and pushed every
+# remaining chunk onto failover. A measured 5-case response is ~1.5k tokens, so
+# 2200 still leaves room to finish. Do not raise this without re-checking the
+# arithmetic above against MAX_CONCURRENT_BATCHES.
+GROQ_MAX_TOKENS = int(os.environ.get("GROQ_MAX_TOKENS", "2200"))
+
+# Free OpenRouter models reserve no credit, so this only needs to be large
+# enough to actually finish a 5-case answer. Nemotron spends most of its
+# completion budget on reasoning tokens (257 of 276 on a trivial probe), so it
+# needs more headroom than the token-per-minute-constrained Groq path.
+# If OPENROUTER_MODEL is ever pointed back at a PAID model, this becomes a
+# credit reservation again -- _openai_compatible_generate self-heals from the
+# resulting 402 by retrying once at whatever the account can afford.
+OPENROUTER_MAX_TOKENS = int(os.environ.get("OPENROUTER_MAX_TOKENS", "4000"))
 
 # Order matters: first configured provider wins, later ones are failover.
 #
@@ -83,17 +131,15 @@ OPENROUTER_MAX_TOKENS = int(os.environ.get("OPENROUTER_MAX_TOKENS", "3000"))
 # not by preference. Gemini's direct endpoint was by far the slowest and also
 # has the tightest daily cap, so it moved from first to last:
 #
-#   openrouter (gemini-2.5-flash)   ~6.5s   <- primary
-#   groq       (gpt-oss-20b)        ~1.9s   <- fastest, but see TPM note below
+#   groq       (gpt-oss-20b)        ~1.9s   <- primary, by far the fastest
+#   openrouter (gemini-2.5-flash)   ~6.5s   <- failover
 #   gemini     (gemini-3.6-flash)  ~20.8s   <- slowest + 20/day cap, last resort
 #
-# Groq is fastest but is NOT first on purpose: its free tier limits TOKENS PER
-# MINUTE (8000), and MAX_CONCURRENT_BATCHES parallel requests each reserving
-# GROQ_MAX_TOKENS would exceed that ceiling and 413 immediately. As failover it
-# serves whatever OpenRouter could not, at a concurrency the TPM budget absorbs.
-# OpenRouter routes to a Gemini-family model, so putting it first keeps verdict
-# quality in line with what the project was already producing.
-PROVIDER_ORDER = ("openrouter", "groq", "gemini")
+# Groq's free tier limits TOKENS PER MINUTE (8000) rather than request count,
+# so GROQ_MAX_TOKENS x MAX_CONCURRENT_BATCHES must stay under that ceiling --
+# see GROQ_MAX_TOKENS. Within that budget it is roughly 3x faster than the
+# alternatives, which is what a user waiting on the Sync button actually feels.
+PROVIDER_ORDER = ("groq", "openrouter", "gemini")
 
 # How many batched investigation requests may be in flight at once. Chunks are
 # fully independent (each carries its own cases), so running them sequentially
@@ -112,6 +158,29 @@ MAX_CONCURRENT_BATCHES = int(os.environ.get("AI_MAX_CONCURRENT_BATCHES", "2"))
 # single shared global would let one thread's provider be recorded against
 # another thread's case. Each worker reads back only its own value.
 _local = threading.local()
+
+# A provider that just refused (rate limit, out of credits) will refuse the
+# next chunk too. Without this, every concurrent chunk independently pays a
+# full round-trip to discover the same dead provider -- with OpenRouter out of
+# credits that alone turned a ~15s sync into 60s+. Remember the failure briefly
+# and skip straight to the next provider.
+PROVIDER_COOLDOWN_SECONDS = int(os.environ.get("AI_PROVIDER_COOLDOWN", "60"))
+_cooldown: dict[str, float] = {}
+_cooldown_lock = threading.Lock()
+
+
+def _is_cooling_down(provider: str) -> bool:
+    with _cooldown_lock:
+        until = _cooldown.get(provider, 0.0)
+        if until and time.monotonic() < until:
+            return True
+        _cooldown.pop(provider, None)
+        return False
+
+
+def _start_cooldown(provider: str) -> None:
+    with _cooldown_lock:
+        _cooldown[provider] = time.monotonic() + PROVIDER_COOLDOWN_SECONDS
 
 
 def last_provider() -> str | None:
@@ -231,6 +300,10 @@ def _generate(system_prompt: str, user_message: str, schema: dict | None = None,
     any_rate_limited = False
 
     for name in providers:
+        if _is_cooling_down(name):
+            failures.append(f"{name}: skipped (recently rate-limited)")
+            any_rate_limited = True
+            continue
         try:
             result = _PROVIDERS[name](system_prompt, user_message, schema, temperature)
             _local.provider = name
@@ -238,6 +311,7 @@ def _generate(system_prompt: str, user_message: str, schema: dict | None = None,
         except (AIRateLimitError, AIAPIError, AIAuthError) as exc:
             if isinstance(exc, AIRateLimitError):
                 any_rate_limited = True
+                _start_cooldown(name)
             # First line only: provider error bodies are long, and what matters
             # is WHICH provider failed and roughly why.
             detail = str(exc).splitlines()[0][:160]
@@ -296,9 +370,47 @@ def _gemini_generate(system_prompt: str, user_message: str, schema: dict | None,
         raise AIAPIError(f"Gemini's response wasn't valid JSON: {exc}") from exc
 
 
+# Retrying a 402 at the affordable ceiling is only worth it if that ceiling can
+# still hold a real batched answer (~1.5k tokens). Below this the reply would be
+# cut off mid-JSON, which is worse than failing over to a provider that can
+# finish the thought.
+_MIN_USEFUL_MAX_TOKENS = 1200
+
+_AFFORDABLE_RE = re.compile(r"can only afford\s+(\d+)", re.IGNORECASE)
+
+
+def _affordable_tokens(body: str) -> int | None:
+    """The token budget a 402 body says the account can actually cover."""
+    match = _AFFORDABLE_RE.search(body or "")
+    return int(match.group(1)) if match else None
+
+
+def _strip_code_fence(text: str) -> str:
+    """
+    Drop a ```json ... ``` wrapper before parsing.
+
+    Providers are asked for strict json_schema output and the good ones honour
+    it, but a weaker model fenced its reply as markdown even under `strict`.
+    A fence is a formatting quirk, not a wrong answer -- there is no reason to
+    discard an otherwise valid result over it.
+    """
+    stripped = (text or "").strip()
+    if not stripped.startswith("```"):
+        return stripped
+    body = stripped[3:]
+    if "\n" in body:
+        first, rest = body.split("\n", 1)
+        # Only a bare language tag may follow the opening fence.
+        if first.strip().isalpha():
+            body = rest
+    return body.rsplit("```", 1)[0].strip() if body.rstrip().endswith("```") else body.strip()
+
+
 def _openai_compatible_generate(provider: str, url: str, model: str, extra_headers: dict,
                                 system_prompt: str, user_message: str, schema: dict | None,
-                                temperature: float, max_tokens: int):
+                                temperature: float, max_tokens: int,
+                                _retry_402: bool = True,
+                                fallback_models: list[str] | None = None):
     """
     OpenAI-compatible chat-completions call (OpenRouter). The same adapter
     shape works for any OpenAI-compatible endpoint -- xAI/Grok included --
@@ -318,6 +430,9 @@ def _openai_compatible_generate(provider: str, url: str, model: str, extra_heade
         "temperature": temperature,
         "max_tokens": max_tokens,
     }
+    if fallback_models:
+        # OpenRouter caps this array at 3 entries INCLUDING the primary.
+        payload["models"] = [model, *fallback_models][:3]
     if schema is not None:
         payload["response_format"] = {
             "type": "json_schema",
@@ -350,15 +465,38 @@ def _openai_compatible_generate(provider: str, url: str, model: str, extra_heade
         raise AIRateLimitError(
             f"{provider} token-per-minute limit exceeded (413): {resp.text[:300]}")
     if resp.status_code == 402:
-        # Out of credits, or asking to reserve more tokens than the account
-        # can afford. Same practical meaning as a rate limit -- this provider
-        # cannot serve right now -- so treat it as retryable and fail over.
+        # Out of credits, or -- more often -- asking to RESERVE more tokens
+        # than the balance can cover. The body says exactly what is affordable
+        # ("You requested up to 3000 tokens, but can only afford 2558"), so
+        # retry once at that ceiling instead of discarding a provider that
+        # could still answer. Only retried when the affordable budget is worth
+        # having; below that the answer would be truncated anyway.
+        affordable = _affordable_tokens(resp.text)
+        if affordable and _retry_402 and affordable >= _MIN_USEFUL_MAX_TOKENS:
+            return _openai_compatible_generate(
+                provider, url, model, extra_headers, system_prompt,
+                user_message, schema, temperature, affordable,
+                _retry_402=False, fallback_models=fallback_models)
         raise AIRateLimitError(
             f"{provider} has insufficient credits for this request (402): {resp.text[:300]}")
     if not resp.ok:
         raise AIAPIError(f"{provider} returned {resp.status_code}: {resp.text[:300]}")
 
     data = resp.json()
+
+    # OpenRouter can return HTTP 200 whose BODY carries an upstream failure
+    # ("Upstream error from Nvidia: Service temporarily overloaded", code 502).
+    # Without this the KeyError below would report the misleading "response
+    # didn't include any text" instead of the real reason. Upstream capacity
+    # errors are transient, so they are retryable and fail over.
+    err = data.get("error") if isinstance(data, dict) else None
+    if err:
+        message = err.get("message", str(err)) if isinstance(err, dict) else str(err)
+        code = err.get("code") if isinstance(err, dict) else None
+        if code in (429, 402, 502, 503) or "rate" in str(message).lower():
+            raise AIRateLimitError(f"{provider} upstream error ({code}): {str(message)[:300]}")
+        raise AIAPIError(f"{provider} returned an error body ({code}): {str(message)[:300]}")
+
     try:
         text = data["choices"][0]["message"]["content"]
     except (KeyError, IndexError) as exc:
@@ -367,7 +505,7 @@ def _openai_compatible_generate(provider: str, url: str, model: str, extra_heade
     if schema is None:
         return (text or "").strip()
     try:
-        return json.loads(text)
+        return json.loads(_strip_code_fence(text))
     except (json.JSONDecodeError, TypeError) as exc:
         raise AIAPIError(f"{provider}'s response wasn't valid JSON: {exc}") from exc
 
@@ -377,7 +515,8 @@ def _openrouter_generate(system_prompt, user_message, schema, temperature):
         "openrouter", OPENROUTER_URL, OPENROUTER_MODEL,
         # OpenRouter uses these for attribution on its dashboard.
         {"HTTP-Referer": "http://localhost:5173", "X-Title": "Ledgr"},
-        system_prompt, user_message, schema, temperature, OPENROUTER_MAX_TOKENS)
+        system_prompt, user_message, schema, temperature, OPENROUTER_MAX_TOKENS,
+        fallback_models=OPENROUTER_FALLBACK_MODELS)
 
 
 def _groq_generate(system_prompt, user_message, schema, temperature):
@@ -482,7 +621,9 @@ BATCH_SYSTEM_PROMPT = (
     "ambiguous, recommend 'manual_review' instead -- that is a correct, "
     "successful outcome, never a failure to force a match. Recommend "
     "'resolve' only when the evidence is unambiguous. Return exactly one "
-    "result per case_id you were given, in the same order."
+    "result per case_id you were given, in the same order. "
+    "IF A CANDIDATE ORDER HAS `already_settled_by` SET, that order has ALREADY BEEN PAID by the settlement named there. Never recommend linking a second settlement to it or marking it settled again -- the order is not missing its money. A credit that exactly matches an already-paid order is most likely a DUPLICATE PAYMENT (a checkout retry that charged the customer twice). Say so, recommend manual_review, and make the next step about verifying and refunding the customer, not about reconciling the order. "
+    "WRITE FOR A NON-SPECIALIST. The reader runs a shop, not a payments team. Use everyday words: say 'the money never arrived' not 'settlement not identified'; 'the customer paid less than the order total' not 'amount variance outside tolerance'; 'the courier hasn't sent the cash yet' not 'remittance pending'. Avoid jargon such as reconciliation, tier, disposition, gateway ref, UTR, MDR, delta and exception unless you immediately explain it in plain words. Short sentences. Say what happened, then what it means for their money, then what to do."
 )
 
 
@@ -535,7 +676,11 @@ FOLLOWUP_SYSTEM_PROMPT = (
     "Give your FINAL conclusion using everything you now have. If the new "
     "evidence resolves the ambiguity, say so and raise your confidence "
     "accordingly. If it doesn't help, or wasn't available, say that plainly "
-    "and keep your recommendation conservative -- do not force a resolution."
+    "and keep your recommendation conservative -- do not force a resolution. "
+    "WRITE FOR A NON-SPECIALIST: everyday words, short sentences, no jargon "
+    "(avoid 'reconciliation', 'tier', 'UTR', 'MDR', 'delta', 'exception' "
+    "unless you explain them plainly). Say what happened, what it means for "
+    "their money, and what to do."
 )
 
 

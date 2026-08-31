@@ -6,7 +6,7 @@ Handles login, session management, and demo merchant accounts.
 # Demo merchant accounts for buildathon
 DEMO_MERCHANTS = {
     "demo@acmecorp.com": {
-        "password": "demo123",
+        "password": "Lx7#Recon@2026Kq",
         "company_name": "Acme Corporation",
         "merchant_id": "merchant_acme_001",
         "razorpay_key_id": "rzp_test_acme123",
@@ -16,7 +16,7 @@ DEMO_MERCHANTS = {
         "logo_emoji": "⚡"
     },
     "demo@betastore.com": {
-        "password": "demo123",
+        "password": "Lx7#Recon@2026Kq",
         "company_name": "Beta Fashion Store",
         "merchant_id": "merchant_beta_002",
         "razorpay_key_id": "rzp_test_beta456",
@@ -26,7 +26,7 @@ DEMO_MERCHANTS = {
         "logo_emoji": "👗"
     },
     "demo@gammafoods.com": {
-        "password": "demo123",
+        "password": "Lx7#Recon@2026Kq",
         "company_name": "Gamma Organic Foods",
         "merchant_id": "merchant_gamma_003",
         "razorpay_key_id": "rzp_test_gamma789",
@@ -36,7 +36,7 @@ DEMO_MERCHANTS = {
         "logo_emoji": "🌱"
     },
     "demo@deltatech.com": {
-        "password": "demo123",
+        "password": "Lx7#Recon@2026Kq",
         "company_name": "Delta Tech Solutions",
         "merchant_id": "merchant_delta_004",
         "razorpay_key_id": "rzp_test_delta012",

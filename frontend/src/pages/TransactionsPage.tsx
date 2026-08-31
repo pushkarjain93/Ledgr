@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { BackToCaseLink } from '../components/BackToCaseLink'
 import { TransactionDetailDrawer } from '../components/transactions/TransactionDetailDrawer'
 import { TransactionFiltersBar } from '../components/transactions/TransactionFilters'
 import { TransactionsTable } from '../components/transactions/TransactionsTable'
@@ -20,10 +22,16 @@ const DEFAULT_FILTERS: TransactionFilters = {
 
 export function TransactionsPage() {
   const { allRuns, cases } = useApp()
+  // ?search=ORD-00024 — how AI cross-links land here from a case's reasoning.
+  const [searchParams] = useSearchParams()
+  const initialSearch = searchParams.get('search') ?? ''
   const [records, setRecords] = useState<TransactionRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<TransactionFilters>(DEFAULT_FILTERS)
+  const [filters, setFilters] = useState<TransactionFilters>({
+    ...DEFAULT_FILTERS,
+    search: initialSearch,
+  })
   const [selected, setSelected] = useState<TransactionRecord | null>(null)
 
   const loadTransactions = useCallback(async () => {
@@ -68,7 +76,8 @@ export function TransactionsPage() {
     <div className="mx-auto max-w-[1120px] px-6 py-8 lg:px-8 lg:py-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-semibold text-zinc-900 dark:text-zinc-50">Transactions</h1>
+          <BackToCaseLink />
+        <h1 className="text-[22px] font-semibold text-zinc-900 dark:text-zinc-50">Transactions</h1>
           <p className="mt-1.5 max-w-xl text-[14px] text-zinc-500 dark:text-zinc-400">
             Search reconciled orders and settlements — including auto-matched records.
           </p>

@@ -45,6 +45,7 @@ export function CaseSummaryPanel({ caseItem }: CaseSummaryPanelProps) {
       <div className="mt-4 space-y-2 border-t border-zinc-100 pt-4 dark:border-zinc-800">
         <SummaryRow label="Issue type" value={issueTypeLabel(caseItem.case_type)} />
         <SummaryRow label="Order date" value={formatCaseDate(caseItem.order_date || caseItem.created_at)} />
+        <SummaryRow label="Payment mode" value={caseItem.payment_mode || '—'} />
         <SummaryRow
           label="Customer"
           value={caseItem.customer_name?.trim() || '—'}

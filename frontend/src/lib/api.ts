@@ -93,6 +93,8 @@ export type AppState = {
    *  runs stay reproducible. Age cases against THIS or the frontend's buckets
    *  will silently disagree with the engine's own thresholds. */
   run_date: string
+  /** Cases still queued for AI. Poll until this reaches zero. */
+  ai_in_progress: number
 }
 
 export type SourceStatus = {
@@ -118,7 +120,16 @@ export type Settings = {
   run_date: string
   ai_model: string
   ai_batch_size: number
-  auto_resolve_confidence_floor: number
+  /** Providers with a key configured, in failover order. */
+  ai_providers: string[]
+  /**
+   * The auto-resolve gate is EXPOSURE-based, not confidence-based: a case may
+   * clear itself only when the money at risk is small in BOTH relative and
+   * absolute terms. Replaced auto_resolve_confidence_floor, which was dropped
+   * along with confidence scores.
+   */
+  auto_resolve_max_pct: number
+  auto_resolve_max_abs_paise: number
   total_batches: number
 }
 
@@ -128,6 +139,8 @@ export type SyncResult = {
   run: ReconciliationRun
   steps: SyncStep[]
   cases: Record<string, Case>
+  /** How many cases were handed to the background AI pass. */
+  ai_queued: number
 }
 
 export type TransactionRecord = {
@@ -195,6 +208,12 @@ export type MessageOption = {
   label: string
   /** Empty when we genuinely hold no address — show the note, never invent one. */
   address: string
+  /**
+   * True for courier/gateway placeholders on the reserved example.com domain.
+   * They exist so the flow can be demonstrated end to end; the UI must label
+   * them, or a demo address could be mistaken for a real remittance desk.
+   */
+  is_demo?: boolean
   note: string
   why: string
 }
@@ -206,6 +225,38 @@ export type MessageDraft = {
   facts_used: string[]
   recipient_type: string
   provider: string | null
+}
+
+export type ReportData = {
+  has_data: boolean
+  generated_at?: string
+  accuracy?: {
+    records_scored: number
+    tier_correct: number; tier_accuracy: number
+    disposition_correct: number; disposition_accuracy: number
+    reason_correct: number; reason_accuracy: number
+    clearing_precision: number; false_clears: number
+    clearing_recall: number; missed_clears: number
+    settled_by_rules: number; needed_judgement: number; total_records: number
+    tier_distribution: { tier: number; name: string; engine: number; labelled: number }[]
+    misclassified: {
+      record_id: string; got_tier: number; got_status: string; got_reason: string
+      want_tier: number; want_status: string; want_reason: string; scenario: string
+    }[]
+    perfect: boolean
+  }
+  coverage?: { records_processed: number; records_labelled: number; records_unlabelled: number }
+  throughput?: { runs: number; records_total: number; last_run_at: string | null }
+  money?: { expected: number; received: number; at_risk_open: number; recovered: number }
+  exceptions?: { case_type: string; count: number; amount_at_risk: number }[]
+  ai?: {
+    cases_investigated: number
+    actions: Record<string, number>
+    providers: Record<string, number>
+    never_reached: number
+    model_batch_size: number
+    providers_configured: string[]
+  }
 }
 
 export type AskResult = {
@@ -241,6 +292,7 @@ export const api = {
   getState: () => request<AppState>('/api/state'),
   getSources: () => request<Sources>('/api/sources'),
   getSettings: () => request<Settings>('/api/settings'),
+  getReports: () => request<ReportData>('/api/reports'),
   reset: () => request<{ ok: boolean }>('/api/reset', { method: 'POST' }),
 
   syncAndReconcile: () =>

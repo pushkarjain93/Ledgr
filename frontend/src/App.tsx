@@ -3,12 +3,14 @@ import { AppProvider } from './context/AppContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { PageTitle } from './components/PageTitle'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ReconciliationsPage } from './pages/ReconciliationsPage'
 import { CasesPage } from './pages/CasesPage'
 import { CaseDetailPage } from './pages/CaseDetailPage'
 import { TransactionsPage } from './pages/TransactionsPage'
+import { ReportsPage } from './pages/ReportsPage'
 import { SettingsPage } from './pages/SettingsPage'
 
 function App() {
@@ -16,6 +18,7 @@ function App() {
     <ThemeProvider>
       <AppProvider>
         <BrowserRouter>
+        <PageTitle />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
@@ -26,6 +29,7 @@ function App() {
               <Route path="/cases" element={<CasesPage />} />
               <Route path="/cases/:caseId" element={<CaseDetailPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

@@ -8,6 +8,7 @@ import {
   NavIconDashboard,
   NavIconHelp,
   NavIconReconciliations,
+  NavIconReports,
   NavIconSettings,
   NavIconTransactions,
 } from './NavIcons'
@@ -19,6 +20,7 @@ const NAV_ITEMS: { to: string; label: string; Icon: NavIconComponent }[] = [
   { to: '/reconciliations', label: 'Reconciliations', Icon: NavIconReconciliations },
   { to: '/cases', label: 'Cases', Icon: NavIconCases },
   { to: '/transactions', label: 'Transactions', Icon: NavIconTransactions },
+  { to: '/reports', label: 'Reports', Icon: NavIconReports },
   { to: '/settings', label: 'Settings', Icon: NavIconSettings },
 ]
 

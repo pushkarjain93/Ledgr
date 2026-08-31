@@ -45,6 +45,8 @@ type AppContextValue = {
   totalBatches: number
   /** ISO timestamp of the most recent reconciliation run (any date). */
   lastSyncAt: string | null
+  /** Cases still being investigated by the background AI pass. */
+  aiInProgress: number
   /** Refetch server state — call after any mutation (reconcile, resolve…). */
   refresh: () => Promise<void>
   resetDemoData: () => Promise<void>
@@ -86,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notification_seen: s.notification_seen,
         cases: s.cases,
       })
+      setAiInProgress(s.ai_in_progress ?? 0)
       setError(null)
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -182,6 +185,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const nextBatchAvailableAt = merchantState?.next_batch_available_at ?? null
 
   const lastSyncAt = merchantState?.reconciliation_runs[0]?.timestamp ?? null
+  const [aiInProgress, setAiInProgress] = useState(0)
+
+  // Reconciliation returns immediately and the AI pass continues on the
+  // server, so poll until every case has a verdict. Stops as soon as the
+  // count reaches zero -- no permanent background timer.
+  useEffect(() => {
+    if (aiInProgress <= 0) return
+    const id = window.setInterval(refresh, 4000)
+    return () => window.clearInterval(id)
+  }, [aiInProgress, refresh])
 
   // A scheduled batch unlocks on a persisted server timestamp. Poll only
   // while one is genuinely pending; stop the moment it lands. No permanent
@@ -211,6 +224,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       nextBatchAvailableAt,
       totalBatches: TOTAL_BATCHES,
       lastSyncAt,
+      aiInProgress,
       refresh,
       resetDemoData,
       login,
@@ -219,7 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       error,
     }),
     [merchant, dateFilteredState, selectedDate, cases, dashboard, hasNewBatch, allRuns,
-     batchAvailable, currentBatch, nextBatchAvailableAt, lastSyncAt,
+     batchAvailable, currentBatch, nextBatchAvailableAt, lastSyncAt, aiInProgress,
      refresh, resetDemoData, login, logout, loading, error],
   )
 

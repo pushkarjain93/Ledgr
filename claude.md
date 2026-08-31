@@ -763,3 +763,117 @@ supporting documents, resolve/reopen/bookmark.
 - Visual QA (dark mode, responsive, empty states) -- not verifiable from the
   terminal; the user has caught several visual bugs this way
 - Demo video not started
+
+---
+
+## Session Update (Aug 31, 2026): First clean end-to-end run — the `ai_pending` root cause, Reports page
+
+The previous section's last "Left" item said *"no clean end-to-end rehearsal has
+ever been done. Assume the first clean run surfaces something."* It did. This
+session ran one and fixed what it found.
+
+### The headline bug: a third of all cases never reached AI, and the cause was arithmetic
+
+A full run left **15 of 29 AI-eligible cases stuck at `ai_pending`** — the
+honest "AI never looked at this" state. The fallback behaved correctly; the
+problem was that it was firing constantly. Two independent causes, both
+mis-diagnosed as "free tiers are just rate-limited":
+
+**1. Groq was refusing requests we made impossible.** Its free tier caps
+TOKENS PER MINUTE at 8000, and the reservation counts `prompt + max_tokens`
+across all in-flight requests. Measured (not estimated) prompt size for a
+5-case batch is **~1010 tokens** — system prompt ~570, plus ~90/case. So:
+
+```
+2 concurrent x (1010 + 3000) = 8020   <- the old GROQ_MAX_TOKENS: 20 OVER the cap
+2 concurrent x (1010 + 2200) = 6420   <- now
+```
+
+A **20-token** overshoot meant the first pair of concurrent chunks was refused
+every single run, which tripped the 60s provider cooldown and pushed every
+remaining chunk onto failover. `GROQ_MAX_TOKENS` is now 2200. **Do not raise it
+without redoing that arithmetic against `MAX_CONCURRENT_BATCHES`.**
+
+**2. OpenRouter was permanently dead, not rate-limited.** It was returning
+**402, which is not a rate limit** — the body says exactly what is wrong:
+`"You requested up to 3000 tokens, but can only afford 2558"`. The default model
+was `google/gemini-2.5-flash`, a **PAID** model draining a $0.17 free-tier
+balance, and OpenRouter reserves the full `max_tokens` against that balance
+before running anything. So the failover tier had never once served a request.
+
+Fixed by switching to a **`:free` model**, which reserves no credit and cannot
+run out. Model choice was verified, not assumed:
+
+| Model | Result |
+|---|---|
+| `nvidia/nemotron-3-super-120b-a12b:free` | honours `json_schema` exactly, ~4.8s — **chosen** |
+| `minimax/minimax-m2.7:free` | **ignored the schema** — markdown fence, renamed keys. Unusable |
+| `z-ai/glm-5.2:free`, `google/gemma-4-*:free` | frequently 429 upstream — kept only as backups |
+
+**Result: `never_reached` went 15 -> 0.** Both providers now genuinely serve
+(`groq: 23, openrouter: 6` on the verified run), which is the first time
+failover has been observed working end to end.
+
+### Other real defects found by the same run
+
+- **Verdicts were persisted only after ALL retry rounds finished.** Retries can
+  span minutes, so the UI showed nothing filling in for the whole window, and a
+  crash or restart part-way discarded every verdict already paid for. Now merged
+  after **every** round via `_merge_investigated()` (the resurrection guard and
+  human-decision-wins guard moved in there intact).
+- **`AI_RETRY_ROUNDS` 3 -> 6.** Three rounds spanned ~105s, but ~29 cases
+  genuinely cannot clear Groq's TPM budget in under ~2-3 minutes. Six covers
+  ~210s. Verified: batch 1 cleared in 200s, batch 2 in 140s, both to zero pending.
+- **The Reports page stated something false.** "Sent to the model: 10 of 112"
+  was read from `engine.py`'s `ai_assisted` column — which is a **structural TIER
+  flag** (`tier == 3 or (tier == 4 and MANUAL_REVIEW)`), *not* a record of a model
+  call. `engine.py` makes no network calls at all, so nothing in that 10 had been
+  near a model, and the page simultaneously reported "cases investigated: 29".
+  Two contradictory numbers, the prominent one wrong. Renamed to
+  `settled_by_rules` / `needed_judgement`, with a note that it counts order-side
+  **records** while the AI block counts **cases** — a different population, since a
+  case can be raised settlement-side where there is no order to grade.
+- **Per-route `<title>`** (was stuck on "Ledgr — Sign in" everywhere, including
+  in a screen recording). New `components/PageTitle.tsx`. It sits above
+  `<Routes>`, so it reads the case id off the pathname — `useParams` would always
+  be empty there.
+
+### Robustness added to `ai_client.py` while in there
+- **Errors embedded in an HTTP 200 body.** OpenRouter returns `200` whose body
+  carries `{"error": {"code": 502, "message": "Upstream error from Nvidia..."}}`.
+  Previously this surfaced as the misleading "response didn't include any text".
+  Now detected, and 429/402/502/503 are treated as retryable.
+- **`_strip_code_fence()`** — a fenced ```json reply is a formatting quirk, not a
+  wrong answer; no reason to discard an otherwise valid result over it.
+- **402 self-healing** — parses "can only afford N" and retries once at that
+  ceiling, but only if N is still big enough (`_MIN_USEFUL_MAX_TOKENS = 1200`) to
+  hold a complete answer. Truncated JSON is worse than failing over.
+- **OpenRouter's `models` fallback array is capped at 3** (a 4th is a hard 400),
+  and it does **NOT** fall through on an upstream 502 — verified. Useful, but not
+  a substitute for provider-level failover.
+
+### Verified end-to-end result (both batches, clean reset)
+```
+sync returned:  0.91s (batch 1) / 1.21s (batch 2)
+records scored: 106
+tier / disposition / reason accuracy: 100% / 100% / 100%
+clearing precision 100% (0 false clears), recall 100% (0 missed clears)
+cases investigated: 29    never_reached: 0    providers: groq 23, openrouter 6
+```
+
+**A note on partial-run accuracy:** after batch 1 alone the score reads ~96%,
+with 2 `T4_COD_EXACT` orders shown as Tier 5 EXCEPTION. That is **not** a
+regression — those are COD orders whose bank settlement genuinely arrives in
+batch 2. It returns to 100% once batch 2 syncs. This is the documented
+false-orphan-due-to-sync-timing behaviour, and it is worth saying out loud if a
+judge sees the intermediate number.
+
+### Still left
+- `investigateFurther`, `setComment`, `getSettings` still have no UI caller
+  (`retryAi` does now, per case)
+- `run_date` still hardcoded in `caseUtils.ts`
+- Bell dismissal still local-only, returns on refresh
+- `aiRecommendationText()` in `caseDisplay.ts` is now dead code
+- **COD bulk remittance (one UTR covering many orders) is still not modelled** —
+  the one item still standing from the original 7-case taxonomy
+- Demo video not started

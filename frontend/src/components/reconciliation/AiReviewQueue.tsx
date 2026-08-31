@@ -1,63 +1,10 @@
 import { Link } from 'react-router-dom'
 import { formatINR } from '../../lib/money'
+import { issueTypeLabel } from '../../lib/caseUtils'
 import { caseDetailPath } from '../../lib/caseQueue'
 import { scrollAppMainToTop } from '../../lib/scrollAppMain'
-import type { Case, CaseStatus } from '../../types/case'
+import type { Case } from '../../types/case'
 import { isOpenForReview } from '../../lib/caseUtils'
-
-function confidenceTier(confidence: number | null | undefined): {
-  label: 'High' | 'Medium' | 'Low' | 'Pending'
-  badgeClass: string
-} {
-  if (confidence === null || confidence === undefined) {
-    return {
-      label: 'Pending',
-      badgeClass: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
-    }
-  }
-  if (confidence >= 80) {
-    return {
-      label: 'High',
-      badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-    }
-  }
-  if (confidence >= 50) {
-    return {
-      label: 'Medium',
-      badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-    }
-  }
-  return {
-    label: 'Low',
-    badgeClass: 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300',
-  }
-}
-
-function statusBadge(status: CaseStatus): string {
-  switch (status) {
-    case 'ai_recommendation':
-    case 'ai_pending':
-    case 'manual_review':
-      return 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300'
-    case 'exception':
-      return 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300'
-    default:
-      return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'
-  }
-}
-
-function statusLabel(status: CaseStatus): string {
-  switch (status) {
-    case 'ai_recommendation':
-    case 'ai_pending':
-    case 'manual_review':
-      return 'AI Review'
-    case 'exception':
-      return 'Exception'
-    default:
-      return status.replace(/_/g, ' ')
-  }
-}
 
 function reviewCases(cases: Case[]): Case[] {
   return cases
@@ -106,19 +53,15 @@ export function AiReviewQueue({ cases, reviewCount }: AiReviewQueueProps) {
                 <th className="px-5 py-3">Order ID</th>
                 <th className="px-5 py-3">Expected</th>
                 <th className="px-5 py-3">Received</th>
-                <th className="px-5 py-3">AI Confidence</th>
-                <th className="px-5 py-3">AI Recommendation</th>
-                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3 text-right">At risk</th>
+                <th className="px-5 py-3">Payment mode</th>
+                <th className="px-5 py-3">Issue</th>
                 <th className="px-5 py-3">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {queue.map((c) => {
-                const conf = c.ai?.confidence
-                const tier = confidenceTier(conf)
                 const id = c.order_id ?? c.record_id
-                const recommendation =
-                  c.ai?.reason?.trim() || c.reason_label || c.explanation || '—'
 
                 return (
                   <tr key={c.case_id} className="text-zinc-700 dark:text-zinc-300">
@@ -135,22 +78,28 @@ export function AiReviewQueue({ cases, reviewCount }: AiReviewQueueProps) {
                     </td>
                     <td className="px-5 py-3.5 tabular-nums">{formatINR(c.expected)}</td>
                     <td className="px-5 py-3.5 tabular-nums">{formatINR(c.received)}</td>
+                    <td className="px-5 py-3.5 text-right font-medium tabular-nums text-zinc-900 dark:text-zinc-50">
+                    {formatINR(c.amount_at_risk)}
+                  </td>
                     <td className="px-5 py-3.5">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold ${tier.badgeClass}`}
-                      >
-                        {conf !== null && conf !== undefined ? `${conf}%` : '—'} {tier.label}
-                      </span>
-                    </td>
-                    <td className="max-w-[200px] truncate px-5 py-3.5 text-zinc-600 dark:text-zinc-400">
-                      {recommendation}
+                      {c.payment_mode ? (
+                        <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                          {c.payment_mode}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-400">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span
-                        className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusBadge(c.case_status)}`}
-                      >
-                        {statusLabel(c.case_status)}
-                      </span>
+                      <span className="text-zinc-700 dark:text-zinc-300">{issueTypeLabel(c.case_type)}</span>
+                      {c.case_status === 'ai_pending' && (
+                        <span
+                          title="AI has not managed to analyse this case yet"
+                          className="ml-2 rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                        >
+                          AI pending
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       <Link

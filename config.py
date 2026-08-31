@@ -134,3 +134,36 @@ FEE_TYPES = {
 
 DATA_DIR = "data"
 
+
+
+# ---------------------------------------------------------------------------
+# Demo contact addresses (courier remittance desks / gateway support)
+#
+# THESE ARE PLACEHOLDERS ON A RESERVED EXAMPLE DOMAIN, NOT REAL INBOXES.
+# RFC 2606 reserves example.com precisely so sample addresses can never
+# collide with, or accidentally deliver to, a real mailbox. Using a plausible
+# real address here (support@bluedart.com) would be worse than having none:
+# a drafted chase could actually reach a stranger.
+#
+# They exist so the "draft a message" flow has a recipient to show end to end.
+# Ledgr still NEVER sends -- a human copies the draft into their own client --
+# so an unroutable address is exactly right for a demo.
+#
+# Replace with the merchant's genuine remittance/support contacts before any
+# real use; `is_demo` on the API response is what tells the UI to say so.
+# ---------------------------------------------------------------------------
+DEMO_CONTACTS_ARE_PLACEHOLDERS = True
+
+COURIER_CONTACTS = {
+    "BLUEDART": "remittance@bluedart.example.com",
+    "DELHIVERY": "remittance@delhivery.example.com",
+    "XPRESSBEES": "remittance@xpressbees.example.com",
+    "ECOM EXPRESS": "remittance@ecomexpress.example.com",
+}
+
+GATEWAY_CONTACT = "support@razorpay.example.com"
+
+
+def courier_contact(courier: str) -> str:
+    """Demo remittance-desk address for a courier, or "" if unknown."""
+    return COURIER_CONTACTS.get((courier or "").strip().upper(), "")

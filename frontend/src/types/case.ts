@@ -49,6 +49,8 @@ export type Case = {
   settlement_id: string | null
   customer_name: string
   order_date: string
+  /** From the order feed; blank for settlement-only cases. */
+  payment_mode?: string
   batch_id: string | number
   case_type: CaseType
   case_status: CaseStatus

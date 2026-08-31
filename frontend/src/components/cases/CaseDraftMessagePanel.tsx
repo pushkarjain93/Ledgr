@@ -125,9 +125,17 @@ export function CaseDraftMessagePanel({ caseId }: CaseDraftMessagePanelProps) {
         <div className="mt-4 space-y-3">
           {/* Honest about what we do and don't hold an address for. */}
           {draftRecipient.address ? (
-            <p className="text-[12.5px] text-zinc-500 dark:text-zinc-400">
-              To: <span className="font-medium text-zinc-800 dark:text-zinc-200">{draftRecipient.address}</span>
-            </p>
+            <div className="space-y-1">
+              <p className="text-[12.5px] text-zinc-500 dark:text-zinc-400">
+                To: <span className="font-medium text-zinc-800 dark:text-zinc-200">{draftRecipient.address}</span>
+              </p>
+              {/* A placeholder address must never look like a real desk. */}
+              {draftRecipient.is_demo && (
+                <p className="text-[11.5px] text-amber-700 dark:text-amber-500">
+                  {draftRecipient.note}
+                </p>
+              )}
+            </div>
           ) : (
             <p className="text-[12.5px] text-amber-700 dark:text-amber-500">{draftRecipient.note}</p>
           )}
