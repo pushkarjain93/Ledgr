@@ -26,7 +26,7 @@ export function StatsSegment({
     },
     { label: 'Open cases', value: String(openCasesCount), sub: 'Unresolved', link: '/cases' },
     {
-      label: 'Needs your decision',
+      label: 'AI recommended',
       value: String(needsDecisionCount),
       sub: 'Human review',
       link: '/cases?filter=needs_decision',

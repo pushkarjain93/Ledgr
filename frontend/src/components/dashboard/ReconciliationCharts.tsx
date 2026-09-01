@@ -6,6 +6,7 @@ import {
 } from '../../lib/reconciliationMetrics'
 import { periodLabel, type ReconciliationPeriod } from '../../lib/merchantState'
 import type { ReconciliationRun } from '../../types/case'
+import type { OutcomeSegment } from '../../lib/reconciliationFinancials'
 
 const LINE_STROKE = '#27272a'
 const LINE_FILL = 'rgba(39, 39, 42, 0.08)'
@@ -275,6 +276,15 @@ export function ReconciliationChart({ allRuns, referenceDate }: ReconciliationCh
 
 type ManualWorkEliminatedCardProps = {
   runs: RunChartPoint[]
+  /**
+   * The LIVE outcome buckets, the same array the Reconciliations donut renders.
+   *
+   * This card used to read the run snapshot, which is frozen at sync time. As
+   * AI worked through the batch the live counts moved but the snapshot did
+   * not, so the Dashboard said "auto matched 32 / needs review 19" while
+   * Reconciliations said 35 / 12 for the same ledger.
+   */
+  outcome: OutcomeSegment[]
 }
 
 function Legend() {
@@ -477,7 +487,7 @@ function RunBreakdownSection({ runs }: { runs: RunChartPoint[] }) {
   )
 }
 
-export function ManualWorkEliminatedCard({ runs }: ManualWorkEliminatedCardProps) {
+export function ManualWorkEliminatedCard({ runs, outcome }: ManualWorkEliminatedCardProps) {
   const currentRun = runs.at(-1) ?? null
 
   if (!currentRun) {
@@ -510,10 +520,13 @@ export function ManualWorkEliminatedCard({ runs }: ManualWorkEliminatedCardProps
       </p>
 
       <div className="mt-6 space-y-2 border-t border-zinc-100 pt-5 dark:border-zinc-800">
-        <StatLine label="Auto matched" value={currentRun.autoMatched} />
-        <StatLine label="Awaiting settlement" value={currentRun.awaitingSettlement} />
-        <StatLine label="Needs review" value={currentRun.aiResolved + currentRun.exceptions} />
-        <StatLine label="Total records" value={currentRun.totalRecords} />
+        {outcome.map((seg) => (
+          <StatLine key={seg.key} label={seg.label} value={seg.count} />
+        ))}
+        <StatLine
+          label="Total records"
+          value={outcome.reduce((n, s) => n + s.count, 0)}
+        />
       </div>
 
       <div className="mt-6">

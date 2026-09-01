@@ -6,15 +6,25 @@ import { scrollAppMainToTop } from '../../lib/scrollAppMain'
 import type { Case } from '../../types/case'
 import { isOpenForReview } from '../../lib/caseUtils'
 
+/**
+ * Every open case that needs a human eye, INCLUDING the ones AI has not
+ * reached yet.
+ *
+ * `needs_ai` used to be filtered out, which left the queue reading "0" for the
+ * first half-minute after a sync even though the records existed and their
+ * money was already at risk. The case is real the moment reconciliation
+ * finishes; only the verdict is pending. Showing it immediately -- flagged as
+ * still being looked at -- is both faster and more honest than hiding it.
+ */
 function reviewCases(cases: Case[]): Case[] {
   return cases
-    .filter(
-      (c) =>
-        isOpenForReview(c) &&
-        c.case_status !== 'pending_settlement' &&
-        c.case_status !== 'needs_ai',
-    )
+    .filter((c) => isOpenForReview(c) && c.case_status !== 'pending_settlement')
     .sort((a, b) => b.amount_at_risk - a.amount_at_risk)
+}
+
+/** True while AI has not yet returned a verdict for this case. */
+function awaitingVerdict(c: Case): boolean {
+  return c.case_status === 'needs_ai' || c.case_status === 'ai_pending'
 }
 
 type AiReviewQueueProps = {
@@ -22,20 +32,12 @@ type AiReviewQueueProps = {
 }
 
 export function AiReviewQueue({ cases }: AiReviewQueueProps) {
-  // The badge counts THE SAME filtered list the table renders, so the two can
-  // never disagree. It previously came from the engine run totals
-  // (aiResolved + exceptions), which counts cases still queued as `needs_ai`
-  // -- cases the table deliberately hides because AI has not produced a
-  // verdict to review yet. Mid-run that read "19 cases require review" above
-  // an empty table.
+  // The badge counts THE SAME list the table renders, so the two can never
+  // disagree. It previously came from the engine run totals, which are frozen
+  // at sync time and drift from the live case store as AI works.
   const reviewable = reviewCases(cases)
   const queue = reviewable.slice(0, 8)
-  // Cases AI has not reached yet — hidden from the table (no verdict to show)
-  // but worth naming, so an empty queue mid-run reads as "still working"
-  // rather than "nothing to review".
-  const investigating = cases.filter(
-    (c) => !c.resolution?.resolved && c.case_status === 'needs_ai',
-  ).length
+  const investigating = reviewable.filter(awaitingVerdict).length
 
   return (
     <div className="rounded-xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -45,6 +47,12 @@ export function AiReviewQueue({ cases }: AiReviewQueueProps) {
           <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
             {reviewable.length} {reviewable.length === 1 ? 'case' : 'cases'} require review
           </span>
+          {investigating > 0 && (
+            <span className="flex items-center gap-1.5 text-[11.5px] text-zinc-500 dark:text-zinc-400">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-500" />
+              {investigating} awaiting AI verdict
+            </span>
+          )}
         </div>
         <Link
           to="/cases"
@@ -57,12 +65,7 @@ export function AiReviewQueue({ cases }: AiReviewQueueProps) {
 
       {queue.length === 0 ? (
         <p className="px-5 py-10 text-center text-[13px] text-zinc-400">
-          {/* "No cases" is false while AI is still working through them --
-              they exist, they just have no verdict to review yet. Saying so
-              is the difference between "nothing found" and "still looking". */}
-          {investigating > 0
-            ? `AI is investigating ${investigating} case${investigating === 1 ? '' : 's'} — verdicts will appear here shortly.`
-            : 'No cases in the review queue yet.'}
+          No cases in the review queue.
         </p>
       ) : (
         <div className="overflow-x-auto">
@@ -111,12 +114,16 @@ export function AiReviewQueue({ cases }: AiReviewQueueProps) {
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="text-zinc-700 dark:text-zinc-300">{issueTypeLabel(c.case_type)}</span>
-                      {c.case_status === 'ai_pending' && (
+                      {awaitingVerdict(c) && (
                         <span
-                          title="AI has not managed to analyse this case yet"
-                          className="ml-2 rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                          title={
+                            c.case_status === 'ai_pending'
+                              ? 'AI could not reach this case yet — retryable'
+                              : 'AI is analysing this case now'
+                          }
+                          className="ml-2 rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
                         >
-                          AI pending
+                          {c.case_status === 'ai_pending' ? 'AI pending' : 'Analysing'}
                         </span>
                       )}
                     </td>

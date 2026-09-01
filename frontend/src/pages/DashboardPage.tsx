@@ -9,7 +9,7 @@ import { useApp } from '../context/AppContext'
 import { isOpenForReview } from '../lib/caseUtils'
 import { formatDisplayDate } from '../lib/merchantState'
 import { computeReconciliationDashboard } from '../lib/reconciliationMetrics'
-import { totalReconciledRecords } from '../lib/reconciliationFinancials'
+import { buildReconciliationViewModel, totalReconciledRecords } from '../lib/reconciliationFinancials'
 
 export function DashboardPage() {
   const { state, cases, dashboard, selectedDate, allRuns, ordersProcessed } = useApp()
@@ -18,6 +18,10 @@ export function DashboardPage() {
 
   const recon = computeReconciliationDashboard(state.reconciliation_runs, true)
   const openCasesCount = cases.filter((c) => isOpenForReview(c)).length
+  // Same live buckets the Reconciliations donut uses, so the two screens can
+  // never disagree about the same ledger.
+  const outcome = buildReconciliationViewModel(
+    state.reconciliation_runs, [], cases, ordersProcessed).outcome
   const isEmpty = recon.totalRuns === 0
 
   return (
@@ -54,7 +58,7 @@ export function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <ReconciliationChart allRuns={allRuns} referenceDate={selectedDate} />
-          <ManualWorkEliminatedCard runs={recon.runs} />
+          <ManualWorkEliminatedCard runs={recon.runs} outcome={outcome} />
         </div>
 
         <RecentActivity runs={recon.runs} />
