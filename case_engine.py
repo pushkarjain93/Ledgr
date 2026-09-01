@@ -483,7 +483,7 @@ def apply_ai_result(case, result):
     case["_event"] = "ai investigated"
 
 
-def investigate_new_cases_batched(cases, batch_size=None):
+def investigate_new_cases_batched(cases, batch_size=None, on_chunk_done=None):
     """
     Batches every case still marked 'needs_ai' into groups of
     `batch_size` (default ai_client.DEFAULT_BATCH_SIZE) and sends each
@@ -501,6 +501,13 @@ def investigate_new_cases_batched(cases, batch_size=None):
     Partial success (Gemini's response omits a case_id it was sent):
     that one case is left 'ai_pending'; everything else in the same
     response is applied normally.
+
+    `on_chunk_done(chunk)` fires as soon as each chunk finishes, before the
+    others have. Callers use it to PERSIST verdicts incrementally so the review
+    queue fills in as results arrive. Without it nothing reached the store until
+    every chunk was done, and the queue sat empty for a minute or more after a
+    sync even though early chunks had already been answered. It runs on the
+    worker thread, so the callback must be thread-safe.
     """
     batch_size = batch_size or ai_client.DEFAULT_BATCH_SIZE
     pending = [c for c in cases if c["case_status"] == "needs_ai"]
@@ -525,6 +532,11 @@ def investigate_new_cases_batched(cases, batch_size=None):
             # possibly on a different provider.
             for c in chunk:
                 _mark_ai_pending(c, str(exc))
+            # Persist the failure too: the case moves needs_ai -> ai_pending,
+            # which is what stops the UI polling forever for a verdict that is
+            # not coming.
+            if on_chunk_done:
+                on_chunk_done(chunk)
             return
 
         for c in chunk:
@@ -533,6 +545,8 @@ def investigate_new_cases_batched(cases, batch_size=None):
                 _mark_ai_pending(c, "The AI response omitted this case (partial batch result).")
             else:
                 apply_ai_result(c, result)
+        if on_chunk_done:
+            on_chunk_done(chunk)
 
     # Chunks are fully independent, so sending them sequentially just multiplied
     # latency by the number of chunks (4 x ~10s made a sync take 40s+, when the

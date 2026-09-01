@@ -14,9 +14,25 @@ type ReconciliationResultsWorkspaceProps = {
 
 export function ReconciliationResultsWorkspace({ model, cases }: ReconciliationResultsWorkspaceProps) {
   const codAwaiting = awaitingSettlementCases(cases)
+  // Cases AI has not reached yet. While any remain, these figures are a
+  // snapshot mid-investigation, not the batch's final result -- say so rather
+  // than letting a partial chart read as finished.
+  const investigating = cases.filter(
+    (c) => !c.resolution?.resolved &&
+      (c.case_status === 'needs_ai' || c.case_status === 'ai_pending'),
+  ).length
 
   return (
     <section className="space-y-4">
+      {investigating > 0 && (
+        <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50/70 px-4 py-3 dark:border-blue-500/25 dark:bg-blue-500/10">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+          <p className="text-[13px] text-blue-900 dark:text-blue-200">
+            AI is investigating {investigating} more case{investigating === 1 ? '' : 's'} —
+            these figures update as verdicts arrive, and are final once this clears.
+          </p>
+        </div>
+      )}
       <SummaryBoxes model={model} cases={cases} />
 
       <div className="grid gap-4 lg:grid-cols-2">

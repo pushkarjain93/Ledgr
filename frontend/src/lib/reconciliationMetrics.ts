@@ -171,13 +171,22 @@ export function parseRun(run: ReconciliationRun, runNumber: number): RunChartPoi
   const awaiting = run.awaiting_settlement ?? 0
   const aiResolved = run.ai_resolved ?? 0
   const exceptions = run.exceptions ?? 0
-  // ELIMINATED = settled with no case raised. Previously this added
-  // aiResolved, but those records are exactly the ones that DO become cases
-  // needing a decision -- counting them as eliminated inflated the headline
-  // and contradicted the review queue. COD still inside its window is not
-  // eliminated either: no money has arrived yet.
-  const eliminated = auto
-  const manualReview = Math.max(0, total - eliminated - awaiting)
+  // MANUAL WORK ELIMINATED = (auto matched + AI handled) / records that
+  // actually needed reconciling.
+  //
+  // Both halves matter:
+  //  * auto matched needed no human at all;
+  //  * an AI-handled record still ends with a human decision, but the
+  //    investigation -- pulling the settlement, comparing the fee band,
+  //    writing the finding -- was done for them. That is eliminated work.
+  //  * COD still inside its collection window is EXCLUDED FROM THE
+  //    DENOMINATOR, not counted as eliminated. No money has arrived yet, so
+  //    there is no reconciliation work to eliminate; leaving it in the
+  //    denominator understated the result by penalising the tool for orders
+  //    it has not been asked to do anything about yet.
+  const eliminated = auto + aiResolved
+  const reconcilable = Math.max(0, total - awaiting)
+  const manualReview = Math.max(0, reconcilable - eliminated)
   const at = new Date(run.timestamp)
 
   return {
@@ -198,13 +207,13 @@ export function parseRun(run: ReconciliationRun, runNumber: number): RunChartPoi
     awaitingSettlement: awaiting,
     aiResolved,
     exceptions,
-    autoMatchRate: pctOf(auto, total),
-    aiContributionPct: pctOf(aiResolved, total),
-    manualWorkEliminationPct: pctOf(eliminated, total),
-    manualWorkRemainingPct: pctOf(manualReview, total),
+    autoMatchRate: pctOf(auto, reconcilable),
+    aiContributionPct: pctOf(aiResolved, reconcilable),
+    manualWorkEliminationPct: pctOf(eliminated, reconcilable),
+    manualWorkRemainingPct: pctOf(manualReview, reconcilable),
     manualReviewCount: manualReview,
-    autoMatchedPct: pctOf(auto, total),
-    aiResolvedPct: pctOf(aiResolved, total),
+    autoMatchedPct: pctOf(auto, reconcilable),
+    aiResolvedPct: pctOf(aiResolved, reconcilable),
     runNumber,
     timestamp: run.timestamp,
   }

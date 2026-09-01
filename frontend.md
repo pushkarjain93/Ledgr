@@ -583,3 +583,137 @@ with conversation history); Supporting Documents open real records; AI message d
 (never sends); cases sorted by AI confidence descending. Fixed: deep-link/refresh redirect
 to /dashboard, AI prioritising by `delta` instead of `amount_at_risk`, raw paise in drafted
 messages. Still unwired: investigate-further, retry-AI, standalone comment, settings.*
+
+---
+
+# CURRENT STATE (Sep 1, 2026) — supersedes the tables above
+
+Everything from "Remaining frontend work" onwards is now out of date. Read this
+section instead; the earlier material is kept as history of how the UI got here.
+
+## Screens — all seven built
+
+| Route | State |
+|---|---|
+| `/login` | Built. Full dark-mode support via `ledgr-*` CSS tokens. |
+| `/dashboard` | Built. Stats, trend graph, manual-work panel, recent activity. |
+| `/reconciliations` | Built. Sync CTA, KPIs, financial health, outcome donut, COD widget, AI review queue, run history. |
+| `/cases` + `/cases/:id` | Built. Filters, queue, full ticket with evidence, drafting, Ask AI, resolve/reopen/bookmark. |
+| `/transactions` | Built. Search + date + payment-mode + **tier** + status filters, detail drawer. |
+| `/reports` | **Built** (the older note saying "not in React router" is wrong). Accuracy, work split, money, exceptions, AI accountability, method accordion. |
+| `/settings` | Built, reads `/api/sources`. |
+
+## Previously-unwired APIs — now wired
+
+| Feature | Status |
+|---|---|
+| Investigate further | ✅ Wired, with a "What the deeper look found" highlight panel |
+| Retry AI | ✅ Wired per case |
+| Reports | ✅ Built |
+| Settings | ✅ Reads `/api/sources` (`getSettings` remains unused — redundant, not missing) |
+| Standalone comment | Still unused — the mandatory-comment rule goes through `resolveCase(id, 'manual_review', comment)`, so this is redundancy, not a gap |
+
+## The vocabulary every screen must use
+
+These five buckets partition the ledger and **sum to total records by
+construction**. Do not invent new names for them:
+
+| Bucket | Meaning |
+|---|---|
+| **Auto matched** | rules settled it, no human needed (includes remittance-resolved cases) |
+| **Awaiting settlement** | COD inside its collection window — not a failure, a clock |
+| **AI recommendation** | AI found a lead a human can accept or reject |
+| **Needs investigation** | AI checked and found no conclusive path |
+| **Being investigated** | transient; rendered only while a batch is still running |
+
+"AI Resolved" was removed as a label — those records are exactly the ones that
+become open cases needing a decision, so calling them resolved contradicted the
+Cases page.
+
+## One definition per number — the hard rule
+
+A number shown in two places must be computed in ONE place. An audit on Sep 1
+found six bugs from breaking this (money differing by Rs 36,994 between
+Reconciliations and Reports; three different "records processed" totals).
+
+Shared definitions now live in:
+
+- `lib/reconciliationFinancials.ts` → `totalReconciledRecords(cases, ordersProcessed)`
+- `lib/reconciliationFinancials.ts` → `buildReconciliationViewModel(...).outcome` (the five buckets)
+- `lib/caseUtils.ts` → `aiReachedVerdict()` / `needsInvestigation()`
+- `/api/reports` → `work_split` (the same partition, backend-side)
+
+**Never** sum `run.total_records` across runs to get a cumulative figure — a
+run re-includes still-open orders from earlier batches, so summing
+double-counts. Use `state.orders_processed` (a de-duplicated ledger) or
+`totalReconciledRecords()`.
+
+**Never** sum money over all transaction records — order rows and settlement
+rows both carry amounts. Filter to `record_kind === 'order'` first.
+
+## Manual work eliminated — the formula
+
+```
+(auto matched + AI handled) / (total records - awaiting settlement)
+```
+
+- AI-handled records **count as eliminated**: the human still decides, but the
+  investigation was done for them.
+- COD inside its window is excluded from the **denominator**, not counted as
+  eliminated — there is no reconciliation work to eliminate on money that has
+  not arrived. Leaving it in understated the result.
+
+The same denominator feeds auto-match rate and AI contribution, so all the
+percentages on a run agree.
+
+## In-progress states
+
+AI verdicts arrive in chunks over a couple of minutes. Three affordances make
+that legible, and all three must keep working:
+
+1. **Header refresh button** (`PageHeader.tsx`) — circular arrow, spins while
+   AI is working, shows a live count badge of cases still queued.
+2. **Provisional banner** on Reconciliations — "AI is investigating N more
+   cases… final once this clears."
+3. **Empty-state copy** in the review queue — while cases are queued it says
+   AI is investigating them, not "no cases", which would be false.
+
+The app also polls `/api/state` every 4s while `ai_in_progress > 0`.
+
+## Case ticket panels
+
+`CaseRemittancePanel` renders only when a case actually carries courier
+remittance detail (`remittance`, `remittance_batch`, or `remittance_findings`),
+so it never appears as an empty section on the other cases.
+
+`CaseAiAnalysisPanel` shows a "What the deeper look found" block after
+Investigate Further, including what was checked and the previous advice struck
+through. It tolerates `still_unavailable` arriving as either a list or a bare
+string — the backend sends a list, but a shape mismatch here blanked the whole
+case page once.
+
+## Dark mode
+
+Every surface must define both light and dark. A sweep on Aug 31 found five
+components with `bg-white` or `text-zinc-900` and no `dark:` sibling — one made
+the values on two dashboard cards render black-on-black, which read as missing
+data rather than a styling bug. When adding a card, copy an existing one.
+
+Login uses its own `ledgr-*` token set in `index.css` (both themes defined) —
+do not hardcode `bg-white` there.
+
+## Known remaining polish (none blocking)
+
+| Item | Note |
+|---|---|
+| `RUN_DATE` duplicated | `config.py` and `lib/constants.ts`; in sync today, silent-drift risk |
+| Bell dismissal | Local-only, returns on refresh |
+| Dead code | `aiRecommendationText()`, `api.setComment`, `api.getSettings` — 0 callers |
+| Transactions export | Not built |
+
+## Hard rules (still apply, plus two new)
+
+1. Money crosses the API as **integer paise**; format only at render.
+2. Never invent a figure in the UI — every number comes from an API response.
+3. **One definition per number** — see above.
+4. **Every colour needs a dark variant.**

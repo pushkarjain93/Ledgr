@@ -412,11 +412,17 @@ def _investigate_in_background(merchant_id: str, case_ids: list[str]) -> None:
         pending = [c for c in state_store.list_cases(state) if c["case_id"] in set(case_ids)]
         if not pending:
             return
-        investigated = case_engine.investigate_new_cases_batched(pending)
-        # Persist after EVERY round, not once at the end. Retries can span
-        # several minutes; holding all verdicts until the last round meant the
-        # UI showed nothing filling in for the whole window, and a crash or
-        # restart part-way through discarded every verdict already paid for.
+        # Persist each chunk THE MOMENT it is answered, not once at the end.
+        # A batch of ~20 cases takes a couple of minutes to work through; with
+        # a single merge at the end the review queue stayed empty for that
+        # whole window even though the first chunk was ready in seconds.
+        # _merge_investigated takes the state lock, so it is safe to call from
+        # the worker threads this fires on.
+        def _persist(chunk):
+            _merge_investigated(merchant_id, chunk)
+
+        investigated = case_engine.investigate_new_cases_batched(
+            pending, on_chunk_done=_persist)
         _merge_investigated(merchant_id, investigated)
 
         # Free tiers cap TOKENS PER MINUTE, so a large batch routinely exhausts
@@ -432,7 +438,7 @@ def _investigate_in_background(merchant_id: str, case_ids: list[str]) -> None:
             time.sleep(AI_RETRY_DELAY_SECONDS)
             for c in stuck:
                 c["case_status"] = "needs_ai"
-            case_engine.investigate_new_cases_batched(stuck)
+            case_engine.investigate_new_cases_batched(stuck, on_chunk_done=_persist)
             _merge_investigated(merchant_id, stuck)
     except Exception as exc:  # never let a worker crash take the server with it
         print(f"[background AI] {merchant_id}: {type(exc).__name__}: {exc}")

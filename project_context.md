@@ -896,3 +896,160 @@ Recipients are derived from the case's real facts — a COD case offers the cour
 7. The five-minute demo video, which is a required deliverable and not started.
 
 The honest read: the remaining engineering is small (~5 hours). The remaining *risk* is that nobody has yet watched this system work start to finish in one sitting.
+
+---
+
+## 24. Session Log: COD Remittance Detail + Number-Consistency Audit (Aug 31 - Sep 1, 2026)
+
+### 24.1 What shipped
+
+**Courier COD remittance detail** -- the last unbuilt item from the 7-case
+taxonomy (Section 15, case 5). A bulk COD payout arrives as one bank credit;
+`engine.py`'s `by_utr` matching is 1:1, so it booked the orders as unpaid AND
+the credit as unexplained. The same money was counted twice, and the two halves
+gave contradictory instructions: "chase the courier for the overdue
+remittance" on the orders, "determine if it should be refunded" on the credit.
+Delhivery had already paid.
+
+Now modelled the way it works in reality: the courier publishes a remittance
+file alongside the payment, one row per delivered order carrying the order id.
+Matching is a **join, not a search**.
+
+### 24.2 New files
+
+| File | Purpose |
+|---|---|
+| `remittance.py` | Deterministic join + checksum + 7 discrepancy detectors. Zero AI. |
+| `test_remittance.py` | 14 checks: every discrepancy kind, plus the guards |
+| `data/remittances.csv` | Synthetic courier remittance detail (generated) |
+| `frontend/src/components/cases/CaseRemittancePanel.tsx` | Shows the per-order breakdown on a case |
+
+### 24.3 The data model (unchanged count: still THREE sources)
+
+Remittance detail belongs to the **existing Bank / COD source**. It is the
+per-order breakdown behind a bank credit, not a separate integration:
+
+```
+1. Shopify        -> orders
+2. Razorpay       -> gateway settlement feed
+3. Bank / COD     -> bank credits  +  courier remittance detail   <- extended
+```
+
+Reported under `bank` in `/api/sources` with a `remittance_rows` count. No new
+sidebar entry, no fourth source.
+
+`data/remittances.csv` columns:
+`settlement_utr, order_id, awb, cod_collected, cod_fee, freight_fee,
+net_payout, remitted_on, courier, batch_id`
+
+`batch_id` matters: remittance rows are revealed with their own batch, exactly
+like orders and settlements. Without it a later batch's rows are visible while
+its bank credit is not, and the checksum reports a missing credit for money
+that simply has not arrived yet.
+
+### 24.4 The rule that makes it safe
+
+**A batch links NOTHING unless its rows sum exactly to the bank credit.**
+Unproven paperwork must never clear money. When the checksum fails, the batch
+becomes an exception and the orders stay open.
+
+Seven detectors, each provable from the join rather than inferred:
+`order_missing_from_remittance`, `remittance_order_unknown`,
+`order_in_multiple_batches`, `batch_checksum_mismatch`,
+`cod_collected_mismatch`, `cod_fee_over_band`, `remittance_batch_without_credit`.
+
+`cod_fee_over_band` reuses `config.fee_band(...)` -- the same contracted band
+`engine.py` enforces at Tier 2/4. Fee policy stays defined in ONE place.
+
+### 24.5 A rejected design worth recording
+
+The first proposal was **subset-sum**: group unmatched COD orders by courier
+and date window, find the subset whose total minus the COD fee equals the
+credit. It was prototyped against the real dataset before any project code was
+written, and it failed: with a `fee <= 2.5%` inequality it returned **12
+candidate subsets** for one credit, and confidently mis-matched an orphan
+credit that has no orders behind it at all.
+
+Tightening the fee band and requiring a courier name in the narration got it to
+a unique correct answer -- but it was still producing a *probable* answer where
+a certain one exists. The remittance file makes the question a lookup.
+
+**The principle:** AI (or heuristics) earn their place only where a
+deterministic answer is structurally unavailable. Here it was available; we
+were just not reading the right file.
+
+### 24.6 The number-consistency audit
+
+Six real bugs where different screens computed the same figure differently:
+
+| Bug | Was | Now |
+|---|---|---|
+| Expected money | Reconciliations Rs 3,65,137.16 vs Reports Rs 3,28,142.70 | one de-duplicated source |
+| Record total | Dashboard 123 / Recon 112 / Reports 112 | `totalReconciledRecords()`, 112 everywhere |
+| "178 settlements" | counted any record with money received | counts by `record_kind` -> 87 |
+| "Auto matched" | included COD still inside its window | own `awaiting_settlement` bucket |
+| Reports "Settled by rules 102" | counted unmatched exceptions as settled | shared `work_split` -> 79 |
+| Donut partition | right only by coincidence of this dataset | explicit order-side subtraction |
+
+**Root cause in every case:** two places deriving one number from different
+sources. **The standing rule now:** any figure shown in two places must have
+ONE definition in code.
+
+### 24.7 Vocabulary (use these consistently)
+
+| Bucket | Meaning |
+|---|---|
+| **Auto matched** | rules settled it, no human needed (includes remittance-resolved) |
+| **Awaiting settlement** | COD inside its window -- not a failure, a clock |
+| **AI recommendation** | AI found a lead a human can accept or reject |
+| **Needs investigation** | AI checked and found no conclusive path |
+| **Being investigated** | transient; only while a batch is still running |
+
+These sum to total records by construction. "AI Resolved" was removed as a
+label -- those records are exactly the ones that become open cases.
+
+**Manual work eliminated** =
+`(auto matched + AI handled) / (total records - awaiting settlement)`.
+AI-handled counts as eliminated because the investigation was done for the
+human even though the decision is not. COD inside its window is excluded from
+the denominator: there is no work to eliminate on money that has not arrived.
+
+### 24.8 AI review latency
+
+Verdicts now persist **per chunk**, not per batch
+(`investigate_new_cases_batched(..., on_chunk_done=...)`). The review queue
+used to sit at 0 for ~2 minutes then fill all at once; it now shows 5 cases at
+7s, 10 at 31s, 15 at 97s. Remaining gaps are Groq's tokens-per-minute ceiling.
+
+A header refresh button (with a live count of cases still being investigated)
+and a "figures are provisional until this clears" banner on Reconciliations
+make the in-progress state legible.
+
+### 24.9 Verified state
+
+```
+test_remittance.py            14/14
+engine.py vs ground_truth     106 scored, tier/disposition/reason 100%
+                              precision 100% (0 false clears), recall 100%
+bulk records                  6/6 resolved, amount_at_risk 0
+at risk                       Rs 81,481.80 -> Rs 74,717.68
+frontend                      tsc clean, production build clean
+```
+
+### 24.10 Known limitations (state these plainly)
+
+- **Split payout** -- one order paid across two settlements. The inverse of
+  bulk remittance; not modelled.
+- **Late chargeback** reversing an already-cleared record.
+- **Narration parsing** -- formats differ per courier per bank; narrations are
+  carried and displayed, never parsed.
+- **Stage 2 remittance work** (discrepancy-audit reporting, dispute-deadline
+  tracking) deliberately not built.
+- Demo remittance data is deliberately CLEAN so the happy path is what shows;
+  every failure mode is proven by `test_remittance.py` fixtures instead.
+
+### 24.11 Process note
+
+A `git restore` mid-session discarded every uncommitted change to tracked
+files (no stash, nothing recoverable). Only untracked new files survived.
+**Commit after each working increment.**

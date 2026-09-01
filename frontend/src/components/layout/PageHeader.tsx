@@ -23,6 +23,21 @@ function SparkIcon() {
   )
 }
 
+function RefreshIcon({ spinning }: { spinning: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      className={`h-[18px] w-[18px] ${spinning ? 'animate-spin' : ''}`}
+    >
+      <path d="M16.5 10a6.5 6.5 0 1 1-1.9-4.6" strokeLinecap="round" />
+      <path d="M16.5 3.5V7H13" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function ChevronIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4">
@@ -80,9 +95,12 @@ export function PageHeader({ title, variant = 'default', children }: PageHeaderP
     selectedDate,
     setSelectedDate,
     resetDemoData,
+    refresh,
+    aiInProgress,
   } = useApp()
   const navigate = useNavigate()
   const [profileOpen, setProfileOpen] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
   const [bellMenuOpen, setBellMenuOpen] = useState(false)
   const [batchPopoverOpen, setBatchPopoverOpen] = useState(false)
@@ -136,8 +154,41 @@ export function PageHeader({ title, variant = 'default', children }: PageHeaderP
 
   const bookmarkedCount = cases.filter((c) => c.bookmarked).length
 
+  const investigating = aiInProgress > 0
+
+  async function handleRefresh() {
+    if (refreshing) return
+    setRefreshing(true)
+    try {
+      await refresh()
+    } finally {
+      // Always spin for a beat. An instant snap gives no feedback that
+      // anything happened when the counts have not moved yet.
+      setTimeout(() => setRefreshing(false), 450)
+    }
+  }
+
   const toolbar = (
     <div className="flex items-center gap-2">
+      {/* Manual refresh. Verdicts land in chunks over a couple of minutes and
+          the app polls on its own, but a visible control means the user can
+          pull the latest counts on demand instead of wondering whether the
+          screen is stale. */}
+      <button
+        type="button"
+        onClick={handleRefresh}
+        disabled={refreshing}
+        aria-label="Refresh reconciliation data"
+        title={investigating ? `AI is investigating ${aiInProgress} case(s) — refresh for the latest` : 'Refresh'}
+        className="relative flex h-9 items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 text-[13px] font-medium text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-50"
+      >
+        <RefreshIcon spinning={refreshing || investigating} />
+        {investigating && (
+          <span className="tabular-nums text-[12px] text-blue-600 dark:text-blue-400">
+            {aiInProgress}
+          </span>
+        )}
+      </button>
       <div className="relative" ref={bellRef}>
         <button
           type="button"
