@@ -44,7 +44,7 @@ export function RecentActivity({ runs }: RecentActivityProps) {
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[12.5px] text-zinc-600 dark:text-zinc-300">
                 <span><span className="text-zinc-400 dark:text-zinc-500">Processed </span><span className="font-medium">{run.totalRecords}</span></span>
                 <span><span className="text-zinc-400 dark:text-zinc-500">Auto matched </span><span className="font-medium">{run.autoMatched}</span></span>
-                <span><span className="text-zinc-400 dark:text-zinc-500">AI resolved </span><span className="font-medium">{run.aiResolved}</span></span>
+                <span><span className="text-zinc-400 dark:text-zinc-500">Needs review </span><span className="font-medium">{run.aiResolved + run.exceptions}</span></span>
                 <span><span className="text-zinc-400 dark:text-zinc-500">Exceptions </span><span className="font-medium">{run.exceptions}</span></span>
               </div>
             </li>

@@ -95,6 +95,8 @@ export type AppState = {
   run_date: string
   /** Cases still queued for AI. Poll until this reaches zero. */
   ai_in_progress: number
+  /** Cumulative, de-duplicated order records reconciled across all batches. */
+  orders_processed: number
 }
 
 export type SourceStatus = {
@@ -145,6 +147,9 @@ export type SyncResult = {
 
 export type TransactionRecord = {
   record_id: string
+  /** 'order' = order-side row (carries expected/received); 'settlement' =
+   *  a row from the settlement feed. Counting money over both double-counts. */
+  record_kind: 'order' | 'settlement'
   order_date: string
   payment_mode: string
   /**
@@ -249,6 +254,15 @@ export type ReportData = {
       want_tier: number; want_status: string; want_reason: string; scenario: string
     }[]
     perfect: boolean
+  }
+  /** Outcome buckets — the same partition the Reconciliations donut shows. */
+  work_split?: {
+    auto_settled: number
+    awaiting_settlement: number
+    ai_recommendation: number
+    needs_investigation: number
+    being_investigated: number
+    total_records: number
   }
   coverage?: { records_processed: number; records_labelled: number; records_unlabelled: number }
   throughput?: { runs: number; records_total: number; last_run_at: string | null }

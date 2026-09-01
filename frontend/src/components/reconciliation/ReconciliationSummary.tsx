@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import { formatINR } from '../../lib/money'
 import type { ReconciliationViewModel } from '../../lib/reconciliationFinancials'
+import { aiReachedVerdict, needsInvestigation } from '../../lib/caseUtils'
+import type { Case } from '../../types/case'
 
 function IconBox({ children, className }: { children: ReactNode; className: string }) {
   return (
@@ -37,10 +39,21 @@ function MetricCard({
 
 type SummaryBoxesProps = {
   model: ReconciliationViewModel
+  cases: Case[]
 }
 
-export function SummaryBoxes({ model }: SummaryBoxesProps) {
-  const { totals, orderCount, settlementCount, aiResolvedPct, exceptionsPct } = model
+export function SummaryBoxes({ model, cases }: SummaryBoxesProps) {
+  const { totals, orderCount, settlementCount } = model
+
+  // Counted over CASES, not engine records, and split by WHAT AI CONCLUDED.
+  // AI investigates every eligible case; the useful distinction is whether it
+  // landed on something actionable. The two buckets are exclusive and sum to
+  // the review queue, so these cards and the queue below always agree.
+  const aiVerdict = cases.filter(aiReachedVerdict).length
+  const manual = cases.filter(needsInvestigation).length
+  const openTotal = aiVerdict + manual
+  const share = (n: number) =>
+    openTotal > 0 ? `${Math.round((n / openTotal) * 100)}% of open cases` : 'No open cases'
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -54,7 +67,9 @@ export function SummaryBoxes({ model }: SummaryBoxesProps) {
         }
         label="Expected"
         value={formatINR(totals.expectedPaise)}
-        sub={`${orderCount} orders`}
+        // "records", not "orders": this count includes orphan bank credits,
+        // which are reconciled records with no order behind them.
+        sub={`${orderCount} records`}
       />
       <MetricCard
         iconBg="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
@@ -74,9 +89,9 @@ export function SummaryBoxes({ model }: SummaryBoxesProps) {
             <path d="M10 3l1.2 3.6H15l-3 2.2 1.2 3.6L10 10.2 6.8 12.4 8 9.8 5 7.6h3.8L10 3z" strokeLinejoin="round" />
           </svg>
         }
-        label="AI Resolved"
-        value={String(totals.aiResolved)}
-        sub={`${aiResolvedPct}% of records`}
+        label="AI recommendation"
+        value={String(aiVerdict)}
+        sub={share(aiVerdict)}
       />
       <MetricCard
         iconBg="bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
@@ -86,9 +101,9 @@ export function SummaryBoxes({ model }: SummaryBoxesProps) {
             <circle cx="10" cy="10" r="7.5" />
           </svg>
         }
-        label="Exceptions"
-        value={String(totals.exceptions)}
-        sub={`${exceptionsPct}% of records`}
+        label="Needs investigation"
+        value={String(manual)}
+        sub={share(manual)}
       />
     </div>
   )

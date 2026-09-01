@@ -13,6 +13,7 @@ export function createEmptyMerchantState(): MerchantState {
     notification_created: true,
     notification_seen: false,
     cases: {},
+    orders_processed: 0,
   }
 }
 

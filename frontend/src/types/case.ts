@@ -112,6 +112,8 @@ export type ReconciliationRun = {
   sources: string
   status: string
   auto_matched?: number
+  /** COD inside its collection window: not matched, not a failure. */
+  awaiting_settlement?: number
   ai_resolved?: number
   exceptions?: number
   total_records?: number
@@ -128,6 +130,8 @@ export type MerchantState = {
   notification_created: boolean
   notification_seen: boolean
   cases: Record<string, Case>
+  /** Cumulative, de-duplicated order records reconciled across all batches. */
+  orders_processed: number
 }
 
 export type MerchantSession = {

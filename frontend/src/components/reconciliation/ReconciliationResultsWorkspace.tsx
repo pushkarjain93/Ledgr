@@ -17,19 +17,23 @@ export function ReconciliationResultsWorkspace({ model, cases }: ReconciliationR
 
   return (
     <section className="space-y-4">
-      <SummaryBoxes model={model} />
+      <SummaryBoxes model={model} cases={cases} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <FinancialHealthPanel model={model} />
+        {/* Denominator is the sum of the segments themselves, so the centre
+            number always equals what the ring depicts. Using the per-run
+            record count instead made the segments (cumulative, case-derived)
+            add up to something other than the total shown. */}
         <ReconciliationOutcomePanel
           segments={model.outcome}
-          total={model.totals.totalRecords}
+          total={model.outcome.reduce((n, s) => n + s.count, 0)}
         />
       </div>
 
       <CodAwaitingSettlementPanel cases={codAwaiting} />
 
-      <AiReviewQueue cases={cases} reviewCount={model.aiReviewCount} />
+      <AiReviewQueue cases={cases} />
     </section>
   )
 }

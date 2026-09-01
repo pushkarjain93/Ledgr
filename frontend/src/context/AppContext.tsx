@@ -39,6 +39,7 @@ type AppContextValue = {
   hasNewBatch: boolean
   /** All reconciliation runs (not date-filtered). */
   allRuns: ReconciliationRun[]
+  ordersProcessed: number
   batchAvailable: boolean
   currentBatch: number
   nextBatchAvailableAt: string | null
@@ -87,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notification_created: s.batch_available,
         notification_seen: s.notification_seen,
         cases: s.cases,
+        orders_processed: s.orders_processed ?? 0,
       })
       setAiInProgress(s.ai_in_progress ?? 0)
       setError(null)
@@ -180,6 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // array on every render, which defeats the useMemo below and makes the whole
   // context value change identity each render (re-rendering every consumer).
   const allRuns = merchantState?.reconciliation_runs ?? EMPTY_RUNS
+  const ordersProcessed = merchantState?.orders_processed ?? 0
   const batchAvailable = merchantState?.notification_created ?? false
   const currentBatch = merchantState?.current_batch ?? 1
   const nextBatchAvailableAt = merchantState?.next_batch_available_at ?? null
@@ -219,6 +222,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       dashboard,
       hasNewBatch,
       allRuns,
+      ordersProcessed,
       batchAvailable,
       currentBatch,
       nextBatchAvailableAt,
@@ -232,7 +236,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loading,
       error,
     }),
-    [merchant, dateFilteredState, selectedDate, cases, dashboard, hasNewBatch, allRuns,
+    [merchant, dateFilteredState, selectedDate, cases, dashboard, hasNewBatch, allRuns, ordersProcessed,
      batchAvailable, currentBatch, nextBatchAvailableAt, lastSyncAt, aiInProgress,
      refresh, resetDemoData, login, logout, loading, error],
   )

@@ -205,10 +205,11 @@
     {
       "run_id": "RUN-merchant_acme_001-B2",
       "batch_id": 2,
-      "timestamp": "2026-09-01T16:22:54.273141",
+      "timestamp": "2026-09-01T18:31:17.680599",
       "sources": "Shopify + Razorpay + Bank",
       "status": "Completed",
-      "auto_matched": 51,
+      "auto_matched": 41,
+      "awaiting_settlement": 10,
       "ai_resolved": 4,
       "exceptions": 12,
       "total_records": 67,
@@ -218,10 +219,11 @@
     {
       "run_id": "RUN-merchant_acme_001-B1",
       "batch_id": 1,
-      "timestamp": "2026-09-01T16:20:32.131471",
+      "timestamp": "2026-09-01T18:29:55.626259",
       "sources": "Shopify + Razorpay + Bank",
       "status": "Completed",
-      "auto_matched": 37,
+      "auto_matched": 32,
+      "awaiting_settlement": 5,
       "ai_resolved": 6,
       "exceptions": 13,
       "total_records": 56,
@@ -261,30 +263,32 @@
         "classification": "no_match",
         "recommendation": "escalate",
         "confidence": 10,
-        "reason": "The order was supposed to bring Rs 9,999.50 but no money came in. There are no matching settlements to explain the missing payment.",
-        "next_step": "Contact the payment gateway to find out why Rs 9,999.50 was not received.",
-        "evidence": [],
+        "reason": "The order was expected to bring in Rs 9,999.50 but no money was recorded. There is no settlement that matches this amount, so the payment is missing.",
+        "next_step": "Contact the payment gateway to confirm if the Rs 9,999.50 payment was received.",
+        "evidence": [
+          "Order expected Rs 9,999.50, received Rs 0.00"
+        ],
         "missing_evidence": [
           "payment gateway logs"
         ],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:20:35.230135",
+        "investigated_at": "2026-09-01T18:29:58.846230",
         "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
@@ -297,7 +301,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-STL-X1001": {
       "case_id": "CASE-STL-X1001",
@@ -325,26 +329,28 @@
         "classification": "no_match",
         "recommendation": "escalate",
         "confidence": 10,
-        "reason": "The settlement shows Rs 8,420.00 but there is no order that matches it. No candidate orders were found.",
-        "next_step": "Contact the payment gateway to investigate why Rs 8,420.00 was credited to no order.",
-        "evidence": [],
+        "reason": "The settlement shows Rs 8,420.00 but there is no order that matches it, so the source of the money is unknown.",
+        "next_step": "Check with the payment gateway to find out where the Rs 8,420.00 came from.",
+        "evidence": [
+          "Settlement expected Rs 0.00, received Rs 8,420.00"
+        ],
         "missing_evidence": [
           "payment gateway logs"
         ],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:20:35.230135",
+        "investigated_at": "2026-09-01T18:29:58.846230",
         "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -357,7 +363,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00014": {
       "case_id": "CASE-ORD-00014",
@@ -397,31 +403,30 @@
       "ai": {
         "classification": "ambiguous_match",
         "recommendation": "manual_review",
-        "confidence": 30,
-        "reason": "The order expected Rs 6,499.00 and no payment was recorded. Two settlements of Rs 6,499.00 exist, one on 2026-08-04 and another on 2026-08-05, so it\u2019s unclear which one belongs to the order.",
-        "next_step": "Check the order status and payment gateway logs to determine which settlement belongs to this order.",
+        "confidence": 40,
+        "reason": "The order expected Rs 6,499.00 and two settlements of that amount exist, one original and one repost. It's unclear which one applies.",
+        "next_step": "Ask finance to confirm which settlement (original or repost) belongs to this order and verify the payment.",
         "evidence": [
-          "Order expected Rs 6,499.00, no payment received",
-          "Settlement STL-00014 of Rs 6,499.00 on 2026-08-04",
-          "Settlement STL-00014-D of Rs 6,499.00 on 2026-08-05"
+          "Order expected Rs 6,499.00, received Rs 0.00",
+          "Two settlements of Rs 6,499.00 found: STL-00014 and STL-00014-D"
         ],
         "missing_evidence": [
-          "order status, payment gateway logs, customer confirmation"
+          "confirmation of which settlement is original"
         ],
         "candidate_rankings": [],
         "action": "manual_review",
-        "investigated_at": "2026-09-01T16:20:35.230135",
+        "investigated_at": "2026-09-01T18:29:58.846230",
         "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -434,7 +439,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00049": {
       "case_id": "CASE-ORD-00049",
@@ -462,30 +467,32 @@
         "classification": "no_match",
         "recommendation": "escalate",
         "confidence": 10,
-        "reason": "The order was supposed to bring Rs 6,499.00 but no money came in. No matching settlements were found.",
-        "next_step": "Contact the payment gateway to find out why Rs 6,499.00 was not received.",
-        "evidence": [],
+        "reason": "The order was expected to bring in Rs 6,499.00 but no money was recorded. There is no settlement that matches this amount, so the payment is missing.",
+        "next_step": "Contact the payment gateway to confirm if the Rs 6,499.00 payment was received.",
+        "evidence": [
+          "Order expected Rs 6,499.00, received Rs 0.00"
+        ],
         "missing_evidence": [
           "payment gateway logs"
         ],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:20:35.230135",
+        "investigated_at": "2026-09-01T18:29:58.846230",
         "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
@@ -498,7 +505,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-STL-X1002": {
       "case_id": "CASE-STL-X1002",
@@ -526,26 +533,28 @@
         "classification": "no_match",
         "recommendation": "escalate",
         "confidence": 10,
-        "reason": "The settlement shows Rs 5,764.00 but there is no order that matches it. No candidate orders were found.",
-        "next_step": "Contact the payment gateway to investigate why Rs 5,764.00 was credited to no order.",
-        "evidence": [],
+        "reason": "The settlement shows Rs 5,764.00 but there is no order that matches it, so the source of the money is unknown.",
+        "next_step": "Check with the payment gateway to find out where the Rs 5,764.00 came from.",
+        "evidence": [
+          "Settlement expected Rs 0.00, received Rs 5,764.00"
+        ],
         "missing_evidence": [
           "payment gateway logs"
         ],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:20:35.230135",
+        "investigated_at": "2026-09-01T18:29:58.846230",
         "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -558,7 +567,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00027": {
       "case_id": "CASE-ORD-00027",
@@ -584,27 +593,27 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:22:54.273141",
+        "resolved_at": "2026-09-01T18:31:17.679592",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "settlement arrived, resolved automatically"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00030": {
       "case_id": "CASE-ORD-00030",
@@ -630,27 +639,27 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:22:54.273141",
+        "resolved_at": "2026-09-01T18:31:17.679592",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "settlement arrived, resolved automatically"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00024": {
       "case_id": "CASE-ORD-00024",
@@ -663,7 +672,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "manual_review",
+      "case_status": "exception",
       "expected": 399999,
       "received": 200000,
       "delta": -199999,
@@ -675,30 +684,36 @@
       "candidates": [],
       "evidence_hash": "83a1e15ce24d6dc6",
       "ai": {
-        "classification": "partial_payment",
-        "recommendation": "resolve",
-        "confidence": 90,
-        "reason": "The order expected Rs 3,999.99 but only Rs 2,000.00 was received, so the customer paid part of the amount.",
-        "next_step": "Accept the Rs 2,000 payment and note that the remaining Rs 1,999.99 is still owed.",
-        "evidence": [
-          "Expected amount Rs 3,999.99",
-          "Received amount Rs 2,000.00"
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "Only Rs 2,000.00 of the expected Rs 3,999.99 was received for order ORD-00024.",
+        "next_step": "Verify with the payment gateway if the remaining Rs 1,999.99 is pending or contact the customer to collect the balance.",
+        "evidence": [],
+        "missing_evidence": [
+          "payment gateway response for the balance",
+          "customer communication about the remaining amount"
         ],
-        "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": "manual_review",
-        "investigated_at": "2026-09-01T16:20:35.071800",
-        "provider": "groq",
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "Only Rs 2,000.00 of the expected Rs 3,999.99 was received for order ORD-00024."
+          }
+        ],
+        "action": "escalate",
+        "investigated_at": "2026-09-01T18:30:49.551316",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -711,7 +726,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-STL-BULK01": {
       "case_id": "CASE-STL-BULK01",
@@ -753,19 +768,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:20:32.131471",
+        "resolved_at": "2026-09-01T18:29:55.626259",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "explained by courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:20:32.131471"
+      "updated_at": "2026-09-01T18:29:55.626259"
     },
     "CASE-ORD-00008": {
       "case_id": "CASE-ORD-00008",
@@ -790,33 +805,40 @@
       "candidates": [],
       "evidence_hash": "900e3759c5805528",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "The order expected Rs 1,249.99 but no payment was received and there are no candidate settlements to match it to.",
-        "next_step": "Contact the courier to confirm the remittance status for this order.",
+        "confidence": 0,
+        "reason": "No payment arrived for order ORD-00008 (expected Rs 1,249.99, received Rs 0).",
+        "next_step": "Check with the courier or payment gateway to see if the remittance for this cash\u2011on\u2011delivery order is pending.",
         "evidence": [],
         "missing_evidence": [
-          "courier remittance status"
+          "courier remittance report",
+          "payment gateway status"
         ],
-        "candidate_rankings": [],
+        "candidate_rankings": [
+          {
+            "id": "none",
+            "confidence": 0,
+            "reason": "No payment arrived for order ORD-00008 (expected Rs 1,249.99, received Rs 0)."
+          }
+        ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:20:35.071800",
-        "provider": "groq",
+        "investigated_at": "2026-09-01T18:30:49.551316",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
@@ -829,7 +851,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-STL-SHADOW01": {
       "case_id": "CASE-STL-SHADOW01",
@@ -900,37 +922,36 @@
       ],
       "evidence_hash": "07a71d75e17fcddb",
       "ai": {
-        "classification": "ambiguous_match",
+        "classification": "resolve",
         "recommendation": "resolve",
-        "confidence": 95,
-        "reason": "The settlement amount Rs 1,249.99 matches the amount of order ORD-00008, which has no prior settlement, while other candidate orders are already settled.",
-        "next_step": "Link settlement STL-SHADOW01 to order ORD-00008 and mark it as paid.",
+        "confidence": 1,
+        "reason": "The settlement of Rs 1,249.99 matches exactly the unpaid amount of order ORD-00008, which has not been settled yet.",
+        "next_step": "Confirm with the courier that they remitted Rs 1,249.99 for order ORD-00008 and then mark the order as settled.",
         "evidence": [
-          "Settlement amount matches ORD-00008",
-          "ORD-00008 has no prior settlement",
-          "Other candidates already settled"
+          "ORD-00008 amount_paise 124999",
+          "already_settled_by null"
         ],
         "missing_evidence": [],
         "candidate_rankings": [
           {
             "id": "ORD-00008",
-            "confidence": 95,
-            "reason": "The settlement amount Rs 1,249.99 matches the amount of order ORD-00008, which has no prior settlement, while other candidate orders are already settled."
+            "confidence": 1,
+            "reason": "The settlement of Rs 1,249.99 matches exactly the unpaid amount of order ORD-00008, which has not been settled yet."
           }
         ],
         "action": "manual_review",
-        "investigated_at": "2026-09-01T16:20:35.071800",
-        "provider": "groq",
+        "investigated_at": "2026-09-01T18:30:49.551316",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -943,7 +964,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00039": {
       "case_id": "CASE-ORD-00039",
@@ -968,34 +989,36 @@
       "candidates": [],
       "evidence_hash": "3e7123b24a6fbd31",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 15,
-        "reason": "No candidate settlement records were found to explain why Rs 10,999.45 was received when Rs 9,999.50 was expected for order ORD-00039.",
-        "next_step": "Contact the payment gateway to verify why Rs 10,999.45 was collected for order ORD-00039.",
-        "evidence": [
-          "Expected amount: Rs 9,999.50",
-          "Received amount: Rs 10,999.45",
-          "No candidate matches provided"
-        ],
+        "confidence": 0,
+        "reason": "No candidate settlement records were provided to match against the order.",
+        "next_step": "Review the payment gateway logs to see if the customer was charged twice and arrange a refund of the excess if needed.",
+        "evidence": [],
         "missing_evidence": [
-          "Payment gateway transaction breakdown",
-          "Customer payment receipt"
+          "payment gateway logs",
+          "bank statement"
         ],
-        "candidate_rankings": [],
+        "candidate_rankings": [
+          {
+            "id": "N/A",
+            "confidence": 0,
+            "reason": "No candidate settlement records were provided to match against the order."
+          }
+        ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:21:03.214673",
-        "provider": "gemini",
+        "investigated_at": "2026-09-01T18:30:35.970155",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -1008,7 +1031,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-BULK101": {
       "case_id": "CASE-ORD-BULK101",
@@ -1050,19 +1073,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:20:32.131471",
+        "resolved_at": "2026-09-01T18:29:55.626259",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "matched to courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:20:32.131471"
+      "updated_at": "2026-09-01T18:29:55.626259"
     },
     "CASE-ORD-BULK102": {
       "case_id": "CASE-ORD-BULK102",
@@ -1104,19 +1127,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:20:32.131471",
+        "resolved_at": "2026-09-01T18:29:55.626259",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "matched to courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:20:32.131471"
+      "updated_at": "2026-09-01T18:29:55.626259"
     },
     "CASE-ORD-00002": {
       "case_id": "CASE-ORD-00002",
@@ -1141,38 +1164,40 @@
       "candidates": [],
       "evidence_hash": "927d65c79741dd56",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 10,
-        "reason": "No candidate payment records were found for order ORD-00002, so the money never arrived.",
-        "next_step": "Contact the payment provider or courier to check if payment was collected for order ORD-00002.",
-        "evidence": [
-          "Expected amount: Rs 349.50",
-          "Received amount: Rs 0.00",
-          "No candidate matches provided"
-        ],
+        "confidence": 0,
+        "reason": "No candidate settlement records were provided to match against the order.",
+        "next_step": "Check with the payment gateway or bank to see if the payment failed, or contact the customer to confirm whether they paid.",
+        "evidence": [],
         "missing_evidence": [
-          "Courier remittance statement",
-          "Payment gateway settlement log"
+          "payment gateway logs",
+          "bank statement"
         ],
-        "candidate_rankings": [],
+        "candidate_rankings": [
+          {
+            "id": "N/A",
+            "confidence": 0,
+            "reason": "No candidate settlement records were provided to match against the order."
+          }
+        ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:21:03.214673",
-        "provider": "gemini",
+        "investigated_at": "2026-09-01T18:30:35.970155",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled (AI result reused -- evidence unchanged)"
         }
       ],
@@ -1185,7 +1210,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00016": {
       "case_id": "CASE-ORD-00016",
@@ -1210,34 +1235,36 @@
       "candidates": [],
       "evidence_hash": "8b8426bff55be214",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 15,
-        "reason": "No candidate records were found to explain why Rs 2,231.63 was received instead of the expected Rs 2,499.50 for order ORD-00016.",
-        "next_step": "Request a detailed fee statement from the payment provider to explain the difference for order ORD-00016.",
-        "evidence": [
-          "Expected amount: Rs 2,499.50",
-          "Received amount: Rs 2,231.63",
-          "No candidate matches provided"
-        ],
+        "confidence": 0,
+        "reason": "No candidate settlement records were provided to match against the order.",
+        "next_step": "Look for the missing amount in your payment gateway or bank statement, or ask the customer to pay the remaining balance.",
+        "evidence": [],
         "missing_evidence": [
-          "Payment gateway fee breakdown",
-          "Courier charge breakdown"
+          "payment gateway logs",
+          "bank statement"
         ],
-        "candidate_rankings": [],
+        "candidate_rankings": [
+          {
+            "id": "N/A",
+            "confidence": 0,
+            "reason": "No candidate settlement records were provided to match against the order."
+          }
+        ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:21:03.214673",
-        "provider": "gemini",
+        "investigated_at": "2026-09-01T18:30:35.970155",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -1250,7 +1277,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00013": {
       "case_id": "CASE-ORD-00013",
@@ -1275,34 +1302,36 @@
       "candidates": [],
       "evidence_hash": "cb7f128ce01bf30f",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 15,
-        "reason": "No candidate settlement records were found to account for the shortfall between Rs 599.99 expected and Rs 360.00 received for order ORD-00013.",
-        "next_step": "Escalate to the payment gateway to investigate the short payment for order ORD-00013.",
-        "evidence": [
-          "Expected amount: Rs 599.99",
-          "Received amount: Rs 360.00",
-          "No candidate matches provided"
-        ],
+        "confidence": 0,
+        "reason": "No candidate settlement records were provided to match against the order.",
+        "next_step": "Look for the missing amount in your payment gateway or bank statement, or ask the customer to pay the remaining balance.",
+        "evidence": [],
         "missing_evidence": [
-          "Payment gateway settlement breakdown",
-          "Customer discount records"
+          "payment gateway logs",
+          "bank statement"
         ],
-        "candidate_rankings": [],
+        "candidate_rankings": [
+          {
+            "id": "N/A",
+            "confidence": 0,
+            "reason": "No candidate settlement records were provided to match against the order."
+          }
+        ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:21:03.214673",
-        "provider": "gemini",
+        "investigated_at": "2026-09-01T18:30:35.970155",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -1315,7 +1344,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00050": {
       "case_id": "CASE-ORD-00050",
@@ -1340,34 +1369,36 @@
       "candidates": [],
       "evidence_hash": "2353167861c6617f",
       "ai": {
-        "classification": "no_match",
+        "classification": "escalate",
         "recommendation": "escalate",
-        "confidence": 15,
-        "reason": "No candidate settlement records were found to explain why Rs 449.63 was received against the expected Rs 599.50 for order ORD-00050.",
-        "next_step": "Contact the courier or payment gateway to clarify the payout shortfall for order ORD-00050.",
-        "evidence": [
-          "Expected amount: Rs 599.50",
-          "Received amount: Rs 449.63",
-          "No candidate matches provided"
-        ],
+        "confidence": 0,
+        "reason": "No candidate settlement records were provided to match against the order.",
+        "next_step": "Look for the missing amount in your payment gateway or bank statement, or ask the customer to pay the remaining balance.",
+        "evidence": [],
         "missing_evidence": [
-          "Remittance advice from courier",
-          "Gateway fee statement"
+          "payment gateway logs",
+          "bank statement"
         ],
-        "candidate_rankings": [],
+        "candidate_rankings": [
+          {
+            "id": "N/A",
+            "confidence": 0,
+            "reason": "No candidate settlement records were provided to match against the order."
+          }
+        ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:21:03.214673",
-        "provider": "gemini",
+        "investigated_at": "2026-09-01T18:30:35.970155",
+        "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -1380,7 +1411,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00032": {
       "case_id": "CASE-ORD-00032",
@@ -1408,31 +1439,31 @@
         "classification": "no_match",
         "recommendation": "escalate",
         "confidence": 15,
-        "reason": "The customer paid Rs 1,203.33 for order ORD-00032 instead of the expected Rs 1,249.99, and no matching payment records or candidates were found to explain the missing money.",
-        "next_step": "Contact the payment gateway to investigate why Rs 1,203.33 was received instead of Rs 1,249.99 for order ORD-00032.",
+        "reason": "The order expected Rs 1,249.99 but received Rs 1,203.33, and no candidate matching records were found to explain the difference. This means less money arrived than expected and there are no matching payment records to evaluate.",
+        "next_step": "Contact the payment gateway to confirm why Rs 1,203.33 was remitted instead of Rs 1,249.99.",
         "evidence": [
-          "Expected amount for order ORD-00032 is Rs 1,249.99",
+          "Order ORD-00032 expected total is Rs 1,249.99",
           "Received amount is Rs 1,203.33",
-          "No candidate matches exist for this order"
+          "No candidate matches were found"
         ],
         "missing_evidence": [
-          "Payment gateway fee breakdown",
-          "Settlement report from payment provider"
+          "Payment gateway transaction breakdown",
+          "Courier settlement fee log"
         ],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:22:32.614878",
+        "investigated_at": "2026-09-01T18:31:02.502368",
         "provider": "gemini",
         "error": null
       },
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:22:32.616198",
+          "at": "2026-09-01T18:31:02.502368",
           "event": "ai investigated"
         }
       ],
@@ -1445,7 +1476,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:32.616198"
+      "updated_at": "2026-09-01T18:31:02.502368"
     },
     "CASE-ORD-00005": {
       "case_id": "CASE-ORD-00005",
@@ -1470,14 +1501,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -1490,7 +1521,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00006": {
       "case_id": "CASE-ORD-00006",
@@ -1515,14 +1546,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -1535,7 +1566,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00012": {
       "case_id": "CASE-ORD-00012",
@@ -1560,14 +1591,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -1580,7 +1611,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00028": {
       "case_id": "CASE-ORD-00028",
@@ -1605,14 +1636,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -1625,7 +1656,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00037": {
       "case_id": "CASE-ORD-00037",
@@ -1650,14 +1681,14 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:20:32.131471",
+      "created_at": "2026-09-01T18:29:55.626259",
       "history": [
         {
-          "at": "2026-09-01T16:20:32.131471",
+          "at": "2026-09-01T18:29:55.626259",
           "event": "awaiting settlement"
         },
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -1670,7 +1701,7 @@
         "resolved_by": null,
         "comment": null
       },
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-STL-SHADOW02": {
       "case_id": "CASE-STL-SHADOW02",
@@ -1741,36 +1772,44 @@
       ],
       "evidence_hash": "02be1b410c19dfd0",
       "ai": {
-        "classification": "manual_review",
+        "classification": "duplicate_payment",
         "recommendation": "manual_review",
-        "confidence": 0,
-        "reason": "The received settlement of Rs 9,999.99 exactly matches order ORD-00073, but that order was already paid by settlement STL-00073. This suggests a duplicate charge to the customer.",
-        "next_step": "Check the payment gateway for a duplicate charge on ORD-00073 and, if confirmed, arrange a refund to the customer.",
+        "confidence": 90,
+        "reason": "The settlement of Rs 9,999.99 matches exactly the amount of order ORD-00073, which has already been paid by settlement STL-00073. This means the customer was charged twice for the same order.",
+        "next_step": "Verify with the customer that they were charged twice and issue a refund for the duplicate payment.",
         "evidence": [
-          "ORD-00073 amount_paise 999999 matches received Rs 9,999.99",
-          "ORD-00073 already_settled_by STL-00073"
+          "Settlement amount Rs 9,999.99 matches order ORD-00073 amount Rs 9,999.99",
+          "Order ORD-00073 already settled by STL-00073"
         ],
         "missing_evidence": [],
         "candidate_rankings": [
           {
             "id": "ORD-00073",
-            "confidence": 0,
-            "reason": "The received settlement of Rs 9,999.99 exactly matches order ORD-00073, but that order was already paid by settlement STL-00073. This suggests a duplicate charge to the customer."
+            "confidence": 90,
+            "reason": "The settlement of Rs 9,999.99 matches exactly the amount of order ORD-00073, which has already been paid by settlement STL-00073. This means the customer was charged twice for the same order."
           }
         ],
         "action": "manual_review",
-        "investigated_at": "2026-09-01T16:24:30.987393",
-        "provider": "openrouter",
+        "investigated_at": "2026-09-01T18:33:14.667483",
+        "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:33:14.667483",
           "event": "ai investigated"
         }
       ],
@@ -1783,7 +1822,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:33:14.667483"
     },
     "CASE-ORD-00078": {
       "case_id": "CASE-ORD-00078",
@@ -1808,54 +1847,38 @@
       "candidates": [],
       "evidence_hash": "125b70783cfacd0b",
       "ai": {
-        "classification": "escalate",
+        "classification": "no_match",
         "recommendation": "escalate",
-        "confidence": 0,
-        "reason": "The new data shows several settlements that match other orders, but none for ORD-00078. The expected amount of Rs 6,499.50 was never received, and no settlement record links to this order. Without a payment gateway or bank log showing an attempted payment, we cannot confirm whether the money was sent, lost, or mis\u2011directed. Therefore the case remains unresolved and needs further investigation by the payment team.",
-        "next_step": "Contact the payment gateway or your bank to confirm whether a payment was initiated for ORD-00078 and trace why the funds never arrived.",
-        "evidence": [
-          "candidate_settlements"
+        "confidence": 20,
+        "reason": "No payment was received for order ORD-00078 and there are no candidate settlements to explain the missing money.",
+        "next_step": "Check the payment gateway for the transaction status of order ORD-00078.",
+        "evidence": [],
+        "missing_evidence": [
+          "Payment gateway transaction status"
         ],
-        "missing_evidence": [],
-        "candidate_rankings": [
-          {
-            "id": "CASE-ORD-00078",
-            "confidence": 0,
-            "reason": "The new data shows several settlements that match other orders, but none for ORD-00078. The expected amount of Rs 6,499.50 was never received, and no settlement record links to this order. Without a payment gateway or bank log showing an attempted payment, we cannot confirm whether the money was sent, lost, or mis\u2011directed. Therefore the case remains unresolved and needs further investigation by the payment team."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:25:50.786316",
+        "investigated_at": "2026-09-01T18:33:14.667483",
         "provider": "groq",
-        "error": null,
-        "followup": {
-          "at": "2026-09-01T16:25:50",
-          "evidence_checked": [
-            "Searched the settlement feed \u2014 5 possible matches found"
-          ],
-          "still_unavailable": "Not held by this system: payment gateway or bank record showing the attempted payment. Ledgr reconciles order and settlement feeds only -- it has no access to gateway-side logs or payment-processor internals.",
-          "previous": {
-            "action": "escalate",
-            "reasoning": "Order ORD-00078 expects Rs 6,499.50 but no money was received, and there are no candidate orders to explain the missing amount.",
-            "next_step": "Contact the payment gateway or your bank to see if a payment was initiated and trace why the funds never arrived."
-          },
-          "changed": false
-        },
-        "previous_confidence": 0
+        "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
-          "event": "ai investigated"
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T16:25:50.786316",
-          "event": "ai follow-up investigation completed"
+          "at": "2026-09-01T18:32:36.742072",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:33:14.667483",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -1867,7 +1890,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:50.786316"
+      "updated_at": "2026-09-01T18:33:14.667483"
     },
     "CASE-STL-X2002": {
       "case_id": "CASE-STL-X2002",
@@ -1892,35 +1915,37 @@
       "candidates": [],
       "evidence_hash": "6110070af024703c",
       "ai": {
-        "classification": "escalate",
+        "classification": "no_match",
         "recommendation": "escalate",
-        "confidence": 0,
-        "reason": "Settlement STL-X2002 shows Rs 6,160.00 received with no matching order, and there are no candidate orders to explain this amount.",
-        "next_step": "Verify with the payment gateway or bank where this settlement originated and whether it belongs to another transaction.",
+        "confidence": 20,
+        "reason": "The settlement of Rs 6,160.00 has no matching order and no candidates to explain it.",
+        "next_step": "Check the payment gateway for the transaction status of settlement STL-X2002.",
         "evidence": [],
         "missing_evidence": [
-          "source of the unexpected settlement"
+          "Payment gateway transaction status"
         ],
-        "candidate_rankings": [
-          {
-            "id": "null",
-            "confidence": 0,
-            "reason": "Settlement STL-X2002 shows Rs 6,160.00 received with no matching order, and there are no candidate orders to explain this amount."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:24:30.987393",
-        "provider": "openrouter",
+        "investigated_at": "2026-09-01T18:33:14.667483",
+        "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:33:14.667483",
           "event": "ai investigated"
         }
       ],
@@ -1933,7 +1958,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:33:14.667483"
     },
     "CASE-ORD-00079": {
       "case_id": "CASE-ORD-00079",
@@ -1958,56 +1983,38 @@
       "candidates": [],
       "evidence_hash": "027e4e54b21c1029",
       "ai": {
-        "classification": "escalate",
+        "classification": "no_match",
         "recommendation": "escalate",
-        "confidence": 0,
-        "reason": "None of the settlements in the system match order ORD-00079. All settlements are linked to other orders and none show the expected amount for this order. Therefore the missing payment is still unexplained and requires further investigation by the payment gateway or bank.",
-        "next_step": "Contact the payment gateway or your bank to confirm whether a payment was attempted for order ORD-00079 and why the funds were not received.",
-        "evidence": [
-          "candidate_settlements"
+        "confidence": 20,
+        "reason": "No payment was received for order ORD-00079 and there are no candidate settlements to explain the missing money.",
+        "next_step": "Check the payment gateway for the transaction status of order ORD-00079.",
+        "evidence": [],
+        "missing_evidence": [
+          "Payment gateway transaction status"
         ],
-        "missing_evidence": [],
-        "candidate_rankings": [
-          {
-            "id": "ORD-00079",
-            "confidence": 0,
-            "reason": "None of the settlements in the system match order ORD-00079. All settlements are linked to other orders and none show the expected amount for this order. Therefore the missing payment is still unexplained and requires further investigation by the payment gateway or bank."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:27:18.096393",
+        "investigated_at": "2026-09-01T18:33:14.667483",
         "provider": "groq",
-        "error": null,
-        "followup": {
-          "at": "2026-09-01T16:27:18",
-          "evidence_checked": [
-            "Searched the settlement feed \u2014 5 possible matches found"
-          ],
-          "still_unavailable": [
-            "payment gateway or bank record showing the attempted payment"
-          ],
-          "previous": {
-            "action": "escalate",
-            "reasoning": "Order ORD-00079 expects Rs 3,999.50 but no money was received, and there are no candidate orders to explain the missing amount.",
-            "next_step": "Contact the payment gateway or your bank to see if a payment was initiated and trace why the funds never arrived."
-          },
-          "changed": false
-        },
-        "previous_confidence": 0
+        "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
-          "event": "ai investigated"
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T16:27:18.096393",
-          "event": "ai follow-up investigation completed"
+          "at": "2026-09-01T18:32:36.742072",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:33:14.667483",
+          "event": "ai investigated"
         }
       ],
       "resolution": {
@@ -2019,7 +2026,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:27:18.096393"
+      "updated_at": "2026-09-01T18:33:14.667483"
     },
     "CASE-STL-BULK02": {
       "case_id": "CASE-STL-BULK02",
@@ -2061,19 +2068,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:22:54.273141",
+        "resolved_at": "2026-09-01T18:31:17.680599",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "explained by courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-STL-X2001": {
       "case_id": "CASE-STL-X2001",
@@ -2098,35 +2105,37 @@
       "candidates": [],
       "evidence_hash": "2a14847bfbf332e3",
       "ai": {
-        "classification": "escalate",
+        "classification": "no_match",
         "recommendation": "escalate",
-        "confidence": 0,
-        "reason": "Settlement STL-X2001 shows Rs 2,991.00 received with no matching order, and there are no candidate orders to explain this amount.",
-        "next_step": "Verify with the payment gateway or bank where this settlement originated and whether it belongs to another transaction.",
+        "confidence": 20,
+        "reason": "The settlement of Rs 2,991.00 has no matching order and no candidates to explain it.",
+        "next_step": "Check the payment gateway for the transaction status of settlement STL-X2001.",
         "evidence": [],
         "missing_evidence": [
-          "source of the unexpected settlement"
+          "Payment gateway transaction status"
         ],
-        "candidate_rankings": [
-          {
-            "id": "null",
-            "confidence": 0,
-            "reason": "Settlement STL-X2001 shows Rs 2,991.00 received with no matching order, and there are no candidate orders to explain this amount."
-          }
-        ],
+        "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:24:30.987393",
-        "provider": "openrouter",
+        "investigated_at": "2026-09-01T18:33:14.667483",
+        "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:33:14.667483",
           "event": "ai investigated"
         }
       ],
@@ -2139,7 +2148,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:33:14.667483"
     },
     "CASE-ORD-00051": {
       "case_id": "CASE-ORD-00051",
@@ -2180,41 +2189,37 @@
         "classification": "manual_review",
         "recommendation": "manual_review",
         "confidence": 0,
-        "reason": "The order shows no money received, but two Razorpay settlements list the exact amount due on different dates\u2014one appears to be a repost of the other. This creates uncertainty about which settlement, if any, actually paid the shop.",
-        "next_step": "Ask Razorpay to confirm which settlement is the genuine payment and request that the funds be transferred if they haven\u2019t arrived.",
+        "reason": "Two settlements match the expected amount, so we cannot tell which one is the correct payment.",
+        "next_step": "Check the Razorpay settlement report for 2026-08-13 and 2026-08-14 to pick the matching settlement, or ask the payment gateway to confirm which one was sent.",
         "evidence": [
-          "record.expected: Rs 599.50",
-          "record.received: Rs 0.00",
-          "candidate_matches[0].settlement_id: STL-00051-D",
-          "candidate_matches[0].amount_paise: 59950",
-          "candidate_matches[0].settled_on: 2026-08-14",
-          "candidate_matches[0].narration: RAZORPAY SETTLEMENT REPOST UTR000400051",
-          "candidate_matches[1].settlement_id: STL-00051",
-          "candidate_matches[1].amount_paise: 59950",
-          "candidate_matches[1].settled_on: 2026-08-13",
-          "candidate_matches[1].narration: RAZORPAY SETTLEMENT UTR000400051"
+          "STL-00051-D",
+          "STL-00051"
         ],
         "missing_evidence": [],
         "candidate_rankings": [
           {
             "id": "STL-00051-D",
             "confidence": 0,
-            "reason": "The order shows no money received, but two Razorpay settlements list the exact amount due on different dates\u2014one appears to be a repost of the other. This creates uncertainty about which settlement, if any, actually paid the shop."
+            "reason": "Two settlements match the expected amount, so we cannot tell which one is the correct payment."
           }
         ],
         "action": "manual_review",
-        "investigated_at": "2026-09-01T16:25:13.813723",
+        "investigated_at": "2026-09-01T18:32:36.742072",
         "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
           "event": "ai investigated"
         }
       ],
@@ -2227,7 +2232,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:32:36.742072"
     },
     "CASE-ORD-00097": {
       "case_id": "CASE-ORD-00097",
@@ -2255,22 +2260,19 @@
         "classification": "escalate",
         "recommendation": "escalate",
         "confidence": 0,
-        "reason": "No settlement records were found for order ORD-00097, and the shop shows zero received against the expected Rs 349.50.",
-        "next_step": "Check with the payment gateway (or courier if cash) to see if the payment was sent and trace it.",
-        "evidence": [
-          "record.expected: Rs 349.50",
-          "record.received: Rs 0.00"
-        ],
+        "reason": "No settlement matches the order, so the money never arrived.",
+        "next_step": "Contact the courier or delivery partner to ask if they have sent the cash remittance for this order.",
+        "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [
           {
-            "id": "none",
+            "id": "NONE",
             "confidence": 0,
-            "reason": "No settlement records were found for order ORD-00097, and the shop shows zero received against the expected Rs 349.50."
+            "reason": "No settlement matches the order, so the money never arrived."
           }
         ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:25:13.813723",
+        "investigated_at": "2026-09-01T18:32:36.742072",
         "provider": "openrouter",
         "error": null
       },
@@ -2283,14 +2285,18 @@
           "detail": "BLUEDART remitted on 2026-08-25, after this order was placed on 2026-08-11, but ORD-00097 was not in that batch."
         }
       ],
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
           "event": "ai investigated"
         }
       ],
@@ -2303,7 +2309,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:32:36.742072"
     },
     "CASE-ORD-00093": {
       "case_id": "CASE-ORD-00093",
@@ -2316,7 +2322,7 @@
       "case_type": "overpayment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_recommendation",
+      "case_status": "exception",
       "expected": 189900,
       "received": 208890,
       "delta": 18990,
@@ -2328,36 +2334,37 @@
       "candidates": [],
       "evidence_hash": "9759e1517af7b8a8",
       "ai": {
-        "classification": "resolve",
-        "recommendation": "resolve",
-        "confidence": 1,
-        "reason": "The shop received Rs 2,088.90 for order ORD-00093, which is Rs 189.90 more than the expected Rs 1,899.00.",
-        "next_step": "Refund the excess amount of Rs 189.90 to the customer and verify the original charge.",
-        "evidence": [
-          "record.expected: Rs 1,899.00",
-          "record.received: Rs 2,088.90"
-        ],
+        "classification": "escalate",
+        "recommendation": "escalate",
+        "confidence": 0,
+        "reason": "No settlement matches the order, so we cannot explain the extra amount received.",
+        "next_step": "Ask the payment gateway to check for a duplicate charge or extra fee and arrange a refund to the customer if needed.",
+        "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [
           {
-            "id": "none",
-            "confidence": 1,
-            "reason": "The shop received Rs 2,088.90 for order ORD-00093, which is Rs 189.90 more than the expected Rs 1,899.00."
+            "id": "NONE",
+            "confidence": 0,
+            "reason": "No settlement matches the order, so we cannot explain the extra amount received."
           }
         ],
-        "action": "resolve",
-        "investigated_at": "2026-09-01T16:25:13.813723",
+        "action": "escalate",
+        "investigated_at": "2026-09-01T18:32:36.742072",
         "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
           "event": "ai investigated"
         }
       ],
@@ -2370,7 +2377,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:32:36.742072"
     },
     "CASE-ORD-00053": {
       "case_id": "CASE-ORD-00053",
@@ -2398,33 +2405,34 @@
         "classification": "escalate",
         "recommendation": "escalate",
         "confidence": 0,
-        "reason": "The shop received only Rs 461.25 for order ORD-00053, falling short of the expected Rs 599.00 by Rs 137.75.",
-        "next_step": "Verify with the payment gateway why the amount was short and request the remaining balance.",
-        "evidence": [
-          "record.expected: Rs 599.00",
-          "record.received: Rs 461.25"
-        ],
+        "reason": "No settlement matches the order, so only part of the expected money arrived.",
+        "next_step": "Follow up with the courier to send the remaining cash remittance for this order.",
+        "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [
           {
-            "id": "none",
+            "id": "NONE",
             "confidence": 0,
-            "reason": "The shop received only Rs 461.25 for order ORD-00053, falling short of the expected Rs 599.00 by Rs 137.75."
+            "reason": "No settlement matches the order, so only part of the expected money arrived."
           }
         ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:25:13.813723",
+        "investigated_at": "2026-09-01T18:32:36.742072",
         "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
           "event": "ai investigated"
         }
       ],
@@ -2437,7 +2445,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:32:36.742072"
     },
     "CASE-ORD-00068": {
       "case_id": "CASE-ORD-00068",
@@ -2465,33 +2473,34 @@
         "classification": "escalate",
         "recommendation": "escalate",
         "confidence": 0,
-        "reason": "The shop received Rs 862.98 for order ORD-00068, which is Rs 36.52 less than the expected Rs 899.50.",
-        "next_step": "Check with the payment gateway to see why the amount was lower and ask for the missing Rs 36.52.",
-        "evidence": [
-          "record.expected: Rs 899.50",
-          "record.received: Rs 862.98"
-        ],
+        "reason": "No settlement matches the order, so only part of the expected money arrived.",
+        "next_step": "Follow up with the courier to send the remaining cash remittance for this order.",
+        "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [
           {
-            "id": "none",
+            "id": "NONE",
             "confidence": 0,
-            "reason": "The shop received Rs 862.98 for order ORD-00068, which is Rs 36.52 less than the expected Rs 899.50."
+            "reason": "No settlement matches the order, so only part of the expected money arrived."
           }
         ],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:25:13.813723",
+        "investigated_at": "2026-09-01T18:32:36.742072",
         "provider": "openrouter",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
           "event": "ai investigated"
         }
       ],
@@ -2504,7 +2513,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:32:36.742072"
     },
     "CASE-ORD-00052": {
       "case_id": "CASE-ORD-00052",
@@ -2529,31 +2538,39 @@
       "candidates": [],
       "evidence_hash": "703cd1a58affef2d",
       "ai": {
-        "classification": "partial_payment",
+        "classification": "no_match",
         "recommendation": "escalate",
-        "confidence": 20,
-        "reason": "The order expected Rs 599.50 but only Rs 580.29 was received, so Rs 19.21 is missing.",
-        "next_step": "Escalate to the payment gateway to investigate the missing amount.",
+        "confidence": 10,
+        "reason": "The order expected Rs 599.50 but only Rs 580.29 was received, and there are no other records that match this payment. The system cannot find a settlement that explains the missing Rs 19.21.",
+        "next_step": "Contact the payment gateway to confirm whether the Rs 580.29 was processed and why the remaining Rs 19.21 is missing.",
         "evidence": [
-          "Order expected Rs 599.50, received Rs 580.29."
+          "Order ID ORD-00052 expected Rs 599.50",
+          "Received Rs 580.29",
+          "No candidate matches found"
         ],
-        "missing_evidence": [
-          "payment gateway transaction ID"
-        ],
+        "missing_evidence": [],
         "candidate_rankings": [],
         "action": "escalate",
-        "investigated_at": "2026-09-01T16:24:32.726548",
+        "investigated_at": "2026-09-01T18:33:13.336610",
         "provider": "groq",
         "error": null
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T16:25:13.815323",
+          "at": "2026-09-01T18:31:21.027314",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:32:36.742072",
+          "event": "ai investigation pending (unavailable)"
+        },
+        {
+          "at": "2026-09-01T18:33:14.667483",
           "event": "ai investigated"
         }
       ],
@@ -2566,7 +2583,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:25:13.815323"
+      "updated_at": "2026-09-01T18:33:14.667483"
     },
     "CASE-ORD-00058": {
       "case_id": "CASE-ORD-00058",
@@ -2591,10 +2608,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -2607,7 +2624,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00074": {
       "case_id": "CASE-ORD-00074",
@@ -2632,10 +2649,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -2648,7 +2665,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-00091": {
       "case_id": "CASE-ORD-00091",
@@ -2673,10 +2690,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "awaiting settlement"
         }
       ],
@@ -2689,7 +2706,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-BULK201": {
       "case_id": "CASE-ORD-BULK201",
@@ -2731,19 +2748,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:22:54.273141",
+        "resolved_at": "2026-09-01T18:31:17.680599",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "matched to courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     },
     "CASE-ORD-BULK202": {
       "case_id": "CASE-ORD-BULK202",
@@ -2785,19 +2802,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T16:22:54.273141",
+        "resolved_at": "2026-09-01T18:31:17.680599",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T16:22:54.273141",
+      "created_at": "2026-09-01T18:31:17.680599",
       "history": [
         {
-          "at": "2026-09-01T16:22:54.273141",
+          "at": "2026-09-01T18:31:17.680599",
           "event": "matched to courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T16:22:54.273141"
+      "updated_at": "2026-09-01T18:31:17.680599"
     }
   }
 }

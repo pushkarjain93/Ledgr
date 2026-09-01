@@ -2,8 +2,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 const FILTERS = [
   { key: '', label: 'All open' },
-  { key: 'needs_decision', label: 'Needs your decision' },
-  { key: 'ai_pending', label: 'Waiting on AI' },
+  { key: 'needs_decision', label: 'AI recommendation' },
+  { key: 'needs_investigation', label: 'Needs investigation' },
   { key: 'bookmarked', label: 'Bookmarked' },
   { key: 'resolved', label: 'Resolved' },
 ] as const

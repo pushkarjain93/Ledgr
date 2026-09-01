@@ -6,12 +6,19 @@ type StatsSegmentProps = {
   recon: ReconciliationDashboard
   needsDecisionCount: number
   openCasesCount: number
+  /** Distinct records reconciled — see totalReconciledRecords. */
+  recordsProcessed: number
 }
 
-export function StatsSegment({ recon, needsDecisionCount, openCasesCount }: StatsSegmentProps) {
+export function StatsSegment({
+  recon,
+  needsDecisionCount,
+  openCasesCount,
+  recordsProcessed,
+}: StatsSegmentProps) {
   const stats = [
     { label: 'Total recon runs', value: String(recon.totalRuns), sub: 'On selected date' },
-    { label: 'Records processed', value: String(recon.cumulativeRecordsProcessed), sub: 'On selected date' },
+    { label: 'Records processed', value: String(recordsProcessed), sub: 'Distinct, across all runs' },
     {
       label: 'Manual work eliminated',
       value: recon.latestRun ? `${recon.latestRun.manualWorkEliminationPct}%` : '0%',

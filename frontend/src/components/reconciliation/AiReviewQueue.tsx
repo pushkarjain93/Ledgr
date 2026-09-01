@@ -19,11 +19,23 @@ function reviewCases(cases: Case[]): Case[] {
 
 type AiReviewQueueProps = {
   cases: Case[]
-  reviewCount: number
 }
 
-export function AiReviewQueue({ cases, reviewCount }: AiReviewQueueProps) {
-  const queue = reviewCases(cases).slice(0, 8)
+export function AiReviewQueue({ cases }: AiReviewQueueProps) {
+  // The badge counts THE SAME filtered list the table renders, so the two can
+  // never disagree. It previously came from the engine run totals
+  // (aiResolved + exceptions), which counts cases still queued as `needs_ai`
+  // -- cases the table deliberately hides because AI has not produced a
+  // verdict to review yet. Mid-run that read "19 cases require review" above
+  // an empty table.
+  const reviewable = reviewCases(cases)
+  const queue = reviewable.slice(0, 8)
+  // Cases AI has not reached yet — hidden from the table (no verdict to show)
+  // but worth naming, so an empty queue mid-run reads as "still working"
+  // rather than "nothing to review".
+  const investigating = cases.filter(
+    (c) => !c.resolution?.resolved && c.case_status === 'needs_ai',
+  ).length
 
   return (
     <div className="rounded-xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -31,7 +43,7 @@ export function AiReviewQueue({ cases, reviewCount }: AiReviewQueueProps) {
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-[15px] font-semibold text-zinc-900 dark:text-zinc-50">AI Review Queue</h2>
           <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-            {reviewCount} cases require review
+            {reviewable.length} {reviewable.length === 1 ? 'case' : 'cases'} require review
           </span>
         </div>
         <Link
@@ -44,7 +56,14 @@ export function AiReviewQueue({ cases, reviewCount }: AiReviewQueueProps) {
       </div>
 
       {queue.length === 0 ? (
-        <p className="px-5 py-10 text-center text-[13px] text-zinc-400">No cases in the review queue yet.</p>
+        <p className="px-5 py-10 text-center text-[13px] text-zinc-400">
+          {/* "No cases" is false while AI is still working through them --
+              they exist, they just have no verdict to review yet. Saying so
+              is the difference between "nothing found" and "still looking". */}
+          {investigating > 0
+            ? `AI is investigating ${investigating} case${investigating === 1 ? '' : 's'} — verdicts will appear here shortly.`
+            : 'No cases in the review queue yet.'}
+        </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[880px] text-left text-[13px]">

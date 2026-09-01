@@ -14,6 +14,7 @@ export type RunChartPoint = {
   timeLabel: string
   totalRecords: number
   autoMatched: number
+  awaitingSettlement: number
   aiResolved: number
   exceptions: number
   autoMatchRate: number
@@ -167,10 +168,16 @@ function pctOf(part: number, total: number): number {
 export function parseRun(run: ReconciliationRun, runNumber: number): RunChartPoint {
   const total = run.total_records ?? 0
   const auto = run.auto_matched ?? 0
+  const awaiting = run.awaiting_settlement ?? 0
   const aiResolved = run.ai_resolved ?? 0
   const exceptions = run.exceptions ?? 0
-  const eliminated = auto + aiResolved
-  const manualReview = Math.max(0, total - eliminated)
+  // ELIMINATED = settled with no case raised. Previously this added
+  // aiResolved, but those records are exactly the ones that DO become cases
+  // needing a decision -- counting them as eliminated inflated the headline
+  // and contradicted the review queue. COD still inside its window is not
+  // eliminated either: no money has arrived yet.
+  const eliminated = auto
+  const manualReview = Math.max(0, total - eliminated - awaiting)
   const at = new Date(run.timestamp)
 
   return {
@@ -188,6 +195,7 @@ export function parseRun(run: ReconciliationRun, runNumber: number): RunChartPoi
     }),
     totalRecords: total,
     autoMatched: auto,
+    awaitingSettlement: awaiting,
     aiResolved,
     exceptions,
     autoMatchRate: pctOf(auto, total),

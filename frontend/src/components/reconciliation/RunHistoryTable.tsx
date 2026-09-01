@@ -35,7 +35,7 @@ export function RunHistoryTable({ runs }: RunHistoryTableProps) {
                 <th className="px-5 py-3">Completed</th>
                 <th className="px-5 py-3">Processed</th>
                 <th className="px-5 py-3">Auto matched</th>
-                <th className="px-5 py-3">AI resolved</th>
+                <th className="px-5 py-3">AI diagnosed</th>
                 <th className="px-5 py-3">Exceptions</th>
                 <th className="px-5 py-3">Status</th>
               </tr>

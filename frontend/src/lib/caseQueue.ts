@@ -1,4 +1,9 @@
-import { isAwaitingSettlementCase, isOpenForReview, needsHumanDecision } from './caseUtils'
+import {
+  aiReachedVerdict,
+  isAwaitingSettlementCase,
+  isOpenForReview,
+  needsInvestigation,
+} from './caseUtils'
 import type { Case } from '../types/case'
 
 export function awaitingSettlementCases(cases: Case[]): Case[] {
@@ -23,9 +28,12 @@ export function filterCases(cases: Case[], filter: string | null): Case[] {
   } else {
     list = list.filter((c) => isOpenForReview(c))
     if (filter === 'needs_decision') {
-      list = list.filter(needsHumanDecision)
-    } else if (filter === 'ai_pending') {
-      list = list.filter((c) => c.case_status === 'ai_pending')
+      list = list.filter(aiReachedVerdict)
+    } else if (filter === 'needs_investigation') {
+      // No dedicated "waiting on AI" filter any more: a case AI has not
+      // reached yet is a transient state, not a workload category, and it
+      // still appears under All open.
+      list = list.filter(needsInvestigation)
     }
   }
 

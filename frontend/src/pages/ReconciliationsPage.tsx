@@ -71,6 +71,7 @@ export function ReconciliationsPage() {
     nextBatchAvailableAt,
     totalBatches,
     lastSyncAt,
+    ordersProcessed,
   } = useApp()
 
   const [syncing, setSyncing] = useState(false)
@@ -83,8 +84,8 @@ export function ReconciliationsPage() {
 
   const viewModel = useMemo(() => {
     if (allRuns.length === 0 || transactions.length === 0) return null
-    return buildReconciliationViewModel(allRuns, transactions)
-  }, [allRuns, transactions])
+    return buildReconciliationViewModel(allRuns, transactions, cases, ordersProcessed)
+  }, [allRuns, transactions, cases, ordersProcessed])
 
   const loadResultsData = useCallback(async () => {
     if (allRuns.length === 0) {

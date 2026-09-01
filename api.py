@@ -177,14 +177,23 @@ def _batch_frames(batch_ids: list[str], extra_order_ids: set[str] | None = None)
 
 
 def _classify(result_df) -> dict:
-    """Three mutually-exclusive buckets over the real engine output, summing
+    """Four mutually-exclusive buckets over the real engine output, summing
     exactly to total records. Built entirely from engine.py's own `status`
-    and `ai_assisted` fields -- no invented model."""
+    and `ai_assisted` fields -- no invented model.
+
+    `awaiting_settlement` is split out of `auto_matched` deliberately. A COD
+    order still inside its collection window is neither matched nor a failure
+    -- no money has arrived yet. Counting it as auto-matched overstated how
+    much was actually settled, and made the dashboard disagree with the case
+    queue, which correctly showed those same orders as still waiting.
+    """
     is_exception = result_df["status"] == "EXCEPTION"
-    is_ai = result_df["ai_assisted"] & ~is_exception
-    is_auto = ~result_df["ai_assisted"] & ~is_exception
+    is_awaiting = result_df["status"].isin(["AWAITING_REMITTANCE", "APPROACHING_THRESHOLD"])
+    is_ai = result_df["ai_assisted"] & ~is_exception & ~is_awaiting
+    is_auto = ~result_df["ai_assisted"] & ~is_exception & ~is_awaiting
     return {
         "auto_matched": int(is_auto.sum()),
+        "awaiting_settlement": int(is_awaiting.sum()),
         "ai_resolved": int(is_ai.sum()),
         "exceptions": int(is_exception.sum()),
         "total_records": int(len(result_df)),
@@ -259,6 +268,13 @@ def get_state(merchant: dict = Depends(current_merchant)):
         # Cases still queued for AI. The UI polls until this reaches zero.
         "ai_in_progress": sum(1 for c in (state.get("cases") or {}).values()
                               if c.get("case_status") == "needs_ai"),
+        # CUMULATIVE order-side records across every batch reconciled so far.
+        # Deliberately not the sum of each run's total_records -- a run
+        # re-includes still-open orders from earlier batches, so summing them
+        # double-counts. processed_record_ids is a de-duplicated ledger, which
+        # is what makes "records minus cases = cleanly matched" hold exactly.
+        "orders_processed": sum(1 for r in state.get("processed_record_ids", [])
+                                if str(r).startswith("ORD-")),
         "run_date": RUN_DATE.isoformat(),
     }
 
@@ -1130,6 +1146,35 @@ def reports(merchant: dict = Depends(current_merchant)):
             # they are processed but not graded. Stated rather than hidden --
             # quietly scoring only the easy subset would inflate the result.
             "records_unlabelled": accuracy["processed_not_labelled"],
+        },
+        # How the work actually divided, by OUTCOME -- the same four buckets
+        # the Reconciliations donut shows, so the two screens tell one story.
+        #
+        # Deliberately NOT accuracy["settled_by_rules"], which is derived from
+        # engine.py's `ai_assisted` tier flag. That flag marks only tier-3 and
+        # tier-4-manual records, so every unmatched tier-5 exception counted as
+        # "settled by rules" -- reporting 102 settled while the case queue held
+        # 25 unresolved cases over the same ledger.
+        "work_split": {
+            # total_records already spans BOTH sides (orders plus the orphan
+            # bank credits that raised their own case), so subtract every case,
+            # not just the order-side ones. Subtracting only order-side cases
+            # left the settlement-side ones counted twice and the buckets summed
+            # to 120 against a total of 112.
+            "auto_settled": (
+                accuracy["total_records"] - len(cases)
+                + len([c for c in cases if c.get("resolution", {}).get("resolved")])
+            ),
+            "awaiting_settlement": sum(
+                1 for c in open_cases if c["case_status"] == "pending_settlement"),
+            "ai_recommendation": sum(
+                1 for c in open_cases
+                if c["case_status"] in ("manual_review", "ai_recommendation")),
+            "needs_investigation": sum(
+                1 for c in open_cases if c["case_status"] == "exception"),
+            "being_investigated": sum(
+                1 for c in open_cases if c["case_status"] in ("needs_ai", "ai_pending")),
+            "total_records": accuracy["total_records"],
         },
         "throughput": {
             "runs": len(runs),

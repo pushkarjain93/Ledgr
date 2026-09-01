@@ -230,13 +230,20 @@ export function ReportsPage() {
   const money = data.money!
   const ai = data.ai!
   const exceptions = data.exceptions ?? []
+  // Outcome buckets, computed backend-side so this page and Reconciliations
+  // partition the ledger identically. Falls back to an empty split if an older
+  // response lacks it, rather than rendering NaN.
+  const ws = data.work_split ?? {
+    auto_settled: 0, awaiting_settlement: 0, ai_recommendation: 0,
+    needs_investigation: 0, being_investigated: 0,
+    total_records: a.total_records,
+  }
 
   const exceptionTotal = exceptions.reduce((t, e) => t + e.amount_at_risk, 0)
   const exceptionCount = exceptions.reduce((t, e) => t + e.count, 0)
   const maxException = Math.max(...exceptions.map((e) => e.amount_at_risk), 1)
 
   const mismatchCount = a.records_scored - a.tier_correct
-  const total = Math.max(a.total_records, 1)
   const generated = data.generated_at
     ? new Date(data.generated_at).toLocaleString('en-IN', {
         day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit',
@@ -407,11 +414,16 @@ export function ReportsPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card title="Who did the work" subtitle="How records were resolved">
               <div className="flex flex-wrap items-center gap-x-8 gap-y-6">
-                <Donut correct={a.settled_by_rules} total={a.total_records} />
+                <Donut correct={ws.auto_settled} total={ws.total_records} />
                 <dl className="min-w-[190px] flex-1 space-y-4">
                   {[
-                    { label: 'Settled by rules', n: a.settled_by_rules, dot: 'bg-emerald-500' },
-                    { label: 'Needed judgement', n: a.needed_judgement, dot: 'bg-zinc-300 dark:bg-zinc-600' },
+                    { label: 'Auto matched', n: ws.auto_settled, dot: 'bg-emerald-500' },
+                    { label: 'Awaiting settlement', n: ws.awaiting_settlement, dot: 'bg-zinc-400' },
+                    { label: 'AI recommendation', n: ws.ai_recommendation, dot: 'bg-blue-500' },
+                    { label: 'Needs investigation', n: ws.needs_investigation, dot: 'bg-orange-500' },
+                    ...(ws.being_investigated > 0
+                      ? [{ label: 'Being investigated', n: ws.being_investigated, dot: 'bg-violet-500' }]
+                      : []),
                   ].map(({ label, n, dot }) => (
                     <div key={label} className="flex items-center justify-between gap-4">
                       <dt className="flex items-center gap-2.5 text-[13px] text-zinc-600 dark:text-zinc-300">
@@ -420,7 +432,7 @@ export function ReportsPage() {
                       </dt>
                       <dd className="shrink-0 text-[13px] tabular-nums">
                         <span className="font-semibold text-zinc-900 dark:text-zinc-50">
-                          {pct(n / total)}
+                          {pct(n / Math.max(ws.total_records, 1))}
                         </span>{' '}
                         <span className="text-zinc-400 dark:text-zinc-500">({n})</span>
                       </dd>
@@ -430,8 +442,8 @@ export function ReportsPage() {
               </div>
 
               <p className="mt-7 border-t border-zinc-100 pt-4 text-[12.5px] leading-relaxed text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                Most records are resolved deterministically. Only the rest need further
-                investigation or human review.
+                Most records settle on rules alone, with no model involved. The same
+                four buckets appear on Reconciliations, counted the same way.
               </p>
             </Card>
 

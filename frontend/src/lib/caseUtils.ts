@@ -81,6 +81,29 @@ export function needsHumanDecision(caseItem: Case): boolean {
   )
 }
 
+/**
+ * Open cases split by WHAT AI CONCLUDED — not by whether it participated.
+ *
+ * AI investigates every eligible case and produces findings on all of them.
+ * What differs is whether it could land on something actionable:
+ *
+ *   aiReachedVerdict  - it found a lead: a candidate match, a correlation, a
+ *                       recommendation a human can accept or reject
+ *   needsInvestigation - it checked and found no conclusive path, so the
+ *                       decision is genuinely a human's
+ *
+ * The two are mutually exclusive and together cover every open case, so the
+ * counts always sum to the review queue. Deliberately derived from the stored
+ * verdict — no extra model calls to compute this.
+ */
+export function aiReachedVerdict(caseItem: Case): boolean {
+  return needsHumanDecision(caseItem)
+}
+
+export function needsInvestigation(caseItem: Case): boolean {
+  return isOpenForReview(caseItem) && !needsHumanDecision(caseItem)
+}
+
 export function canReopenCase(caseItem: Case): boolean {
   return (
     Boolean(caseItem.resolution?.resolved) &&

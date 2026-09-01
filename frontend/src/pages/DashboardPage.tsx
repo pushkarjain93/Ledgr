@@ -9,9 +9,10 @@ import { useApp } from '../context/AppContext'
 import { isOpenForReview } from '../lib/caseUtils'
 import { formatDisplayDate } from '../lib/merchantState'
 import { computeReconciliationDashboard } from '../lib/reconciliationMetrics'
+import { totalReconciledRecords } from '../lib/reconciliationFinancials'
 
 export function DashboardPage() {
-  const { state, cases, dashboard, selectedDate, allRuns } = useApp()
+  const { state, cases, dashboard, selectedDate, allRuns, ordersProcessed } = useApp()
 
   if (!state || !dashboard) return null
 
@@ -45,6 +46,7 @@ export function DashboardPage() {
         </div>
 
         <StatsSegment
+          recordsProcessed={totalReconciledRecords(cases, ordersProcessed)}
           recon={recon}
           needsDecisionCount={dashboard.needsDecisionCount}
           openCasesCount={openCasesCount}

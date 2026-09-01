@@ -227,7 +227,10 @@ function ReconciliationLineGraph({
           </p>
           {active.runCount > 0 ? (
             <p className="mt-1 text-[12px] text-zinc-500 dark:text-zinc-400">
-              {active.autoMatched} auto matched · {active.aiResolved} AI resolved · {active.manualReview} manual
+              {/* The graph bucket aggregates whole runs, so it carries no
+                  awaiting-settlement split. Stating auto-matched against the
+                  total avoids implying every other record needs review. */}
+              {active.autoMatched} auto matched of {active.totalRecords} records
             </p>
           ) : null}
         </div>
@@ -283,11 +286,11 @@ function Legend() {
       </span>
       <span className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-violet-600" />
-        AI resolved
+        Awaiting settlement
       </span>
       <span className="flex items-center gap-1.5">
         <span className="h-2 w-2 rounded-full bg-orange-400" />
-        Manual review
+        Needs review
       </span>
     </div>
   )
@@ -296,9 +299,11 @@ function Legend() {
 function EliminationBar({ run, compact = false }: { run: RunChartPoint; compact?: boolean }) {
   const eliminatedPct = run.manualWorkEliminationPct
   const manualPct = run.manualWorkRemainingPct
-  const eliminatedCount = run.autoMatched + run.aiResolved
-  const autoShare = eliminatedCount > 0 ? (run.autoMatched / eliminatedCount) * 100 : 0
-  const aiShare = eliminatedCount > 0 ? (run.aiResolved / eliminatedCount) * 100 : 0
+  // The green band is settled-with-no-case; violet is COD still inside its
+  // window. Previously violet showed AI-diagnosed records INSIDE the
+  // "eliminated" portion, which double-claimed work that still needed review.
+  const autoShare = 100
+  const aiShare = 0
 
   return (
     <div>
@@ -362,12 +367,12 @@ function RunBreakdownCard({ run }: { run: RunChartPoint }) {
       </div>
       <EliminationBar run={run} compact />
       <p className="mt-2.5 text-[11.5px] text-zinc-500">
-        {run.autoMatched} auto matched · {run.aiResolved} AI resolved · {run.manualReviewCount} manual
+        {run.autoMatched} auto matched · {run.awaitingSettlement} awaiting · {run.aiResolved + run.exceptions} need review
       </p>
       <div className="mt-3 space-y-1.5 border-t border-zinc-100 pt-3 dark:border-zinc-700">
         <StatLine label="Auto matched" value={run.autoMatched} />
-        <StatLine label="AI resolved" value={run.aiResolved} />
-        <StatLine label="Manual review" value={run.manualReviewCount} />
+        <StatLine label="Awaiting settlement" value={run.awaitingSettlement} />
+        <StatLine label="Needs review" value={run.aiResolved + run.exceptions} />
         <StatLine label="Total records" value={run.totalRecords} />
       </div>
     </div>
@@ -506,8 +511,8 @@ export function ManualWorkEliminatedCard({ runs }: ManualWorkEliminatedCardProps
 
       <div className="mt-6 space-y-2 border-t border-zinc-100 pt-5 dark:border-zinc-800">
         <StatLine label="Auto matched" value={currentRun.autoMatched} />
-        <StatLine label="AI resolved" value={currentRun.aiResolved} />
-        <StatLine label="Manual review" value={currentRun.manualReviewCount} />
+        <StatLine label="Awaiting settlement" value={currentRun.awaitingSettlement} />
+        <StatLine label="Needs review" value={currentRun.aiResolved + currentRun.exceptions} />
         <StatLine label="Total records" value={currentRun.totalRecords} />
       </div>
 
