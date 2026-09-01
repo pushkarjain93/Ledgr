@@ -102,7 +102,7 @@
     {
       "run_id": "RUN-merchant_acme_001-B1",
       "batch_id": 1,
-      "timestamp": "2026-09-01T20:32:03.799085",
+      "timestamp": "2026-09-01T22:55:35.872788",
       "sources": "Shopify + Razorpay + Bank",
       "status": "Completed",
       "auto_matched": 32,
@@ -114,7 +114,7 @@
       "received_paise": 14596255
     }
   ],
-  "next_batch_available_at": "2026-09-01T20:32:48.800087",
+  "next_batch_available_at": "2026-09-01T22:56:20.876998",
   "notification_batch": 2,
   "notification_created": false,
   "notification_seen": false,
@@ -131,7 +131,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 999950,
       "received": 0,
       "delta": 0,
@@ -143,79 +143,31 @@
       "candidates": [],
       "evidence_hash": "d4a9d8338a878541",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 20,
+        "reason": "No settlement was found that matches the order amount of Rs 9,999.50.",
+        "next_step": "Escalate to the payment gateway to investigate why order ORD-00004 received no payment.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:39.073279",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.991073",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:39.073279",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.028568",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:20.028875",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.050553",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.038884",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.114057",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.952816",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -228,7 +180,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-STL-X1001": {
       "case_id": "CASE-STL-X1001",
@@ -241,7 +193,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 842000,
       "delta": 842000,
@@ -253,79 +205,31 @@
       "candidates": [],
       "evidence_hash": "35d2b8589265ed0d",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 20,
+        "reason": "No order was found that matches the settlement of Rs 8,420.00.",
+        "next_step": "Escalate to the payment gateway to investigate why settlement STL-X1001 was received.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:39.073279",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.991073",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:39.073279",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.028568",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:20.028875",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.052043",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.038884",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.114057",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.952816",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -338,7 +242,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-ORD-00014": {
       "case_id": "CASE-ORD-00014",
@@ -351,7 +255,7 @@
       "case_type": "ambiguous_match",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 649900,
       "received": 0,
       "delta": 0,
@@ -376,79 +280,41 @@
       ],
       "evidence_hash": "a5574a4cfa88b4be",
       "ai": {
-        "classification": "ambiguous_match",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
+        "classification": "matched",
+        "recommendation": "resolve",
+        "confidence": 90,
+        "reason": "The settlement amount of Rs 6,499.00 matches the order amount exactly. The original settlement narration indicates a normal payment, while the second entry is a repost, likely a duplicate.",
+        "next_step": "Mark order ORD-00014 as settled with settlement STL-00014 and ignore the repost.",
+        "evidence": [
+          "Order expected Rs 6,499.00, settlement amount Rs 6,499.00",
+          "Original settlement narration indicates normal payment",
+          "Second candidate is a repost"
+        ],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "candidate_rankings": [
+          {
+            "id": "STL-00014",
+            "confidence": 90,
+            "reason": "The settlement amount of Rs 6,499.00 matches the order amount exactly. The original settlement narration indicates a normal payment, while the second entry is a repost, likely a duplicate."
+          }
+        ],
+        "action": "manual_review",
+        "investigated_at": "2026-09-01T22:55:39.073279",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.991073",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:39.073279",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.028568",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:20.028875",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.052043",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.038884",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.114057",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.952816",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -461,7 +327,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-ORD-00049": {
       "case_id": "CASE-ORD-00049",
@@ -474,7 +340,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 649900,
       "received": 0,
       "delta": 0,
@@ -486,79 +352,31 @@
       "candidates": [],
       "evidence_hash": "a0909189c56cede6",
       "ai": {
-        "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 20,
+        "reason": "No settlement was found that matches the order amount of Rs 6,499.00.",
+        "next_step": "Escalate to the payment gateway to investigate why order ORD-00049 received no payment.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:39.073279",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.991073",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:39.073279",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.028568",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:20.028875",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.052043",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.038884",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.114057",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.952816",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -571,7 +389,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-STL-X1002": {
       "case_id": "CASE-STL-X1002",
@@ -584,7 +402,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 0,
       "received": 576400,
       "delta": 576400,
@@ -596,79 +414,31 @@
       "candidates": [],
       "evidence_hash": "58451ecfeedb764b",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
+        "classification": "no_match",
+        "recommendation": "escalate",
+        "confidence": 20,
+        "reason": "No order was found that matches the settlement of Rs 5,764.00.",
+        "next_step": "Escalate to the payment gateway to investigate why settlement STL-X1002 was received.",
         "evidence": [],
         "missing_evidence": [],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:39.073279",
+        "provider": "groq",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.991073",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:39.073279",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.028568",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:20.028875",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.052043",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.038884",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.114057",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.952816",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -681,7 +451,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-ORD-00027": {
       "case_id": "CASE-ORD-00027",
@@ -694,7 +464,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 249999,
       "received": 0,
       "delta": 0,
@@ -707,78 +477,36 @@
       "evidence_hash": "0fcda1550235ce47",
       "ai": {
         "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No settlement record was found for this order total of Rs 2,499.99, meaning the money never arrived.",
+        "next_step": "Contact payment gateway to confirm why payment was not received.",
+        "evidence": [
+          "Order ORD-00027 expected Rs 2,499.99",
+          "Received amount is Rs 0.00",
+          "No candidate matches found"
+        ],
+        "missing_evidence": [
+          "Payment gateway transaction log"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:55.267203",
+        "provider": "gemini",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.957166",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:55.268669",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.049575",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.968073",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.072369",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.059382",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.131789",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.848489",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -791,7 +519,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-ORD-00030": {
       "case_id": "CASE-ORD-00030",
@@ -804,7 +532,7 @@
       "case_type": "unmatched_order",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 249950,
       "received": 0,
       "delta": 0,
@@ -817,78 +545,36 @@
       "evidence_hash": "22d5d9e92484fa28",
       "ai": {
         "classification": "unmatched_order",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No settlement record was found for this order total of Rs 2,499.50, meaning the money never arrived.",
+        "next_step": "Contact payment processor to check customer payment status.",
+        "evidence": [
+          "Order ORD-00030 expected Rs 2,499.50",
+          "Received amount is Rs 0.00",
+          "No candidate matches found"
+        ],
+        "missing_evidence": [
+          "Bank payout statement"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:55.267203",
+        "provider": "gemini",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.957166",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:55.268669",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.049575",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.968073",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.072369",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.059382",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.131789",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.848489",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -901,7 +587,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-ORD-00024": {
       "case_id": "CASE-ORD-00024",
@@ -914,7 +600,7 @@
       "case_type": "partial_payment",
       "tier": 3,
       "status": "MANUAL_REVIEW",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 399999,
       "received": 200000,
       "delta": -199999,
@@ -927,78 +613,36 @@
       "evidence_hash": "83a1e15ce24d6dc6",
       "ai": {
         "classification": "partial_payment",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 15,
+        "reason": "The customer paid less than the order total, leaving Rs 2,000.00 received against Rs 3,999.99 expected, with no candidate matching records.",
+        "next_step": "Contact customer or gateway to collect the remaining balance.",
+        "evidence": [
+          "Order ORD-00024 expected Rs 3,999.99",
+          "Received amount is Rs 2,000.00",
+          "No candidate matches found"
+        ],
+        "missing_evidence": [
+          "Customer payment receipt"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:55.267203",
+        "provider": "gemini",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.957166",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:55.268669",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.049575",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.968073",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.072369",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.059382",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.131789",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.848489",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -1011,7 +655,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-STL-BULK01": {
       "case_id": "CASE-STL-BULK01",
@@ -1053,19 +697,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T20:32:03.799085",
+        "resolved_at": "2026-09-01T22:55:35.872788",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "explained by courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     },
     "CASE-ORD-00008": {
       "case_id": "CASE-ORD-00008",
@@ -1078,7 +722,7 @@
       "case_type": "remittance_overdue",
       "tier": 0,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "exception",
       "expected": 124999,
       "received": 0,
       "delta": 0,
@@ -1091,78 +735,36 @@
       "evidence_hash": "900e3759c5805528",
       "ai": {
         "classification": "remittance_overdue",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
-        "missing_evidence": [],
+        "recommendation": "escalate",
+        "confidence": 10,
+        "reason": "No payout record was found for this pending order total of Rs 1,249.99, meaning the money never arrived.",
+        "next_step": "Chase the courier for remittance of the collected cash.",
+        "evidence": [
+          "Order ORD-00008 expected Rs 1,249.99",
+          "Received amount is Rs 0.00",
+          "No candidate matches found"
+        ],
+        "missing_evidence": [
+          "Courier remittance summary"
+        ],
         "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "action": "escalate",
+        "investigated_at": "2026-09-01T22:55:55.267203",
+        "provider": "gemini",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.957166",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:55.268669",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.049575",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.968073",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.072369",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.059382",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.131789",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.848489",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -1175,7 +777,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-STL-SHADOW01": {
       "case_id": "CASE-STL-SHADOW01",
@@ -1188,7 +790,7 @@
       "case_type": "unmatched_settlement",
       "tier": 5,
       "status": "EXCEPTION",
-      "case_status": "ai_pending",
+      "case_status": "manual_review",
       "expected": 0,
       "received": 124999,
       "delta": 124999,
@@ -1246,79 +848,41 @@
       ],
       "evidence_hash": "07a71d75e17fcddb",
       "ai": {
-        "classification": "unmatched_settlement",
-        "recommendation": null,
-        "confidence": null,
-        "reason": null,
-        "next_step": null,
-        "evidence": [],
+        "classification": "exact_match",
+        "recommendation": "resolve",
+        "confidence": 95,
+        "reason": "Settlement STL-SHADOW01 of Rs 1,249.99 exactly matches unsettled cash-on-delivery order ORD-00008, while other candidate orders with the same amount were already settled.",
+        "next_step": "Link settlement STL-SHADOW01 to order ORD-00008 and mark it as settled.",
+        "evidence": [
+          "Settlement STL-SHADOW01 received Rs 1,249.99",
+          "Order ORD-00008 matches amount 124999 paise and has null already_settled_by",
+          "Candidates ORD-00047 and ORD-00032 are already settled"
+        ],
         "missing_evidence": [],
-        "candidate_rankings": [],
-        "action": null,
-        "investigated_at": null,
-        "provider": null,
-        "error": "All AI providers failed. groq: groq rate-limited this request (429): {\"error\":{\"message\":\"Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01m17m2z2hemgs256nc6zm1sdc` se | openrouter: openrouter rate-limited this request (429): {\"error\":{\"message\":\"Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model requests per | gemini: Gemini rate-limited this request (429): {"
+        "candidate_rankings": [
+          {
+            "id": "ORD-00008",
+            "confidence": 95,
+            "reason": "Settlement STL-SHADOW01 of Rs 1,249.99 exactly matches unsettled cash-on-delivery order ORD-00008, while other candidate orders with the same amount were already settled."
+          }
+        ],
+        "action": "manual_review",
+        "investigated_at": "2026-09-01T22:55:55.267203",
+        "provider": "gemini",
+        "error": null
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.957166",
-          "event": "ai investigation pending (unavailable)"
+          "at": "2026-09-01T22:55:55.268669",
+          "event": "ai investigated"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:32:42.049575",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.968073",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.072369",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.059382",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.131789",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.848489",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         }
       ],
@@ -1331,7 +895,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:55:55.288041"
     },
     "CASE-ORD-00039": {
       "case_id": "CASE-ORD-00039",
@@ -1369,66 +933,26 @@
         "provider": null,
         "error": "All AI providers failed. groq: skipped (recently rate-limited) | openrouter: skipped (recently rate-limited) | gemini: skipped (recently rate-limited)"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.975220",
+          "at": "2026-09-01T22:55:39.719296",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         },
         {
-          "at": "2026-09-01T20:32:42.063297",
+          "at": "2026-09-01T22:56:30.292819",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.987515",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.087860",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.075861",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.148322",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.864183",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:56:30.327724",
           "event": "reconciled"
         }
       ],
@@ -1441,7 +965,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:56:30.327724"
     },
     "CASE-ORD-BULK101": {
       "case_id": "CASE-ORD-BULK101",
@@ -1483,19 +1007,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T20:32:03.799085",
+        "resolved_at": "2026-09-01T22:55:35.872788",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "matched to courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     },
     "CASE-ORD-BULK102": {
       "case_id": "CASE-ORD-BULK102",
@@ -1537,19 +1061,19 @@
       "resolution": {
         "resolved": true,
         "resolution_type": "auto_resolved",
-        "resolved_at": "2026-09-01T20:32:03.799085",
+        "resolved_at": "2026-09-01T22:55:35.872788",
         "resolved_by": "system"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "matched to courier remittance detail"
         }
       ],
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     },
     "CASE-ORD-00002": {
       "case_id": "CASE-ORD-00002",
@@ -1587,66 +1111,26 @@
         "provider": null,
         "error": "All AI providers failed. groq: skipped (recently rate-limited) | openrouter: skipped (recently rate-limited) | gemini: skipped (recently rate-limited)"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.975220",
+          "at": "2026-09-01T22:55:39.719296",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         },
         {
-          "at": "2026-09-01T20:32:42.063297",
+          "at": "2026-09-01T22:56:30.292819",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.987515",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.087860",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.075861",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.148322",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.864183",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:56:30.327724",
           "event": "reconciled"
         }
       ],
@@ -1659,7 +1143,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:56:30.327724"
     },
     "CASE-ORD-00016": {
       "case_id": "CASE-ORD-00016",
@@ -1697,66 +1181,26 @@
         "provider": null,
         "error": "All AI providers failed. groq: skipped (recently rate-limited) | openrouter: skipped (recently rate-limited) | gemini: skipped (recently rate-limited)"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.975220",
+          "at": "2026-09-01T22:55:39.719296",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         },
         {
-          "at": "2026-09-01T20:32:42.063297",
+          "at": "2026-09-01T22:56:30.292819",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.987515",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.087860",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.075861",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.148322",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.864183",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:56:30.327724",
           "event": "reconciled"
         }
       ],
@@ -1769,7 +1213,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:56:30.327724"
     },
     "CASE-ORD-00013": {
       "case_id": "CASE-ORD-00013",
@@ -1807,66 +1251,26 @@
         "provider": null,
         "error": "All AI providers failed. groq: skipped (recently rate-limited) | openrouter: skipped (recently rate-limited) | gemini: skipped (recently rate-limited)"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.975220",
+          "at": "2026-09-01T22:55:39.719296",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         },
         {
-          "at": "2026-09-01T20:32:42.063297",
+          "at": "2026-09-01T22:56:30.292819",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.987515",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.087860",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.075861",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.148322",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.864183",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:56:30.327724",
           "event": "reconciled"
         }
       ],
@@ -1879,7 +1283,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:56:30.327724"
     },
     "CASE-ORD-00050": {
       "case_id": "CASE-ORD-00050",
@@ -1917,66 +1321,26 @@
         "provider": null,
         "error": "All AI providers failed. groq: skipped (recently rate-limited) | openrouter: skipped (recently rate-limited) | gemini: skipped (recently rate-limited)"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:06.975220",
+          "at": "2026-09-01T22:55:39.719296",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         },
         {
-          "at": "2026-09-01T20:32:42.063297",
+          "at": "2026-09-01T22:56:30.292819",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:19.987515",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.087860",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.075861",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.148322",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.864183",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:56:30.327724",
           "event": "reconciled"
         }
       ],
@@ -1989,7 +1353,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:56:30.327724"
     },
     "CASE-ORD-00032": {
       "case_id": "CASE-ORD-00032",
@@ -2027,66 +1391,26 @@
         "provider": null,
         "error": "All AI providers failed. groq: skipped (recently rate-limited) | openrouter: skipped (recently rate-limited) | gemini: skipped (recently rate-limited)"
       },
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "reconciled, queued for AI investigation"
         },
         {
-          "at": "2026-09-01T20:32:07.006526",
+          "at": "2026-09-01T22:55:39.733218",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:07.021558",
+          "at": "2026-09-01T22:55:55.288041",
           "event": "reconciled"
         },
         {
-          "at": "2026-09-01T20:32:42.076591",
+          "at": "2026-09-01T22:56:30.309257",
           "event": "ai investigation pending (unavailable)"
         },
         {
-          "at": "2026-09-01T20:32:42.089054",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:20.002286",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:20.035986",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:33:55.102597",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:33:55.118662",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:34:33.090638",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:34:33.106494",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:08.161940",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:08.179733",
-          "event": "reconciled"
-        },
-        {
-          "at": "2026-09-01T20:35:45.882368",
-          "event": "ai investigation pending (unavailable)"
-        },
-        {
-          "at": "2026-09-01T20:35:45.973725",
+          "at": "2026-09-01T22:56:30.327724",
           "event": "reconciled"
         }
       ],
@@ -2099,7 +1423,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:35:45.973725"
+      "updated_at": "2026-09-01T22:56:30.327724"
     },
     "CASE-ORD-00005": {
       "case_id": "CASE-ORD-00005",
@@ -2124,10 +1448,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "awaiting settlement"
         }
       ],
@@ -2140,7 +1464,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     },
     "CASE-ORD-00006": {
       "case_id": "CASE-ORD-00006",
@@ -2165,10 +1489,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "awaiting settlement"
         }
       ],
@@ -2181,7 +1505,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     },
     "CASE-ORD-00012": {
       "case_id": "CASE-ORD-00012",
@@ -2206,10 +1530,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "awaiting settlement"
         }
       ],
@@ -2222,7 +1546,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     },
     "CASE-ORD-00028": {
       "case_id": "CASE-ORD-00028",
@@ -2247,10 +1571,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "awaiting settlement"
         }
       ],
@@ -2263,7 +1587,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     },
     "CASE-ORD-00037": {
       "case_id": "CASE-ORD-00037",
@@ -2288,10 +1612,10 @@
       "candidates": [],
       "evidence_hash": null,
       "ai": null,
-      "created_at": "2026-09-01T20:32:03.799085",
+      "created_at": "2026-09-01T22:55:35.872788",
       "history": [
         {
-          "at": "2026-09-01T20:32:03.799085",
+          "at": "2026-09-01T22:55:35.872788",
           "event": "awaiting settlement"
         }
       ],
@@ -2304,7 +1628,7 @@
       },
       "bookmarked": false,
       "comment": "",
-      "updated_at": "2026-09-01T20:32:03.799085"
+      "updated_at": "2026-09-01T22:55:35.872788"
     }
   }
 }
