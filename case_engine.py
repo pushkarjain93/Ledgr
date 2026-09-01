@@ -715,6 +715,10 @@ def fetch_missing_evidence(case, orders_lookup, settlements_lookup=None,
             f"Not held by this system: {'; '.join(unavailable)}. Ledgr reconciles "
             "order and settlement feeds only -- it has no access to gateway-side "
             "logs or payment-processor internals.")
+        # The prose above is written FOR THE MODEL. The UI needs the bare
+        # items, so keep them as a list rather than making the panel unpick a
+        # sentence -- the followup snapshot below reads this one.
+        evidence["still_unavailable_items"] = unavailable
 
     return evidence or {"note": "No additional evidence is available for this case."}
 
@@ -779,7 +783,10 @@ def investigate_case_followup(state, case_id, orders_lookup,
         case["ai"]["followup"] = {
             "at": datetime.now().isoformat(timespec="seconds"),
             "evidence_checked": _followup_evidence_labels(new_evidence),
-            "still_unavailable": new_evidence.get("still_unavailable") or [],
+            # The LIST, not the prose sentence built for the model. Passing the
+            # string through made the UI call .join() on it, which throws and
+            # blanks the whole case page.
+            "still_unavailable": new_evidence.get("still_unavailable_items") or [],
             "previous": prior,
             "changed": prior.get("action") != case["ai"].get("action"),
         }

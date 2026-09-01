@@ -21,6 +21,12 @@ export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
   const recommendation = ai?.next_step?.trim() || '—'
   const evidence = ai?.evidence ?? []
   const followup = ai?.followup ?? null
+  const rawUnavailable = followup?.still_unavailable
+  const unavailable = Array.isArray(rawUnavailable)
+    ? rawUnavailable
+    : rawUnavailable
+      ? [String(rawUnavailable)]
+      : []
 
   return (
     <section
@@ -68,9 +74,12 @@ export function CaseAiAnalysisPanel({ caseItem }: CaseAiAnalysisPanelProps) {
               </span>
             </p>
           )}
-          {followup.still_unavailable.length > 0 && (
+          {/* Tolerate a bare string as well as a list. The backend sends a
+              list, but this panel blanking the whole case page over a shape
+              mismatch is a far worse failure than a slightly odd sentence. */}
+          {unavailable.length > 0 && (
             <p className="mt-2.5 text-[12px] leading-relaxed text-zinc-500 dark:text-zinc-400">
-              Could not check: {followup.still_unavailable.join(', ')}.
+              Could not check: {unavailable.join(', ')}.
             </p>
           )}
         </div>

@@ -41,7 +41,8 @@ export type CaseAiBlock = {
   followup?: {
     at: string
     evidence_checked: string[]
-    still_unavailable: string[]
+    /** List from the backend; older records may hold a single string. */
+    still_unavailable: string[] | string
     changed: boolean
     previous: { action: string | null; reasoning: string | null; next_step: string | null }
   } | null
