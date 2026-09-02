@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatINR } from '../../lib/money'
-import { issueTypeLabel } from '../../lib/caseUtils'
+import { issueTypeLabel, hasWorkingNote } from '../../lib/caseUtils'
 import { caseDetailPath } from '../../lib/caseQueue'
 import {
   caseDisplayId,
@@ -87,6 +87,17 @@ export function CasesTable({ cases, filter = null, emptyMessage = 'No cases matc
                       className="ml-2 rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
                     >
                       AI pending
+                    </span>
+                  )}
+                  {/* A note means a human already looked and left something
+                      behind. Surfacing it here is what makes the "My notes"
+                      filter findable without opening every case. */}
+                  {hasWorkingNote(c) && (
+                    <span
+                      title={c.comment ?? undefined}
+                      className="ml-2 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                    >
+                      Note
                     </span>
                   )}
                 </td>

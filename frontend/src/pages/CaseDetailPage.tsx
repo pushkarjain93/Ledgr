@@ -6,6 +6,7 @@ import { CaseAiAnalysisPanel } from '../components/cases/CaseAiAnalysisPanel'
 import { CaseDetailNav } from '../components/cases/CaseDetailNav'
 import { CaseDocumentsPanel } from '../components/cases/CaseDocumentsPanel'
 import { CaseDraftMessagePanel } from '../components/cases/CaseDraftMessagePanel'
+import { CaseNotesPanel } from '../components/cases/CaseNotesPanel'
 import { CaseRemittancePanel } from '../components/cases/CaseRemittancePanel'
 import { CaseResolvedBanner } from '../components/cases/CaseTimeline'
 import { CaseSummaryPanel } from '../components/cases/CaseSummaryPanel'
@@ -65,6 +66,13 @@ export function CaseDetailPage() {
     () => caseNeighbors(queue, caseId ?? ''),
     [queue, caseId],
   )
+
+  // A saved note must NOT clear the manual-review draft or close anything --
+  // it only refreshes the case and the queue counts.
+  async function afterNoteSaved(updated: Case) {
+    setCaseItem(updated)
+    await refresh()
+  }
 
   async function afterMutation(updated: Case) {
     setCaseItem(updated)
@@ -421,6 +429,9 @@ export function CaseDetailPage() {
       {/* Renders only when this case actually has courier remittance detail,
           so it never shows as an empty section on the other cases. */}
       <CaseRemittancePanel caseItem={caseItem} />
+
+      {/* Partial findings, recorded without closing the case. */}
+      <CaseNotesPanel caseItem={caseItem} onSaved={afterNoteSaved} />
 
       <CaseDraftMessagePanel caseId={caseItem.case_id} />
 

@@ -4,6 +4,7 @@ const FILTERS = [
   { key: '', label: 'All open' },
   { key: 'needs_decision', label: 'AI recommendation' },
   { key: 'needs_investigation', label: 'Needs investigation' },
+  { key: 'has_notes', label: 'My notes' },
   { key: 'bookmarked', label: 'Bookmarked' },
   { key: 'resolved', label: 'Resolved' },
 ] as const

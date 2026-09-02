@@ -104,6 +104,18 @@ export function needsInvestigation(caseItem: Case): boolean {
   return isOpenForReview(caseItem) && !needsHumanDecision(caseItem)
 }
 
+/**
+ * An open case the reviewer has left a working note on.
+ *
+ * The note is a partial finding -- "chased the courier, awaiting reply",
+ * "customer says they paid by UPI" -- recorded WITHOUT resolving, so the case
+ * stays in the queue with the context needed to pick it up again later.
+ * A resolution comment is not a working note: the case is closed.
+ */
+export function hasWorkingNote(caseItem: Case): boolean {
+  return isOpenForReview(caseItem) && Boolean(caseItem.comment?.trim())
+}
+
 export function canReopenCase(caseItem: Case): boolean {
   return (
     Boolean(caseItem.resolution?.resolved) &&

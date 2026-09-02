@@ -1,5 +1,6 @@
 import {
   aiReachedVerdict,
+  hasWorkingNote,
   isAwaitingSettlementCase,
   isOpenForReview,
   needsInvestigation,
@@ -29,6 +30,8 @@ export function filterCases(cases: Case[], filter: string | null): Case[] {
     list = list.filter((c) => isOpenForReview(c))
     if (filter === 'needs_decision') {
       list = list.filter(aiReachedVerdict)
+    } else if (filter === 'has_notes') {
+      list = list.filter(hasWorkingNote)
     } else if (filter === 'needs_investigation') {
       // No dedicated "waiting on AI" filter any more: a case AI has not
       // reached yet is a transient state, not a workload category, and it
