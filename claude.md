@@ -1043,3 +1043,60 @@ frontend                      tsc clean, production build clean
   nothing parses them today -- they are carried and displayed only.
 - Stage 2 of the remittance work (a discrepancy-audit surface on Reports,
   dispute-deadline tracking) is deliberately NOT built.
+
+---
+
+## Session Update (Sep 1-3, 2026): Working notes, and a Transactions/Cases consistency pass
+
+Pre-demo hardening, caught by the user clicking through every screen. Full
+detail in `PROJECT_CONTEXT.md` Section 25 -- summary here.
+
+### Working notes (new feature)
+`state_store.set_comment()` / `POST /api/cases/{id}/comment` already existed,
+unused by any UI. Added `CaseNotesPanel.tsx` on the case detail page -- save a
+partial finding without resolving the case (`case_status`/`resolution`
+untouched). `hasWorkingNote()` in `caseUtils.ts` is the one definition: open
+for review AND a non-empty comment. New "My notes" filter pill + amber `NOTE`
+badge on Cases.
+
+### Transactions was contradicting Cases -- three real bugs, all fixed
+`GET /api/transactions` re-runs `engine.py`'s stateless per-run output every
+time and had no idea a case built on top of a record was later resolved.
+Caught live: a resolved bulk-COD order still read `EXCEPTION -- Matched
+settlement: Not linked` on Transactions while its own case page said
+`Resolved automatically`.
+
+1. **Status overlay**: `transactionUiStatus()` now checks the linked case
+   first -- a resolved case wins over the engine's frozen tier read.
+   `transactionDisplayFields()` overlays `matched_settlement`, `reason_label`,
+   `explanation`, and `amount_at_risk` from the case once resolved, so the
+   drawer stops showing contradictory numbers side by side.
+2. **"View case" was hidden for resolved cases** -- `isOpenForReview` is false
+   once resolved, so `canViewCaseForTransaction` hid the link to exactly the
+   richest part of the demo (the remittance breakdown). Fixed: open OR
+   resolved both show the link.
+3. **A candidate settlement in an ambiguous-match case had no case link at
+   all.** A case is filed under one `record_id` -- for `ambiguous_match`
+   that's the order's id, so the two competing settlements
+   (`STL-00014`/`STL-00014-D`) existed only inside `case["candidates"]`,
+   never as their own tracked record. `api.py`'s `cases_by_record` lookup
+   found nothing for either, so real, already-investigated evidence showed as
+   a raw, unlinked `EXCEPTION`. Fixed by walking every case's `candidates`
+   and adding each `settlement_id` to the lookup via `setdefault` (so a true
+   orphan settlement's own case is never overridden).
+
+**Vocabulary**: the `'ai_review'` bucket on Transactions predated the AI
+recommendation / needs investigation split and was never migrated -- it read
+`engine.py`'s structural `ai_assisted` flag instead of the case's actual
+verdict. Split to match. Added a `Resolved` status (teal). Removed the
+`Exception` filter option entirely (user's call) -- every genuine exception
+now becomes a case and is classified by its real verdict, so that bucket
+should be empty in practice; it survives only as an internal fallback.
+
+### Process note worth repeating
+`vite.config.ts` proxies `/api` to **port 8001**, not 8000. A backend
+restarted on 8000 during this session's testing was silently talking to
+nothing the frontend used -- every "still broken" observation was against
+stale code on the wrong port. Check the proxy target before assuming which
+port "the backend" means, and remember every restart clears the in-memory
+token map (fresh login needed, not just a refresh).

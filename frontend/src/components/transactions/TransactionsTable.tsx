@@ -5,12 +5,14 @@ import {
 } from '../../lib/transactionDisplay'
 import { formatINR } from '../../lib/money'
 import type { TransactionRecord } from '../../lib/api'
+import type { Case } from '../../types/case'
 
 type TransactionsTableProps = {
   records: TransactionRecord[]
   selectedId: string | null
   onSelect: (record: TransactionRecord) => void
   emptyMessage: string
+  casesById: Map<string, Case>
 }
 
 function EyeIcon() {
@@ -27,6 +29,7 @@ export function TransactionsTable({
   selectedId,
   onSelect,
   emptyMessage,
+  casesById,
 }: TransactionsTableProps) {
   if (records.length === 0) {
     return (
@@ -52,7 +55,7 @@ export function TransactionsTable({
         </thead>
         <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {records.map((record) => {
-            const uiStatus = transactionUiStatus(record)
+            const uiStatus = transactionUiStatus(record, casesById)
             const isSelected = selectedId === record.record_id
 
             return (

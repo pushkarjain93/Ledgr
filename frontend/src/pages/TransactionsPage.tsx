@@ -69,8 +69,8 @@ export function TransactionsPage() {
   const tiers = useMemo(() => uniqueTierOptions(records), [records])
 
   const filtered = useMemo(
-    () => filterTransactions(records, filters),
-    [records, filters],
+    () => filterTransactions(records, filters, casesById),
+    [records, filters, casesById],
   )
 
   const hasRuns = allRuns.length > 0
@@ -122,6 +122,7 @@ export function TransactionsPage() {
                 records={filtered}
                 selectedId={selected?.record_id ?? null}
                 onSelect={setSelected}
+                casesById={casesById}
                 emptyMessage={
                   hasActiveTransactionFilters(filters)
                     ? 'No records match these filters.'

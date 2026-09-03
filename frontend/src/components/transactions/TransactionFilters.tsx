@@ -1,12 +1,18 @@
 import type { TransactionFilters as Filters, TransactionStatusFilter } from '../../lib/transactionDisplay'
 import { todayISO } from '../../lib/merchantState'
 
+// No 'Exception' option: every genuinely exceptional record now becomes a
+// case, and that case's own AI verdict (ai_recommendation / needs_investigation)
+// is what shows here -- 'exception' only survives internally as a fallback
+// for a record with no case object at all, which isn't something worth
+// letting someone filter for.
 const STATUS_OPTIONS: { value: TransactionStatusFilter; label: string }[] = [
   { value: 'all', label: 'All statuses' },
   { value: 'matched', label: 'Matched' },
-  { value: 'ai_review', label: 'AI review' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'ai_recommendation', label: 'AI recommendation' },
+  { value: 'needs_investigation', label: 'Needs investigation' },
   { value: 'awaiting_settlement', label: 'Awaiting settlement' },
-  { value: 'exception', label: 'Exception' },
 ]
 
 function formatPaymentModeLabel(mode: string): string {

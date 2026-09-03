@@ -6,6 +6,7 @@ import { formatCaseDate } from '../../lib/caseDisplay'
 import { formatINR } from '../../lib/money'
 import {
   canViewCaseForTransaction,
+  transactionDisplayFields,
   transactionStatusBadgeClass,
   transactionStatusLabel,
   transactionUiStatus,
@@ -34,9 +35,10 @@ export function TransactionDetailDrawer({
   casesById,
   onClose,
 }: TransactionDetailDrawerProps) {
-  const uiStatus = transactionUiStatus(record)
-  const showCaseLink = canViewCaseForTransaction(record, casesById)
   const linkedCase = record.case_id ? casesById.get(record.case_id) : undefined
+  const uiStatus = transactionUiStatus(record, casesById)
+  const showCaseLink = canViewCaseForTransaction(record, casesById)
+  const fields = transactionDisplayFields(record, linkedCase)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -90,6 +92,13 @@ export function TransactionDetailDrawer({
                 {transactionStatusLabel(uiStatus)}
               </span>
             </div>
+            {uiStatus === 'resolved' && linkedCase && (
+              <p className="mt-3 text-[12.5px] text-teal-700 dark:text-teal-300">
+                {linkedCase.resolution.resolution_type === 'auto_resolved'
+                  ? 'Closed automatically — see the reason below.'
+                  : 'Resolved by a reviewer — see the reason below.'}
+              </p>
+            )}
           </div>
 
           <section className="mt-6">
@@ -101,8 +110,8 @@ export function TransactionDetailDrawer({
                 label="Delta"
                 value={record.delta === 0 ? '—' : formatINR(record.delta)}
               />
-              {record.amount_at_risk > 0 && (
-                <DetailRow label="At risk" value={formatINR(record.amount_at_risk)} />
+              {fields.amountAtRisk > 0 && (
+                <DetailRow label="At risk" value={formatINR(fields.amountAtRisk)} />
               )}
             </div>
           </section>
@@ -118,20 +127,23 @@ export function TransactionDetailDrawer({
               {record.payment_mode && (
                 <DetailRow label="Payment mode" value={record.payment_mode.replace(/_/g, ' ')} />
               )}
+              {/* This is engine.py's own tier output from its last pass -- it
+                  never learns that a case built on top of it was later
+                  resolved (see the reason/settlement rows below, which do). */}
               <DetailRow label="Engine status" value={record.status.replace(/_/g, ' ')} />
-              <DetailRow label="Reason" value={record.reason_label || '—'} />
+              <DetailRow label="Reason" value={fields.reasonLabel || '—'} />
               <DetailRow
                 label="Matched settlement"
-                value={record.matched_settlement || 'Not linked'}
+                value={fields.matchedSettlement || 'Not linked'}
               />
               {record.age_days !== null && (
                 <DetailRow label="Order age" value={`${record.age_days} days`} />
               )}
               <DetailRow label="Priority" value={record.priority || '—'} />
             </div>
-            {record.explanation && (
+            {fields.explanation && (
               <p className="mt-3 text-[13px] leading-relaxed text-zinc-600 dark:text-zinc-400">
-                {record.explanation}
+                {fields.explanation}
               </p>
             )}
           </section>

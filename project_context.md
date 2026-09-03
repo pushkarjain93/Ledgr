@@ -1053,3 +1053,123 @@ frontend                      tsc clean, production build clean
 A `git restore` mid-session discarded every uncommitted change to tracked
 files (no stash, nothing recoverable). Only untracked new files survived.
 **Commit after each working increment.**
+
+## 25. Session Log: Working Notes, and a Transactions/Cases Consistency Pass (Sep 1-3, 2026)
+
+Pre-demo hardening. One new feature (working notes), and a set of real
+consistency bugs between the Transactions and Cases screens found by the user
+directly clicking through the app -- the same "one definition per number"
+failure class as Section 24.6, this time in status labels and case linkage
+rather than money totals.
+
+### 25.1 Working notes -- a partial finding that doesn't resolve the case
+
+`state_store.set_comment()` and `POST /api/cases/{id}/comment` already
+existed and worked; they were simply never wired to any UI. Built:
+
+- **`CaseNotesPanel.tsx`** (new) on the case detail page -- a textarea + "Save
+  note" that calls the existing endpoint. Explicitly does **not** touch
+  `case_status` or `resolution` -- the case stays in the open queue. Re-seeds
+  on `case_id` change so navigating between cases can't save a note onto the
+  wrong one.
+- **`hasWorkingNote()`** in `caseUtils.ts` -- the one definition: open for
+  review AND a non-empty comment. A resolution comment does not count; that
+  case is closed.
+- **"My notes" filter pill** on Cases, plus an amber `NOTE` badge in
+  `CasesTable.tsx` (hover shows the note text).
+
+Verified live: saving a note on an `ai_pending` case left it `ai_pending`,
+`resolved: false`, with a `comment saved` history entry -- confirmed via a
+direct API call, not just the UI.
+
+### 25.2 Transactions was contradicting Cases -- three real bugs
+
+`GET /api/transactions` re-runs `engine.py`'s stateless, per-run tier output
+every time (see Section 23's note on that endpoint). It had no way to know a
+case built on top of a record had since been resolved by a human, or by the
+remittance join proving a bulk-COD credit already arrived. Caught directly by
+the user clicking a bulk-COD order on Transactions and finding it still said
+`EXCEPTION -- Matched settlement: Not linked` while its own case page said
+`Resolved automatically`.
+
+**Fix: `transactionUiStatus()` now checks the linked case first.** If the
+case is resolved, that overlays whatever the engine's frozen tier read says.
+Threaded through `transactionDisplayFields()` too -- `matched_settlement`,
+`reason_label`, `explanation`, and `amount_at_risk` in the detail drawer all
+now prefer the case's current values over the record's frozen ones once
+resolved, so the drawer stops saying "resolved" and "Rs 999 at risk" in the
+same panel.
+
+**Bug 2: "View case" was hidden for exactly the cases worth viewing.**
+`canViewCaseForTransaction` excluded anything already resolved
+(`isOpenForReview` is false once resolved), so the richest part of the demo
+-- the remittance breakdown behind a bulk-COD order -- was one click short of
+reachable from Transactions. Now: `isOpenForReview(case) ||
+case.resolution.resolved`.
+
+**Bug 3: a candidate settlement in an ambiguous-match case had no case link
+at all.** `ORD-00014` has two settlements (`STL-00014`, `STL-00014-D`)
+competing for the same amount -- real evidence AI already weighed inside
+`CASE-ORD-00014`. But a case is filed under one `record_id`, and for an
+ambiguous match that's the ORDER's id -- the competing settlements exist only
+inside the case's `candidates` list, never as their own tracked record. So
+`api.py`'s `cases_by_record` lookup found nothing for either settlement, and
+they showed as raw, unlinked `EXCEPTION` rows -- looking uninvestigated when
+they were the central evidence of an already-worked case.
+
+Fixed in `api.py`: every case's `candidates` list is walked and each
+`settlement_id` found there is added to `cases_by_record` via `setdefault` --
+so a settlement that genuinely owns its own case (a true orphan,
+`unmatched_settlement`) is never overridden by merely being named as someone
+else's candidate. **Confirmed via direct API test:** a genuine orphan
+settlement (no order in any batch, ever) was already correctly handled before
+this session -- `engine.py` emits it self-referentially so its case is filed
+under its own id. The gap was narrower: only a settlement referenced as a
+*candidate* inside a different case's evidence.
+
+### 25.3 Vocabulary cleanup on Transactions (extends Section 24.7)
+
+The `'ai_review'` bucket predated Section 24.7's AI recommendation / needs
+investigation split and was never updated -- it derived from `engine.py`'s
+structural `ai_assisted` tier flag, not the case's actual AI verdict, so
+"needs investigation" cases and "AI recommendation" cases were shown under
+one undifferentiated "AI review" label. Split to match the same
+`aiReachedVerdict` / `needsInvestigation` distinction used everywhere else,
+with the same fallback-to-engine-flag only for the rare record with no case
+object loaded yet.
+
+Added a **Resolved** status (teal badge, distinct from `matched`'s emerald --
+"cleared on the first pass" and "was flagged, then resolved" are different
+facts worth telling apart at a glance).
+
+**Removed the `Exception` filter option entirely** (user's explicit call,
+after 25.2's fix): every genuinely exceptional record now becomes a case and
+is classified by that case's real AI verdict, so the raw `'exception'` bucket
+should be empty in practice. It survives internally only as a defensive
+fallback for a record with no case object at all -- not worth exposing as
+something to filter for.
+
+### 25.4 Process note: two backends were running on two different ports
+
+During this session's verification, a backend was started on port 8000 to
+test the `api.py` fix -- but the frontend's `vite.config.ts` proxies `/api`
+to **port 8001**, an older process left running from earlier in the project
+that was never touched by the fix. Every "it's not working" observation
+traced back to testing against the wrong port's stale code, not a bug in the
+fix itself. **Before restarting the backend, check `vite.config.ts`'s proxy
+target, not just what "the backend" conventionally means** -- and remember
+every restart clears the in-memory token map, so the browser session needs a
+fresh login afterward, not just a page refresh.
+
+### 25.5 Verified state
+
+```
+frontend                      tsc clean, production build clean (409 KB)
+working notes                 saved via direct API call: case_status
+                               unchanged (ai_pending), resolved: false
+candidate settlement linkage  STL-00014 / STL-00014-D -> CASE-ORD-00014,
+                               confirmed via curl against the live API
+transaction status overlay    bulk-COD order: EXCEPTION -> RESOLVED (teal),
+                               "Matched settlement" STL-BULK01 (was "Not linked"),
+                               "At risk" row correctly hidden (was Rs 999)
+```

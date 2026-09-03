@@ -59,7 +59,10 @@ gathered.
   or customer about a case. Ledgr never sends anything itself.
 - **One definition per number** — every figure shown on more than one screen
   (Dashboard, Reconciliations, Reports) is computed once, on the backend, and
-  passed through unchanged. No two screens can silently disagree.
+  passed through unchanged. No two screens can silently disagree. The same
+  rule applies to case linkage: the Transactions view overlays a case's real,
+  current status (including remittance auto-resolution) instead of repeating
+  the reconciliation engine's frozen first-pass read.
 
 ---
 
@@ -110,8 +113,12 @@ itself. Money crosses the wire as **integer paise** end to end; formatting to
 ```bash
 pip install -r requirements.txt
 cp .env.example .env        # add your own AI provider key(s); all optional
-uvicorn api:app --host 127.0.0.1 --port 8000
+uvicorn api:app --host 127.0.0.1 --port 8001
 ```
+
+Port 8001 matters — `frontend/vite.config.ts` proxies `/api` to it. If you
+change the port, update the proxy target too, or the frontend will silently
+talk to nothing.
 
 At least one of `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY` should
 be set for real AI investigation; with none set, cases stay honestly

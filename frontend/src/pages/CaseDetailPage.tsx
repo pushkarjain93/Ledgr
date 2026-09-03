@@ -217,6 +217,14 @@ export function CaseDetailPage() {
 
   const displayId = caseDisplayId(caseItem)
   const resolved = Boolean(caseItem.resolution?.resolved)
+  // "Exception" / "Manual review" as a header tag reads as alarming and adds
+  // nothing the page doesn't already say better -- "Issue type" in Case
+  // Summary names the real reason (Short-paid, Ambiguous match, ...), and
+  // the AI Analysis panel explains it in full. Keep the tag only where it
+  // carries information the rest of the page doesn't: resolved, an AI
+  // recommendation worth acting on, or AI genuinely not having looked yet.
+  const showStatusTag =
+    resolved || caseItem.case_status === 'ai_recommendation' || caseItem.case_status === 'ai_pending'
   const reopenable = canReopenCase(caseItem)
   const canDecide = isOpenForReview(caseItem) && !acting
   // Only offer the follow-up when AI actually named something it was missing —
@@ -245,11 +253,13 @@ export function CaseDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-[22px] font-semibold text-zinc-900 dark:text-zinc-50">{displayId}</h1>
-            <span
-              className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${caseStatusBadgeClass(caseItem.case_status, resolved)}`}
-            >
-              {caseStatusLabel(caseItem)}
-            </span>
+            {showStatusTag && (
+              <span
+                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${caseStatusBadgeClass(caseItem.case_status, resolved)}`}
+              >
+                {caseStatusLabel(caseItem)}
+              </span>
+            )}
           </div>
           <p className="mt-1 text-[13px] text-zinc-500">{caseItem.case_id}</p>
         </div>

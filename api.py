@@ -586,6 +586,18 @@ def transactions(merchant: dict = Depends(current_merchant)):
 
     orders_by_id = {o["order_id"]: o for o in order_rows}
     cases_by_record = {c["record_id"]: c["case_id"] for c in state.get("cases", {}).values()}
+    # An ambiguous_match case is filed under the ORDER's record_id -- the
+    # competing settlements are only data inside its `candidates` list, never
+    # a record_id of their own. Without this, clicking one of those
+    # settlements here found no case, even though it is exactly the evidence
+    # AI already weighed on the order's case. `setdefault` so a settlement
+    # that genuinely owns its own case (a real orphan) is never overridden by
+    # merely being named as someone else's candidate.
+    for c in state.get("cases", {}).values():
+        for cand in c.get("candidates") or []:
+            sid = cand.get("settlement_id")
+            if sid:
+                cases_by_record.setdefault(sid, c["case_id"])
     records = []
     for r in result_df.to_dict("records"):
         age = r.get("age_days")
