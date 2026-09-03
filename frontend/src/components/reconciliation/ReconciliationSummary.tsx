@@ -40,9 +40,16 @@ function MetricCard({
 type SummaryBoxesProps = {
   model: ReconciliationViewModel
   cases: Case[]
+  /** True while AI hasn't reached every case yet and nothing has hit a rate
+   *  limit -- the AI recommendation / needs investigation split isn't known
+   *  yet, so showing a number (even 0) would claim a fact nobody has
+   *  established. See ReconciliationResultsWorkspace for the exact gate. */
+  pending?: boolean
 }
 
-export function SummaryBoxes({ model, cases }: SummaryBoxesProps) {
+const DASH = '–'
+
+export function SummaryBoxes({ model, cases, pending = false }: SummaryBoxesProps) {
   const { totals, orderCount, settlementCount } = model
 
   // Counted over CASES, not engine records, and split by WHAT AI CONCLUDED.
@@ -66,7 +73,7 @@ export function SummaryBoxes({ model, cases }: SummaryBoxesProps) {
           </svg>
         }
         label="Expected"
-        value={formatINR(totals.expectedPaise)}
+        value={pending ? DASH : formatINR(totals.expectedPaise)}
         // "records", not "orders": this count includes orphan bank credits,
         // which are reconciled records with no order behind them.
         sub={`${orderCount} records`}
@@ -79,7 +86,7 @@ export function SummaryBoxes({ model, cases }: SummaryBoxesProps) {
           </svg>
         }
         label="Received"
-        value={formatINR(totals.receivedPaise)}
+        value={pending ? DASH : formatINR(totals.receivedPaise)}
         sub={`${settlementCount} settlements`}
       />
       <MetricCard
@@ -90,8 +97,8 @@ export function SummaryBoxes({ model, cases }: SummaryBoxesProps) {
           </svg>
         }
         label="AI recommendation"
-        value={String(aiVerdict)}
-        sub={share(aiVerdict)}
+        value={pending ? DASH : String(aiVerdict)}
+        sub={pending ? 'Investigation in progress' : share(aiVerdict)}
       />
       <MetricCard
         iconBg="bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
@@ -102,8 +109,8 @@ export function SummaryBoxes({ model, cases }: SummaryBoxesProps) {
           </svg>
         }
         label="Needs investigation"
-        value={String(manual)}
-        sub={share(manual)}
+        value={pending ? DASH : String(manual)}
+        sub={pending ? 'Investigation in progress' : share(manual)}
       />
     </div>
   )

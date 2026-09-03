@@ -9,7 +9,17 @@ function InfoIcon() {
   )
 }
 
-function DonutChart({ segments, total }: { segments: OutcomeSegment[]; total: number }) {
+const DASH = '–'
+
+function DonutChart({
+  segments,
+  total,
+  pending = false,
+}: {
+  segments: OutcomeSegment[]
+  total: number
+  pending?: boolean
+}) {
   const size = 128
   const stroke = 18
   const radius = (size - stroke) / 2
@@ -20,30 +30,45 @@ function DonutChart({ segments, total }: { segments: OutcomeSegment[]; total: nu
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
         <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
-          {segments.map((seg) => {
-            const dash = total > 0 ? (seg.count / total) * circumference : 0
-            const circle = (
-              <circle
-                key={seg.key}
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke={seg.color}
-                strokeWidth={stroke}
-                strokeDasharray={`${dash} ${circumference}`}
-                strokeDashoffset={-offset}
-                strokeLinecap="butt"
-              />
-            )
-            offset += dash
-            return circle
-          })}
+          {pending ? (
+            // A flat neutral ring reads as "not known yet" -- an empty or
+            // all-one-color ring built from real segment data would instead
+            // read as "zero of everything", which is a different (false)
+            // claim while AI is still mid-investigation.
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              className="stroke-zinc-200 dark:stroke-zinc-700"
+              strokeWidth={stroke}
+            />
+          ) : (
+            segments.map((seg) => {
+              const dash = total > 0 ? (seg.count / total) * circumference : 0
+              const circle = (
+                <circle
+                  key={seg.key}
+                  cx={size / 2}
+                  cy={size / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={seg.color}
+                  strokeWidth={stroke}
+                  strokeDasharray={`${dash} ${circumference}`}
+                  strokeDashoffset={-offset}
+                  strokeLinecap="butt"
+                />
+              )
+              offset += dash
+              return circle
+            })
+          )}
         </g>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <span className="text-[22px] font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
-          {total}
+          {pending ? DASH : total}
         </span>
         <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Total Records</span>
       </div>
@@ -54,9 +79,14 @@ function DonutChart({ segments, total }: { segments: OutcomeSegment[]; total: nu
 type ReconciliationOutcomePanelProps = {
   segments: OutcomeSegment[]
   total: number
+  pending?: boolean
 }
 
-export function ReconciliationOutcomePanel({ segments, total }: ReconciliationOutcomePanelProps) {
+export function ReconciliationOutcomePanel({
+  segments,
+  total,
+  pending = false,
+}: ReconciliationOutcomePanelProps) {
   return (
     <div className="flex h-full flex-col rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
       <div className="flex items-center gap-1.5">
@@ -65,7 +95,7 @@ export function ReconciliationOutcomePanel({ segments, total }: ReconciliationOu
       </div>
 
       <div className="mt-5 flex flex-1 flex-wrap items-center justify-center gap-6 lg:justify-start">
-        <DonutChart segments={segments} total={total} />
+        <DonutChart segments={segments} total={total} pending={pending} />
         <ul className="min-w-[160px] space-y-2.5">
           {segments.map((seg) => (
             <li key={seg.key} className="flex items-center justify-between gap-4 text-[12.5px]">
@@ -74,8 +104,14 @@ export function ReconciliationOutcomePanel({ segments, total }: ReconciliationOu
                 {seg.label}
               </span>
               <span className="tabular-nums text-zinc-800 dark:text-zinc-100">
-                <span className="font-semibold">{seg.count}</span>
-                <span className="text-zinc-400 dark:text-zinc-500"> ({seg.pct}%)</span>
+                {pending ? (
+                  <span className="font-semibold">{DASH}</span>
+                ) : (
+                  <>
+                    <span className="font-semibold">{seg.count}</span>
+                    <span className="text-zinc-400 dark:text-zinc-500"> ({seg.pct}%)</span>
+                  </>
+                )}
               </span>
             </li>
           ))}

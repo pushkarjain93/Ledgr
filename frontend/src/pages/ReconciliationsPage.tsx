@@ -8,7 +8,6 @@ import { formatLastSync } from '../components/reconciliation/SourceCards'
 import { api, ApiError, type SyncResult, type TransactionRecord } from '../lib/api'
 import { buildReconciliationViewModel } from '../lib/reconciliationFinancials'
 import { parseRun } from '../lib/reconciliationMetrics'
-import type { Case } from '../types/case'
 
 function SyncIcon() {
   return (
@@ -72,6 +71,17 @@ export function ReconciliationsPage() {
     totalBatches,
     lastSyncAt,
     ordersProcessed,
+    // The live, already-polled case list -- AppContext refreshes this every
+    // 4s while any case is still `needs_ai`. This page used to keep its own
+    // separate copy fetched once right after sync, which meant the KPI
+    // cards / financial health / outcome donut below stayed frozen at
+    // whatever AI had (not) concluded the instant sync finished, while the
+    // "AI is investigating" banner -- reading this same context value --
+    // correctly ticked down. Using the context copy directly is what makes
+    // the two agree, and is a precondition for the pending-dash gate below:
+    // there is no point hiding numbers behind "-" if the number underneath
+    // is itself never going to update.
+    cases,
   } = useApp()
 
   const [syncing, setSyncing] = useState(false)
@@ -80,7 +90,6 @@ export function ReconciliationsPage() {
   const [lastResult, setLastResult] = useState<SyncResult | null>(null)
 
   const [transactions, setTransactions] = useState<TransactionRecord[]>([])
-  const [cases, setCases] = useState<Case[]>([])
 
   const viewModel = useMemo(() => {
     if (allRuns.length === 0 || transactions.length === 0) return null
@@ -90,16 +99,13 @@ export function ReconciliationsPage() {
   const loadResultsData = useCallback(async () => {
     if (allRuns.length === 0) {
       setTransactions([])
-      setCases([])
       return
     }
     try {
-      const [tx, caseRes] = await Promise.all([api.getTransactions(), api.getCases()])
+      const tx = await api.getTransactions()
       setTransactions(tx.records)
-      setCases(caseRes.cases)
     } catch {
       setTransactions([])
-      setCases([])
     }
   }, [allRuns.length])
 
