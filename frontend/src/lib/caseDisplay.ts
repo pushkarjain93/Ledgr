@@ -1,34 +1,10 @@
 import type { Case, CaseStatus } from '../types/case'
 
-export type ConfidenceTier = {
-  label: 'High' | 'Medium' | 'Low' | 'Pending'
-  badgeClass: string
-}
-
-export function confidenceTier(confidence: number | null | undefined): ConfidenceTier {
-  if (confidence === null || confidence === undefined) {
-    return {
-      label: 'Pending',
-      badgeClass: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
-    }
-  }
-  if (confidence >= 80) {
-    return {
-      label: 'High',
-      badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-    }
-  }
-  if (confidence >= 50) {
-    return {
-      label: 'Medium',
-      badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
-    }
-  }
-  return {
-    label: 'Low',
-    badgeClass: 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300',
-  }
-}
+// No confidence-tier helper here on purpose. The model's self-reported
+// confidence is not shown in the UI and gates nothing: measured on this
+// project's own data it carried almost no signal (83% of cases returned
+// exactly 10). Auto-resolve is gated on EXPOSURE instead -- see
+// AUTO_RESOLVE_MAX_PCT / AUTO_RESOLVE_MAX_ABS in case_engine.py.
 
 export function caseStatusBadgeClass(status: CaseStatus, resolved: boolean): string {
   if (resolved) {
@@ -71,16 +47,6 @@ export function caseStatusLabel(caseItem: Case): string {
 
 export function caseDisplayId(caseItem: Case): string {
   return caseItem.order_id ?? caseItem.settlement_id ?? caseItem.record_id
-}
-
-export function aiRecommendationText(caseItem: Case): string {
-  return (
-    caseItem.ai?.next_step?.trim() ||
-    caseItem.ai?.reason?.trim() ||
-    caseItem.reason_label ||
-    caseItem.explanation ||
-    '—'
-  )
 }
 
 export function formatCaseTimestamp(iso: string | null | undefined): string {

@@ -788,6 +788,7 @@ The user proposed the fix directly, in detail, before any code was written: keep
 3. **Evidence-hash caching** — `_evidence_hash()` fingerprints the facts that actually matter to a case (type, expected/received/delta, candidate IDs, reason) via SHA256. If a case's hash is unchanged from its last real investigation, the stored result is reused — zero new API cost. If the hash changes (new candidate appeared, amounts shifted), it's queued for a fresh call. Verified correct with a deliberately isolated, zero-API-cost test: a fabricated valid cached entry got reused; a manually changed hash correctly triggered re-investigation.
 4. **`ai_pending` — a fourth, honest case-lifecycle state**, distinct from `manual_review`. `manual_review` means AI genuinely investigated and is recommending a human decide. `ai_pending` means AI hasn't had a chance to look yet (usually a 429). This distinction was tested against **real, repeated rate-limit hits** during development, not simulated — confirmed it never crashes, never fabricates a result, and stays visually distinct in the UI (shown as its own slice in the Reconciliation Resolution Funnel, not folded into Manual Review).
 5. **`AUTO_RESOLVE_CONFIDENCE_FLOOR = 85`** — even when Gemini recommends `resolve`, a confidence below 85 is downgraded to `manual_review` in code, regardless of what the model said. Mirrors this project's standing "never auto-clear without justification" rule structurally, not just as a prompt instruction.
+   > **SUPERSEDED — this constant no longer exists.** Confidence scores were removed: on this project's own data 83% came back at exactly 10, evidence count did not correlate with them, and the single case that cleared the 85 threshold was one the engine had flagged "verify before clearing". The gate is now **exposure-based** (`AUTO_RESOLVE_MAX_PCT = 0.10`, `AUTO_RESOLVE_MAX_ABS = 50000` paise) — small at-risk amount, relatively *and* absolutely, plus no missing evidence reported. An uncalibrated self-report should not authorise signing off money.
 6. **The one controlled agentic step**: `investigate_case_followup()` — when Gemini names specific `missing_evidence`, a user-triggered "Investigate Further" button fetches what's realistically fetchable (currently: a customer's other order history — the only evidence source this system actually has beyond the CSVs) and makes exactly one more Gemini call for a final verdict. Never automatic, never looped further. This is the one piece of "agentic AI" in the project, and it was a deliberate, explicit compromise the user proposed themselves after discussing RAG/LangChain/MCP and agreeing those were the wrong scope for this timeline.
 7. **Direct-answer-first Ask AI** — `try_direct_answer()` answers common questions (case ID lookup, "which orders are still pending", "how much is outstanding", "which cases are AI-pending") straight from the persisted case store via pandas, with zero API cost, and only falls through to a real Gemini call (`ai_client.ask()`) for genuinely novel questions. Verified live: pattern-matched questions return instantly with no API call; a vague question ("ok") correctly falls through to a real call.
 
@@ -1172,4 +1173,171 @@ candidate settlement linkage  STL-00014 / STL-00014-D -> CASE-ORD-00014,
 transaction status overlay    bulk-COD order: EXCEPTION -> RESOLVED (teal),
                                "Matched settlement" STL-BULK01 (was "Not linked"),
                                "At risk" row correctly hidden (was Rs 999)
+```
+
+## 26. Session Log: Provisional Figures While AI Is Still Working (Sep 3-4, 2026)
+
+Caught by the user watching the Reconciliations page after a sync: the blue
+banner correctly said "AI is investigating 16 more cases", while the KPI cards
+directly beneath it read **AI recommendation 0 / Needs investigation 16** and
+stayed that way until a manual browser reload. The banner and the cards were
+reading two different copies of the same data.
+
+### 26.1 Root cause -- the same "one definition" failure, in a new place
+
+`AppContext` already polls `/api/state` every 4 seconds while any case is
+`needs_ai`, and stops the moment the count hits zero (no permanent timer).
+That live `cases` list is what the banner read, which is why the banner was
+correct.
+
+But `ReconciliationsPage` kept **its own** `useState<Case[]>` copy, populated
+once by `loadResultsData()` immediately after the sync returned -- before any
+AI verdict existed. Nothing ever re-populated it. So the KPI cards, Financial
+Health, and the Reconciliation Outcome donut were all frozen at the instant of
+sync, while the banner above them ticked down live.
+
+**Fix:** the page now takes `cases` from `useApp()` and no longer keeps a local
+copy. `transactions` is still fetched locally (that genuinely does not change
+while AI works). This is Section 24.6's rule again -- any figure shown in two
+places must have ONE definition -- applied to a case list rather than a money
+total.
+
+### 26.2 Dashes, not zeros -- and the distinction that drives them
+
+Reading `0` for "AI recommendation" while AI is mid-investigation is not a
+neutral placeholder; it asserts a fact nobody has established yet. So while the
+batch is still being worked, the four KPI cards, Financial Health (Expected,
+Received, Difference, Overpaid, At Risk) and the donut all render an en dash
+instead, with the donut showing a flat neutral ring rather than an empty or
+single-colour one (an all-one-colour ring would read as "zero of everything",
+which is a different and false claim).
+
+**The gate is deliberately two-state, not one:**
+
+```
+awaitingFirstVerdict = (needs_ai > 0) AND (ai_pending == 0)
+```
+
+- `needs_ai` -- AI has not reached these yet. The split is genuinely unknown,
+  so hide the numbers.
+- `ai_pending` -- AI tried and hit a rate limit. Waiting longer buys nothing,
+  so **reveal immediately** and show what is actually confirmed.
+
+The banner matches that split rather than making one claim for both states:
+blue "AI is investigating N cases -- the figures below will appear once this
+completes", or amber "AI hit a rate limit on N cases and paused. Showing what's
+confirmed so far". The old single banner promised "these figures update as
+verdicts arrive, and are final once this clears" -- which was false on the page
+it sat on, since those figures were frozen.
+
+### 26.3 Verified
+
+Staged state directly (not via the UI) to force each phase and checked the
+rendered page:
+
+```
+3 cases -> needs_ai            all figures dashed, blue banner, neutral ring
+1 of those -> ai_pending       instant reveal, amber banner, real numbers
+                               (2 AI recommendation / 14 needs investigation)
+all investigated               no banner, real numbers, coloured donut
+```
+
+Test-mutated cases were then re-investigated back to real verdicts; final state
+carries no leftover `needs_ai` or `ai_pending`.
+
+### 26.4 Gotcha worth keeping: the frontend proxies to port 8001, not 8000
+
+`frontend/vite.config.ts` proxies `/api` to **127.0.0.1:8001**. A backend
+started on 8000 during this session's testing was serving nobody, and several
+"the fix didn't work" observations traced to querying the wrong port's stale
+process rather than to the code. Check the proxy target before assuming which
+port "the backend" means -- and remember every backend restart clears the
+in-memory token map, so the browser needs a fresh login, not just a refresh.
+
+## 27. Session Log: Dead-Code Removal and Doc Correction (Sep 6, 2026)
+
+Pre-study cleanup. The goal was that reading the docs teaches what the code
+actually does, so anything describing a mechanism that no longer exists had to
+go, not just be marked stale.
+
+### 27.1 The confidence floor never existed any more -- three docs still claimed it did
+
+`README.md`, `CLAUDE.md` and this file all described `AUTO_RESOLVE_CONFIDENCE_FLOOR
+= 85` gating auto-resolve. That constant was deleted when confidence scoring was
+removed, and nothing had updated the docs. The real gate, in `case_engine.py`:
+
+```
+AUTO_RESOLVE_MAX_PCT = 0.10     # at-risk <= 10% of order value
+AUTO_RESOLVE_MAX_ABS = 50000    # AND <= Rs 500.00 absolute
+```
+
+Plus: the model must not have reported missing evidence. **Exposure, not
+self-reported certainty.** The reasoning is worth keeping straight because it is
+a good answer to "how do you decide what AI may clear": confidence was measured
+on this project's own data and carried almost no signal -- 83% of cases came
+back at exactly 10, evidence count did not correlate with it, and the single
+case that cleared the old 85 threshold was one the deterministic engine had
+explicitly flagged "verify before clearing". An uncalibrated self-report should
+not authorise signing off money.
+
+README now states the exposure gate directly. The two historical session logs
+keep their original text with a **SUPERSEDED** note inline, so the history stays
+readable without misleading a reader.
+
+### 27.2 Confidence is collected but shows nothing and gates nothing
+
+Kept: the model still returns `confidence`, `apply_ai_result` stores it, and
+`investigate_further` snapshots `previous_confidence`. That is harmless
+telemetry and ripping it out of the response schema days before submission is
+risk without benefit.
+
+Deleted (verified zero `.tsx` callers before removing):
+
+| Removed | File |
+|---|---|
+| `confidenceTier()` + `ConfidenceTier` type | `lib/caseDisplay.ts` |
+| `displayConfidence()` | `lib/caseUtils.ts` |
+| `aiRecommendationText()` | `lib/caseDisplay.ts` |
+
+A comment now sits where `confidenceTier` was, explaining why there is no
+confidence helper, so nobody re-adds one. **Nothing in the UI displays a
+confidence score** -- do not claim otherwise in a demo.
+
+### 27.3 Files removed
+
+| Removed | Why |
+|---|---|
+| `frontend.md` | Stale handoff doc. It instructed readers to use `displayConfidence()`/`confidenceTier()` (both now deleted), said cases sort by confidence descending (they sort by amount at risk), and referenced the removed "Waiting on AI" filter. Actively misleading. |
+| `frontend/dist/` | Build output, regenerable with `npm run build` |
+| `__pycache__/` | Regenerable |
+| `data/state/backups/` | Two old debug snapshots, tracked in git for no reason |
+| `data/state/merchant_beta_002.json` | Stale runtime state for a merchant the demo does not use |
+
+### 27.4 Runtime artifacts untracked
+
+`data/state/` and `data/run_results.csv` are now gitignored and `git rm
+--cached`'d. Both are recreated on demand (`state_store.py` line 29 does
+`makedirs(..., exist_ok=True)`; `engine.py` rewrites `run_results.csv` every
+run), and tracking them was the cause of the "why does merchant_acme keep
+changing after I commit?" churn.
+
+### 27.5 Also fixed
+
+README told readers to run `python -m pytest test_remittance.py -v`, but pytest
+is not installed and is not in `requirements.txt`. The tests are standalone:
+`python test_remittance.py`.
+
+`schema_map.py` was found to be **never imported** -- a leftover from the
+CSV-upload era. Kept deliberately: it is the written contract for the canonical
+order/settlement column shape, and `razorpay_client.py` and `shopify_client.py`
+both cite it in comments. It is documentation that happens to be valid Python,
+not dead code pretending to run.
+
+### 27.6 Verified after cleanup
+
+```
+tsc --noEmit                  clean
+npm run build                 clean (410 KB)
+test_remittance.py            14 passed, 0 failed
+validate_data.py              PASS - data consistent with config.py bands
 ```

@@ -43,10 +43,17 @@ gathered.
   instead of a guess.
 - **AI case investigation** (`case_engine.py`, `ai_client.py`) — every record
   the engine can't cleanly resolve becomes a case. AI reads the evidence,
-  explains the likely reason, and returns a confidence score. A result below
-  a hard confidence floor is downgraded to manual review **in code**, not
-  just by prompt instruction. AI never auto-clears a high-risk case and never
-  drafts anything more than a message a human still has to send.
+  explains the likely reason, and recommends a next step. It never resolves
+  a case itself; the recommendation waits for a human.
+- **Auto-resolve is gated on exposure, not on the model's confidence.** A case
+  is only one-click resolvable when the money at risk is genuinely small —
+  ≤10% of the order value *and* ≤₹500 absolute — and the model didn't report
+  missing evidence. Anything larger goes to a human no matter how certain the
+  model sounds. Confidence scoring was tried and removed: measured on this
+  project's own data it carried almost no signal (83% of cases came back at
+  exactly 10, and the one case that cleared the old threshold was one the
+  deterministic engine had explicitly flagged "verify before clearing"). An
+  uncalibrated self-report shouldn't authorise signing off money.
 - **Multi-provider AI failover** — Groq → OpenRouter → Gemini, each an
   independent account/limit. If every provider is unavailable, a case is
   marked `ai_pending` — an honest "no one has looked at this yet" state,
@@ -150,7 +157,7 @@ after restarting `uvicorn`.
 
 ```bash
 python validate_data.py       # scores engine.py output against ground_truth.csv
-python -m pytest test_remittance.py -v   # 14 checks on the bulk-remittance join
+python test_remittance.py     # 14 checks on the bulk-remittance join (no pytest needed)
 ```
 
 ---
@@ -203,12 +210,17 @@ auth.py                    Demo merchant accounts + bearer-token auth
 razorpay_client.py          Real Razorpay Settlements API client
 shopify_client.py            Mock merchant order source
 gen_data.py                   Synthetic demo dataset generator
-validate_data.py                Scores engine.py output against ground_truth.csv
+validate_data.py                Checks the dataset against config.py's bands
 test_remittance.py                Unit tests for the remittance join
 config.py                          Shared constants (fee bands, tolerances)
-frontend/                           React + TypeScript SPA
-data/                                 Demo CSVs + ground_truth.csv + per-merchant state
+schema_map.py                       Canonical order/settlement column contract
+frontend/                            React + TypeScript SPA
+data/                                 Demo CSVs + ground_truth.csv
 ```
+
+`data/state/` (per-merchant runtime state) and `data/run_results.csv` (engine
+output) are gitignored — both are recreated on demand, and tracking them meant
+every demo run showed up as a diff.
 
 ---
 

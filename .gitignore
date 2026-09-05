@@ -24,3 +24,10 @@ temp/
 # Frontend build artifacts
 frontend/dist/
 frontend/node_modules/
+
+# Per-merchant runtime state — recreated on demand by state_store.py.
+# Tracking it means every demo run shows up as a diff.
+data/state/
+
+# Engine output artifact — rewritten on every engine.py run.
+data/run_results.csv

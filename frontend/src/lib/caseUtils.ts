@@ -55,15 +55,6 @@ export function issueTypeLabel(caseType: CaseType | string): string {
   return ISSUE_TYPE_LABELS[caseType] ?? caseType.replace(/_/g, ' ')
 }
 
-export function displayConfidence(caseItem: Case): string {
-  const confidence = caseItem.ai?.confidence
-  if (confidence === null || confidence === undefined) {
-    if (caseItem.case_status === 'ai_pending') return 'Pending'
-    return '—'
-  }
-  return `${confidence}%`
-}
-
 export function orderOrCustomerLabel(caseItem: Case): string {
   if (caseItem.customer_name?.trim()) {
     return caseItem.customer_name
