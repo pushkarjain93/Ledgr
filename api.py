@@ -59,11 +59,14 @@ from engine import reconcile, score_metrics
 
 app = FastAPI(title="Ledgr API", version="1.0.0")
 
-# The Vite dev server. Tightened to explicit origins rather than "*"
-# because these endpoints carry a session token.
+# Tightened to explicit origins rather than "*" because these endpoints
+# carry a session token. The Vite dev server is always allowed; the deployed
+# frontend origin(s) come from FRONTEND_ORIGIN (comma-separated) so this
+# file never needs editing for a specific deploy URL.
+_extra_origins = [o.strip() for o in os.environ.get("FRONTEND_ORIGIN", "").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", *_extra_origins],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
